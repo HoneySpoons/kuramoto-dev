@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>about · kuramoto.dev</title>
+<meta name="description" content="About kuramoto.dev — a small interactive study of emergence, oscillation, and coupled systems.">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --bg-card: #131320;
+    --bg-card-hover: #1a1a2a;
+    --text: #e8e6dd;
+    --text-muted: #7a7a85;
+    --text-link: #a8c4e8;
+    --border: #2a2a3a;
+    --accent-coffee: #ffa94d;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', 'Helvetica Neue', system-ui, -apple-system, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 4rem 1.5rem 3rem;
+    line-height: 1.6;
+    min-height: 100%;
+  }
+  .container {
+    width: 100%;
+    max-width: 560px;
+  }
+  header {
+    margin-bottom: 2.5rem;
+  }
+  h1 {
+    font-weight: 300;
+    font-size: 1.875rem;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.25rem;
+  }
+  .breadcrumb {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    margin-bottom: 0.75rem;
+  }
+  .breadcrumb a {
+    color: var(--text-muted);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.15s;
+  }
+  .breadcrumb a:hover { border-color: var(--text-muted); }
+  section {
+    margin-bottom: 2rem;
+  }
+  section h2 {
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+  }
+  p {
+    margin-bottom: 0.875rem;
+    font-size: 0.95rem;
+  }
+  p:last-child { margin-bottom: 0; }
+  a.link {
+    color: var(--text-link);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(168, 196, 232, 0.25);
+    transition: border-color 0.15s, color 0.15s;
+  }
+  a.link:hover {
+    border-color: var(--text-link);
+  }
+  .links-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+  .link-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 0.625rem 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.95rem;
+  }
+  .link-row:last-child { border-bottom: none; }
+  .link-row .label {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+  .link-row a {
+    color: var(--text);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .link-row a:hover {
+    color: var(--text-link);
+    border-color: rgba(168, 196, 232, 0.4);
+  }
+  .coffee {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: background 0.15s, border-color 0.15s, transform 0.15s;
+  }
+  .coffee:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--accent-coffee);
+    transform: translateY(-1px);
+  }
+  .coffee-emoji {
+    font-size: 1.1rem;
+    line-height: 1;
+  }
+  footer {
+    margin-top: 3rem;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    letter-spacing: 0.02em;
+  }
+</style>
+</head>
+<body>
+
+<!-- Back to home (kuramoto.dev) -->
+<style>
+  .kuramoto-back {
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(20, 20, 40, 0.6);
+    color: rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 4px;
+    text-decoration: none;
+    font: 300 22px/1 system-ui, sans-serif;
+    z-index: 10000;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    user-select: none;
+  }
+  .kuramoto-back:hover {
+    background: rgba(40, 40, 70, 0.85);
+    color: rgba(255, 255, 255, 0.95);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+</style>
+<a class="kuramoto-back" href="/" title="Back to home" aria-label="Back to home">&times;</a>
+
+<div class="container">
+
+  <header>
+    <div class="breadcrumb"><a href="/">kuramoto.dev</a> / about</div>
+    <h1>about</h1>
+  </header>
+
+  <section>
+    <h2>What this is</h2>
+    <p>kuramoto.dev is a small interactive study of the math under things that organize without being told to. Coupled oscillators, recursive structures, continuous limits, chaotic divergence. Each visualization is a single self-contained HTML file, hand-built, no framework. The work isn't trying to teach a curriculum or prove a point. It's trying to make the math look like what it actually is.</p>
+    <p>Named for <a class="link" href="https://en.wikipedia.org/wiki/Yoshiki_Kuramoto">Yoshiki Kuramoto</a>, the Japanese physicist who developed the canonical model of synchronization.</p>
+  </section>
+
+  <section>
+    <h2>Links</h2>
+    <div class="links-grid">
+      <div class="link-row">
+        <span class="label">Email</span>
+        <a href="mailto:hello@kuramoto.dev">hello@kuramoto.dev</a>
+      </div>
+      <div class="link-row">
+        <span class="label">Source</span>
+        <a href="https://github.com/HoneySpoons/kuramoto-dev">github.com/HoneySpoons/kuramoto-dev</a>
+      </div>
+      <!-- Optional: uncomment when ready
+      <div class="link-row">
+        <span class="label">LinkedIn</span>
+        <a href="https://www.linkedin.com/in/YOUR-HANDLE/">linkedin.com/in/YOUR-HANDLE</a>
+      </div>
+      -->
+    </div>
+  </section>
+
+  <section>
+    <h2>Support</h2>
+    <p>If something here meant something to you and you'd like to drop a coffee on the bench:</p>
+    <!--
+      TODO: Replace HANDLE below with the actual Buy Me a Coffee username
+      (sign up at https://buymeacoffee.com to claim one). Then this whole
+      block becomes live; no other changes needed.
+    -->
+    <a class="coffee" href="https://buymeacoffee.com/HANDLE" target="_blank" rel="noopener noreferrer">
+      <span class="coffee-emoji">☕</span>
+      <span>Buy me a coffee</span>
+    </a>
+  </section>
+
+  <footer>kuramoto.dev</footer>
+
+</div>
+
+</body>
+</html>

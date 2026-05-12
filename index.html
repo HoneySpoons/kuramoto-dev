@@ -107,6 +107,23 @@
     font-size: 0.75rem;
     text-align: center;
     letter-spacing: 0.02em;
+    display: flex;
+    justify-content: center;
+    gap: 0.875rem;
+    align-items: center;
+  }
+  footer a {
+    color: var(--text-muted);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  footer a:hover {
+    color: var(--text);
+    border-color: var(--text-muted);
+  }
+  footer .sep {
+    opacity: 0.5;
   }
   @media (max-width: 480px) {
     h1 { font-size: 1.875rem; }
@@ -139,7 +156,14 @@
         <div class="card-subtitle">Kuramoto model — coupled phase oscillators</div>
       </div>
     </div>
-    <footer>kuramoto.dev</footer>
+    <footer>
+      <span>kuramoto.dev</span>
+      <span class="sep">·</span>
+      <a href="/about.html">about</a>
+      <span class="sep">·</span>
+      <!-- TODO: replace HANDLE with the actual Buy Me a Coffee username when set up -->
+      <a href="https://buymeacoffee.com/HANDLE" target="_blank" rel="noopener noreferrer">support</a>
+    </footer>
   </div>
 </body>
 </html>

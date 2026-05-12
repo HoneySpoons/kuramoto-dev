@@ -251,6 +251,35 @@ button.action:hover { background: #1c1c38; color: #aaa; }
 </head>
 <body>
 
+<!-- Back to home (kuramoto.dev) -->
+<style>
+  .kuramoto-back {
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(20, 20, 40, 0.6);
+    color: rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 4px;
+    text-decoration: none;
+    font: 300 22px/1 system-ui, sans-serif;
+    z-index: 10000;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    user-select: none;
+  }
+  .kuramoto-back:hover {
+    background: rgba(40, 40, 70, 0.85);
+    color: rgba(255, 255, 255, 0.95);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+</style>
+<a class="kuramoto-back" href="/" title="Back to home" aria-label="Back to home">&times;</a>
+
 <div id="canvas-area">
   <canvas id="cvs"></canvas>
   <div id="circleCount"></div>
