@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>kuramoto.dev</title>
+<meta name="description" content="A small interactive study of emergence, oscillation, and coupled systems.">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --bg-card: #131320;
+    --bg-card-hover: #1a1a2a;
+    --text: #e8e6dd;
+    --text-muted: #7a7a85;
+    --border: #2a2a3a;
+    --accent-1: #6c5ce7;
+    --accent-2: #00b8d4;
+    --accent-3: #ff6b9d;
+    --accent-4: #ffa94d;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', 'Helvetica Neue', system-ui, -apple-system, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1.5rem;
+    line-height: 1.5;
+  }
+  .container {
+    width: 100%;
+    max-width: 640px;
+  }
+  header {
+    margin-bottom: 2.5rem;
+    text-align: center;
+  }
+  h1 {
+    font-weight: 300;
+    font-size: 2.25rem;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.5rem;
+  }
+  .tagline {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    font-weight: 300;
+  }
+  .cards {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.875rem;
+  }
+  .card {
+    display: block;
+    padding: 1.25rem 1.5rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--text);
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+    position: relative;
+  }
+  .card:hover {
+    background: var(--bg-card-hover);
+    transform: translateY(-1px);
+  }
+  .card[data-accent="1"]:hover { border-color: var(--accent-1); }
+  .card[data-accent="2"]:hover { border-color: var(--accent-2); }
+  .card[data-accent="3"]:hover { border-color: var(--accent-3); }
+  .card-title {
+    font-size: 1.15rem;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    margin-bottom: 0.2rem;
+  }
+  .card-subtitle {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+  }
+  .card.coming-soon {
+    opacity: 0.45;
+    cursor: default;
+  }
+  .card.coming-soon:hover {
+    transform: none;
+    border-color: var(--border);
+    background: var(--bg-card);
+  }
+  .badge {
+    position: absolute;
+    top: 1.1rem;
+    right: 1.25rem;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+  footer {
+    margin-top: 3rem;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    text-align: center;
+    letter-spacing: 0.02em;
+  }
+  @media (max-width: 480px) {
+    h1 { font-size: 1.875rem; }
+    .card { padding: 1rem 1.25rem; }
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>kuramoto.dev</h1>
+      <p class="tagline">a small study of emergence, oscillation, and coupled systems</p>
+    </header>
+    <div class="cards">
+      <a class="card" data-accent="1" href="chaos-theory.html">
+        <div class="card-title">Chaos Theory</div>
+        <div class="card-subtitle">Double pendulum — coupled nonlinear oscillators</div>
+      </a>
+      <a class="card" data-accent="2" href="the-limit.html">
+        <div class="card-title">The Limit</div>
+        <div class="card-subtitle">Riemann sums approaching the integral</div>
+      </a>
+      <a class="card" data-accent="3" href="self-similarity.html">
+        <div class="card-title">Self Similarity</div>
+        <div class="card-subtitle">Apollonian gasket — Descartes recursion</div>
+      </a>
+      <div class="card coming-soon">
+        <span class="badge">soon</span>
+        <div class="card-title">Synchronization</div>
+        <div class="card-subtitle">Kuramoto model — coupled phase oscillators</div>
+      </div>
+    </div>
+    <footer>kuramoto.dev</footer>
+  </div>
+</body>
+</html>

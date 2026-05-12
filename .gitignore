@@ -1,0 +1,31 @@
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+
+# Environment / secrets
+.env
+.env.local
+.env.*.local
+
+# Local-only scratch (not for the repo)
+scratch/
+local-*.html
+*.local.html
+
+# Future Node tooling (defensive — none of this is used today, but easier to ignore now than retroactively)
+node_modules/
+package-lock.json
+dist/
+build/
+.cache/
