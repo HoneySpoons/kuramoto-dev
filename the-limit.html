@@ -77,35 +77,6 @@ button.rbut.on { background: #0c1e36; color: #58a6ff; border-color: #1f4c8a; }
 </head>
 <body>
 
-<!-- Back to home (kuramoto.dev) -->
-<style>
-  .kuramoto-back {
-    position: fixed;
-    top: 12px;
-    left: 12px;
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(20, 20, 40, 0.6);
-    color: rgba(255, 255, 255, 0.5);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 4px;
-    text-decoration: none;
-    font: 300 22px/1 system-ui, sans-serif;
-    z-index: 10000;
-    transition: background 0.15s, color 0.15s, border-color 0.15s;
-    user-select: none;
-  }
-  .kuramoto-back:hover {
-    background: rgba(40, 40, 70, 0.85);
-    color: rgba(255, 255, 255, 0.95);
-    border-color: rgba(255, 255, 255, 0.2);
-  }
-</style>
-<a class="kuramoto-back" href="/" title="Back to home" aria-label="Back to home">&times;</a>
-
 <div id="canvas-area">
   <div id="top-wrap"><canvas id="tcvs"></canvas></div>
   <div id="bot-wrap"><canvas id="bcvs"></canvas></div>
@@ -165,6 +136,17 @@ const P  = { p: 2, a: 2, b: 2, k: 1, mu: 0.5, sigma: 0.2 };
 let trueVal  = 0;
 let convData = { left:[], midpoint:[], right:[] };
 let dirty    = true;   // needs precompute
+
+let dotPixel  = { x: 0, y: 0 };
+let botPAD    = null;
+let botPw     = 0;
+let dotDrag   = false;
+const DOT_HIT = 10;
+
+function botNFromX(xp) {
+  if (!botPAD || botPw <= 0) return n;
+  return Math.max(1, Math.min(N_MAX, Math.round(1 + (xp - botPAD.L) / botPw * (N_MAX - 1))));
+}
 
 // ── Functions ──────────────────────────────────────────────────────────
 const FUNCS = [
@@ -417,6 +399,7 @@ function drawBot() {
   const PAD = { L: 54, R: 18, T: 16, B: 28 };
   const pw = w - PAD.L - PAD.R;
   const ph = h - PAD.T - PAD.B;
+  botPAD = PAD; botPw = pw;
 
   // y range in log10 space
   const allVals = [...convData.left, ...convData.midpoint, ...convData.right];
@@ -478,6 +461,7 @@ function drawBot() {
   const curErr = convData[rule][n - 1];
   const mxp = tx(n);
   const myp = ty(curErr);
+  dotPixel = { x: mxp, y: myp };
   c.strokeStyle = ERR_C; c.lineWidth = 1; c.globalAlpha = 0.6; c.setLineDash([3, 4]);
   c.beginPath(); c.moveTo(mxp, PAD.T); c.lineTo(mxp, PAD.T + ph); c.stroke();
   c.setLineDash([]); c.globalAlpha = 1;
@@ -558,6 +542,48 @@ document.getElementById('nsl').addEventListener('input', function() {
   n = parseInt(this.value);
   document.getElementById('nval').textContent = n;
   draw();
+});
+
+// ── Convergence dot drag-scrub ─────────────────────────────────────────
+
+bcvs.addEventListener('mousedown', e => {
+  if (e.button !== 0) return;
+  const r = bcvs.getBoundingClientRect();
+  const xp = e.clientX - r.left, yp = e.clientY - r.top;
+  if (Math.hypot(xp - dotPixel.x, yp - dotPixel.y) <= DOT_HIT) {
+    dotDrag = true;
+    bcvs.style.cursor = 'grabbing';
+    e.preventDefault();
+  }
+});
+
+window.addEventListener('mousemove', e => {
+  if (!dotDrag) return;
+  const r = bcvs.getBoundingClientRect();
+  const newN = botNFromX(e.clientX - r.left);
+  if (newN !== n) {
+    n = newN;
+    document.getElementById('nsl').value = n;
+    document.getElementById('nval').textContent = n;
+    draw();
+  }
+});
+
+window.addEventListener('mouseup', () => {
+  if (!dotDrag) return;
+  dotDrag = false;
+  bcvs.style.cursor = 'default';
+});
+
+bcvs.addEventListener('mousemove', e => {
+  if (dotDrag) return;
+  const r = bcvs.getBoundingClientRect();
+  const xp = e.clientX - r.left, yp = e.clientY - r.top;
+  bcvs.style.cursor = Math.hypot(xp - dotPixel.x, yp - dotPixel.y) <= DOT_HIT ? 'grab' : 'default';
+});
+
+bcvs.addEventListener('mouseleave', () => {
+  if (!dotDrag) bcvs.style.cursor = 'default';
 });
 
 // ── Init ───────────────────────────────────────────────────────────────
