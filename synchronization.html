@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Synchronization</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  background: #0e0e12;
+  color: #c8c8d0;
+  font-family: system-ui, sans-serif;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+#canvas-area {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+canvas { display: block; }
+
+#rBar {
+  position: absolute;
+  bottom: 16px;
+  left: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  z-index: 4;
+  user-select: none;
+  pointer-events: none;
+}
+#rBar .lbl {
+  font: 8px system-ui;
+  letter-spacing: .18em;
+  color: #3e3e4e;
+  text-transform: uppercase;
+}
+#rBar .track {
+  width: 5px;
+  height: 110px;
+  background: #14142a;
+  border-radius: 3px;
+  position: relative;
+  overflow: hidden;
+}
+#rBar .fill {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 0%;
+  background: linear-gradient(to top, #2c4763 0%, #4fc3f7 40%, #ffca28 100%);
+  transition: height .08s linear;
+  border-radius: 3px;
+}
+
+/* K_c marker on the K slider */
+.slider-wrap { position: relative; display: inline-flex; align-items: center; }
+#kcMarker {
+  position: absolute;
+  top: 50%;
+  width: 2px;
+  height: 18px;
+  margin-top: -9px;
+  background: #4fc3f7;
+  border-radius: 1px;
+  pointer-events: none;
+  opacity: .85;
+  transform: translateX(-1px);
+  transition: left .08s linear;
+}
+#kcMarker::after {
+  content: 'Kc';
+  position: absolute;
+  top: calc(100% + 3px);   /* below the tick → clears the "K (coupling)" label above */
+  left: 50%;
+  transform: translateX(-50%);
+  font: 8px system-ui;
+  letter-spacing: .03em;
+  color: #4fc3f7;
+}
+#kcMarker.offscale { opacity: .25; }
+
+/* Mode toggle — pill buttons, top-center of canvas (aesthetic per apollonian_gasket) */
+#modeToggle {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  z-index: 5;
+  background: rgba(12, 12, 22, .55);
+  padding: 4px;
+  border-radius: 999px;
+  border: 1px solid #1a1a2e;
+}
+.modepill {
+  background: #14142a; color: #4fc3f7;
+  border: 1px solid #1e4a6a;
+  padding: 5px 16px; border-radius: 999px;
+  font: 12px system-ui; letter-spacing: .04em;
+  cursor: pointer; user-select: none;
+  transition: background .12s, color .12s, border-color .12s;
+}
+.modepill:hover { background: #1c2c44; }
+.modepill.active {
+  background: #4fc3f7; color: #0e0e12; border-color: #4fc3f7;
+  font-weight: 600;
+}
+
+/* Mode-dependent show/hide */
+body.mode-meanfield .only-chimera   { display: none; }
+body.mode-chimera   .only-meanfield { display: none; }
+/* Chimera draws its own clock + sync meter on the canvas (top-left); hide the DOM r-bar */
+body.mode-chimera   #rBar           { display: none; }
+
+/* Drawer toggle tab */
+#drawerTab {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  background: #14142a;
+  color: #888;
+  border: 1px solid #222238;
+  border-right: none;
+  border-radius: 6px 0 0 6px;
+  padding: 14px 8px;
+  cursor: pointer;
+  font: 11px system-ui;
+  letter-spacing: .25em;
+  writing-mode: vertical-rl;
+  transform: translateY(-50%);
+  transition: opacity .25s, color .12s, background .12s;
+  z-index: 5;
+  user-select: none;
+}
+#drawerTab:hover { color: #4fc3f7; background: #1c1c38; }
+body.drawer-open #drawerTab { opacity: 0; pointer-events: none; }
+
+/* Drawer */
+#drawer {
+  position: absolute;
+  top: 0; right: 0;
+  width: min(360px, 100vw);
+  height: 100%;
+  background: #0e0e18;
+  border-left: 1px solid #1a1a28;
+  transform: translateX(100%);
+  transition: transform .28s cubic-bezier(.4, 0, .2, 1);
+  display: flex;
+  flex-direction: column;
+  z-index: 6;
+  font-size: 12px;
+  color: #b8b8c2;
+}
+body.drawer-open #drawer { transform: translateX(0); }
+#drawerHeader {
+  padding: 14px 16px;
+  border-bottom: 1px solid #1a1a28;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+#drawerHeader h2 {
+  font-size: 11px; font-weight: 600;
+  letter-spacing: .18em; color: #4fc3f7;
+  text-transform: uppercase;
+}
+#drawerClose {
+  background: none; border: none; color: #777;
+  cursor: pointer; font-size: 20px; padding: 0 6px;
+  line-height: 1;
+}
+#drawerClose:hover { color: #4fc3f7; }
+#drawerBody {
+  overflow-y: auto;
+  overflow-x: visible;
+  padding: 16px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+#drawerBody section h3 {
+  font-size: 9px; font-weight: 600; letter-spacing: .18em;
+  color: #4a4a5a; text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.eq {
+  font-family: 'Cambria Math', 'Latin Modern Math', Georgia, serif;
+  font-size: 13px; line-height: 1.9; color: #d8d8e0;
+}
+.note {
+  font-size: 11px; color: #6a6a7a; margin-top: 8px; line-height: 1.55;
+}
+.live-block {
+  font-family: 'Cambria Math', Georgia, serif;
+  font-size: 12px;
+  line-height: 2.1;
+  padding: 10px 12px;
+  background: #14142a;
+  border-radius: 4px;
+  border: 1px solid #1e1e3a;
+}
+.live-block .dim { color: #555; }
+.live-block .val { color: #ffca28; }
+.live-block .kc  { color: #4fc3f7; }
+
+/* Concept callout — the framing question, top of the drawer */
+.concept {
+  background: #0c1622;
+  border: 1px solid #1e3a4a;
+  border-left: 2px solid #4fc3f7;
+  border-radius: 4px;
+  padding: 12px 14px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #aeb6c2;
+}
+.concept .kc { color: #4fc3f7; }
+.concept .q {
+  display: block;
+  margin-top: 9px;
+  color: #4fc3f7;
+  font-style: italic;
+}
+
+/* Term tooltip */
+.term {
+  font-style: italic; color: #4fc3f7; cursor: help;
+  border-bottom: 1px dotted rgba(79, 195, 247, .6);
+  position: relative;
+  white-space: nowrap;
+}
+.tip {
+  display: none;
+  position: fixed;
+  background: #16162a;
+  border: 1px solid #2a2a3e;
+  color: #c8c8d0;
+  padding: 8px 11px;
+  border-radius: 4px;
+  white-space: normal;
+  width: 240px;
+  font-size: 11px;
+  font-style: normal;
+  text-align: left;
+  line-height: 1.5;
+  z-index: 100;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.5);
+  pointer-events: none;
+}
+
+.about-link {
+  display: block;
+  text-align: center;
+  color: #4a4a5a;
+  font-size: 11px;
+  text-decoration: none;
+  letter-spacing: .06em;
+  padding: 10px 0;
+  border-top: 1px solid #1a1a28;
+  margin-top: 4px;
+  transition: color .15s;
+}
+.about-link:hover { color: #4fc3f7; }
+
+/* Controls bar */
+#controls {
+  background: #0e0e18;
+  border-top: 1px solid #1a1a28;
+  padding: 8px 16px 18px;   /* extra bottom room for the Kc caption under the K slider */
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+.sg { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.sg label {
+  font-size: 10px; color: #4a4a5a;
+  letter-spacing: .07em; text-transform: uppercase;
+}
+.sr { display: flex; align-items: center; gap: 5px; }
+.sr input[type=range] {
+  width: 78px;
+  accent-color: #4fc3f7;
+  cursor: pointer;
+}
+.sv {
+  font-size: 11px; color: #888;
+  width: 32px; text-align: right;
+  font-family: 'Cambria Math', Georgia, serif;
+  background: transparent;
+  border: 1px solid transparent;
+  padding: 1px 4px;
+  border-radius: 2px;
+}
+.sv:hover { border-color: #2a2a3e; color: #aab; }
+.sv:focus { border-color: #4fc3f7; outline: none; color: #4fc3f7; }
+.sep { width: 1px; height: 28px; background: #1a1a28; flex-shrink: 0; }
+.btns { display: flex; gap: 8px; margin-left: auto; }
+button.action {
+  background: #14142a; color: #888;
+  border: 1px solid #222238;
+  padding: 5px 14px; font: 12px system-ui;
+  cursor: pointer; border-radius: 3px;
+  transition: background .12s, color .12s;
+}
+button.action:hover { background: #1c1c38; color: #aaa; }
+button.action.on { background: #0c1e30; color: #4fc3f7; border-color: #1e4a6a; }
+</style>
+</head>
+<body class="mode-meanfield">
+
+<div id="canvas-area">
+  <canvas id="cvs"></canvas>
+  <div id="modeToggle">
+    <button class="modepill active" data-mode="meanfield">Mean-Field</button>
+    <button class="modepill" data-mode="chimera">Chimera</button>
+  </div>
+  <div id="rBar" title="Order parameter r — chaos to synchronicity">
+    <div class="lbl">Sync</div>
+    <div class="track"><div class="fill" id="rFill"></div></div>
+    <div class="lbl">Chaos</div>
+  </div>
+  <div id="drawerTab" title="Show math">M A T H</div>
+  <aside id="drawer">
+    <div id="drawerHeader">
+      <h2>The Math</h2>
+      <button id="drawerClose" aria-label="Close">×</button>
+    </div>
+    <div id="drawerBody">
+
+      <section class="only-meanfield">
+        <div class="concept">
+          Below <span class="kc">K<sub>c</sub></span> the population is mathematically chaotic. Above the <span class="kc">K<sub>c</sub></span> threshold, the population is mathematically synchronized.
+          <span class="q">What do you see when you pass the threshold? Chaos or Order?</span>
+        </div>
+      </section>
+
+      <section class="only-chimera">
+        <div class="concept">
+          Every oscillator here is identical — same frequency, same coupling rule. Yet the population tears into a coherent band and an incoherent one, and nothing in the setup says where the tear goes.
+          <span class="q">Same units, same law — so why don't they all agree? Hit Re-run and watch the split move.</span>
+        </div>
+      </section>
+
+      <section class="only-meanfield">
+        <h3>Kuramoto Equation</h3>
+        <div class="eq">
+          dθᵢ/dt = ωᵢ + (K/N) Σⱼ sin(θⱼ − θᵢ)
+        </div>
+        <p class="note">
+          Each <span class="term">oscillator<span class="tip">One rhythmic unit in the population — a single dot on the circle, running at its own preferred speed until coupling pulls it toward the rest.</span></span> has a <span class="term">natural frequency<span class="tip"><b>Natural frequency ωᵢ</b> — how fast the oscillator prefers to run on its own, with no coupling. Drawn from a Lorentzian distribution centered at ω₀. Dot color encodes ω: cool (cyan) is slower, warm (amber) is faster.</span></span> ωᵢ and a current <span class="term">phase<span class="tip"><b>Phase θᵢ</b> — where the oscillator sits in its cycle, measured as an angle in [0, 2π). Each dot's position on the unit circle is its current phase.</span></span> θᵢ. The coupling term pulls each oscillator toward the rest, weighted by how out-of-phase they are.
+        </p>
+      </section>
+
+      <section class="only-meanfield">
+        <h3>Mean-field rewrite</h3>
+        <div class="eq">
+          r · e<sup>iψ</sup> = (1/N) Σⱼ e<sup>iθⱼ</sup><br>
+          dθᵢ/dt = ωᵢ + K · r · sin(ψ − θᵢ)
+        </div>
+        <p class="note">
+          The N² pairwise sum collapses to a single average. Compute the <span class="term">order parameter<span class="tip"><b>Order parameter r</b> — the magnitude of the mean phase vector. r ≈ 0 when phases scatter (rainbow on the circle); r ≈ 1 when they lock (one hue dominates). The bar in the bottom-left tracks r live; ψ is the locked cluster's mean phase.</span></span> r and mean angle ψ once per step, reuse for all N oscillators — O(N) instead of O(N²).
+        </p>
+      </section>
+
+      <section class="only-meanfield">
+        <h3>Live state</h3>
+        <div class="live-block">
+          <span class="dim">r</span>&nbsp;&nbsp;&nbsp;&nbsp;= <span class="val" id="liveR">0.000</span><br>
+          <span class="dim">ψ</span>&nbsp;&nbsp;&nbsp;&nbsp;= <span class="val" id="livePsi">0.00</span> rad<br>
+          <span class="dim">K</span>&nbsp;&nbsp;&nbsp;&nbsp;= <span class="val" id="liveK">1.00</span><br>
+          <span class="dim">K<sub>c</sub></span>&nbsp;= <span class="kc" id="liveKc">2.00</span>
+        </div>
+        <p class="note">
+          For a Lorentzian with half-width γ, the <span class="term">critical coupling<span class="tip"><b>Critical coupling K_c</b> — the threshold above which synchronization spontaneously emerges. Derived from K_c = 2/(π · g(ω₀)) where g is the frequency density at the center. For a Lorentzian, g(ω₀) = 1/(πγ), giving K_c = 2γ exactly.</span></span> is K<sub>c</sub> = 2γ. Drag K above K<sub>c</sub> to trigger the transition.
+        </p>
+      </section>
+
+      <section class="only-meanfield">
+        <h3>Phase transition</h3>
+        <p class="note">
+          Below K<sub>c</sub>, phases scatter uniformly and r fluctuates near 1/√N (finite-size noise). Above K<sub>c</sub>, a cluster forms and revolves at the mean locked frequency; r rises toward 1. This is a <span class="term">phase transition<span class="tip"><b>Phase transition</b> — a sharp change in collective behavior at a critical parameter. Below K_c: disorder. Above K_c: order. Same mathematical structure as a ferromagnet becoming magnetic.</span></span> driven by <span class="term">mean-field<span class="tip"><b>Mean-field</b> — each oscillator interacts with the collective average rather than with each individual neighbor. Exact for all-to-all coupling in the N → ∞ limit.</span></span> coupling. No oscillator decides to synchronize — it emerges from the local rule.
+        </p>
+      </section>
+
+      <section class="only-chimera">
+        <h3>Chimera Equation</h3>
+        <div class="eq">
+          dθᵢ/dt = ω − (1/N) Σⱼ [1 + A·cos(xᵢ − xⱼ)] · sin(θᵢ − θⱼ + α)
+        </div>
+        <p class="note">
+          Every oscillator shares one <span class="term">natural frequency<span class="tip"><b>Identical ω</b> — in chimera mode there is no frequency spread. All N oscillators want to run at exactly the same speed. Any difference in their behaviour is created by the dynamics, not baked into the population.</span></span> ω. Coupling is <span class="term">non-local<span class="tip"><b>Non-local coupling</b> — strength depends on how far apart two oscillators sit on the ring, set by the kernel 1 + A·cos(xᵢ − xⱼ). Neighbours pull harder than distant units. This is the structural ingredient chimeras need; all-to-all (mean-field) coupling cannot produce them.</span></span>: each unit sits at a ring position xᵢ = 2πi/N and feels its neighbours more strongly than distant units.
+        </p>
+      </section>
+
+      <section class="only-chimera">
+        <h3>Kernel &amp; phase lag</h3>
+        <div class="eq">
+          G(x) = 1 + A·cos(x)<br>
+          α = π/2 − β
+        </div>
+        <p class="note">
+          <b>A</b> sets the coupling range — how sharply near beats far. <b>β</b> is the <span class="term">phase lag<span class="tip"><b>Phase lag β</b> — a small offset inside the sine, α = π/2 − β. Chimeras live in a narrow wedge of (A, β). Push β up and the incoherent region heals into full synchrony; pull it toward zero and order breaks down. The default sits inside the chimera band.</span></span>. The chimera regime is a narrow band — the defaults sit inside it; nudge β to find its edges.
+        </p>
+      </section>
+
+      <section class="only-chimera">
+        <h3>Live state</h3>
+        <div class="live-block">
+          <span class="dim">r</span>&nbsp;&nbsp;&nbsp;&nbsp;= <span class="val" id="cliveR">0.000</span><br>
+          <span class="dim">A</span>&nbsp;&nbsp;&nbsp;&nbsp;= <span class="val" id="cliveA">0.950</span><br>
+          <span class="dim">β</span>&nbsp;&nbsp;&nbsp;&nbsp;= <span class="kc" id="cliveBeta">0.10</span>
+        </div>
+        <p class="note">
+          Global r sits at an intermediate plateau — neither 0 nor 1. Half the population is locked and half is not, so the population-wide order parameter lands in between and stays there. That steady in-between value is itself the chimera signature.
+        </p>
+      </section>
+
+      <section class="only-chimera">
+        <h3>The re-run fingerprint</h3>
+        <p class="note">
+          Identical units, identical rule — yet the population splits into a coherent band and an <span class="term">incoherent<span class="tip"><b>Symmetry breaking</b> — nothing in the setup distinguishes one oscillator from another, so nothing predicts which ones end up incoherent. The split is chosen by the initial conditions alone. This is what makes a chimera a <i>chimera</i> and not just partial synchronization.</span></span> band. Nothing in the parameters says <i>where</i>. Hit <b>Re-run</b> and the boundary in the spatial strip lands somewhere new every time — that relocation is the proof the split is born from the dynamics, not the recipe.
+        </p>
+      </section>
+
+      <a class="about-link" href="/kuramoto.html">About Yoshiki Kuramoto →</a>
+
+    </div>
+  </aside>
+</div>
+
+<div id="controls">
+  <div class="sg only-meanfield">
+    <label>K (coupling)</label>
+    <div class="sr">
+      <span class="slider-wrap">
+        <input type="range" id="sK" min="0" max="5" step="0.05" value="1.0">
+        <div id="kcMarker" title="Critical coupling Kc = 2γ"></div>
+      </span>
+      <input type="text" class="sv" id="vK" value="1.00">
+    </div>
+  </div>
+  <div class="sg only-chimera">
+    <label>A (range)</label>
+    <div class="sr">
+      <input type="range" id="sA" min="0" max="1" step="0.01" value="0.95">
+      <input type="text" class="sv" id="vA" value="0.95">
+    </div>
+  </div>
+  <div class="sg">
+    <label>N (oscillators)</label>
+    <div class="sr">
+      <input type="range" id="sN" min="10" max="500" step="1" value="200">
+      <input type="text" class="sv" id="vN" value="200">
+    </div>
+  </div>
+  <div class="sg only-meanfield">
+    <label>γ (spread)</label>
+    <div class="sr">
+      <input type="range" id="sGamma" min="0.1" max="3" step="0.05" value="1.0">
+      <input type="text" class="sv" id="vGamma" value="1.00">
+    </div>
+  </div>
+  <div class="sg only-chimera">
+    <label>β (lag)</label>
+    <div class="sr">
+      <input type="range" id="sBeta" min="0.01" max="0.5" step="0.01" value="0.10">
+      <input type="text" class="sv" id="vBeta" value="0.10">
+    </div>
+  </div>
+  <div class="sep"></div>
+  <div class="sg">
+    <label>Speed</label>
+    <div class="sr">
+      <input type="range" id="sSpeed" min="0.1" max="4" step="0.1" value="1.0">
+      <input type="text" class="sv" id="vSpeed" value="1.0">
+    </div>
+  </div>
+  <div class="btns">
+    <button class="action" id="bRerun" title="Reseed initial phases — in Chimera mode, relocates the incoherent region">Re-run</button>
+    <button class="action" id="bPause">Pause</button>
+  </div>
+</div>
+
+<script>
+// ── Constants ──────────────────────────────────────────────────────────
+const BG   = '#0e0e12';
+const TAU  = Math.PI * 2;
+const OMEGA0 = Math.PI / 2; // center frequency — one revolution per ~4 seconds at speed=1
+
+const STOPS = [
+  [0.00, [ 79, 195, 247]],
+  [0.30, [122, 142, 240]],
+  [0.55, [171,  71, 188]],
+  [0.80, [255, 123, 172]],
+  [1.00, [255, 202,  40]],
+];
+function colormap(t) {
+  t = Math.max(0, Math.min(1, t));
+  for (let i = 0; i < STOPS.length - 1; i++) {
+    const [t0, c0] = STOPS[i], [t1, c1] = STOPS[i + 1];
+    if (t <= t1) {
+      const f = (t - t0) / (t1 - t0);
+      return [
+        Math.round(c0[0] + (c1[0] - c0[0]) * f),
+        Math.round(c0[1] + (c1[1] - c0[1]) * f),
+        Math.round(c0[2] + (c1[2] - c0[2]) * f),
+      ];
+    }
+  }
+  return STOPS[STOPS.length - 1][1];
+}
+
+// ── Canvas ─────────────────────────────────────────────────────────────
+const cvs = document.getElementById('cvs');
+const ctx = cvs.getContext('2d');
+
+function resize() {
+  const dpr  = window.devicePixelRatio || 1;
+  const area = document.getElementById('canvas-area');
+  const w = area.clientWidth, h = area.clientHeight;
+  cvs.style.width  = w + 'px';
+  cvs.style.height = h + 'px';
+  cvs.width  = Math.round(w * dpr);
+  cvs.height = Math.round(h * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+// ── Simulation state ───────────────────────────────────────────────────
+let N_osc = 200;
+let K     = 1.0;
+let gamma = 1.0;
+let speed = 1.0;
+
+// Regime selector: 'meanfield' (Lorentzian, all-to-all) | 'chimera' (non-local kernel, identical ω)
+let mode     = 'meanfield';
+let chimA    = 0.95;                  // chimera kernel amplitude (coupling range / non-locality)
+let chimBeta = 0.10;                  // chimera phase lag β
+let chimAlpha = Math.PI / 2 - chimBeta; // α = π/2 − β
+let cosX, sinX;                       // ring positions xᵢ = 2πi/N (chimera spatial coupling)
+let uiShift = 0;                      // eased left-shift of the drawing area when the drawer is open
+
+let phases, omegas, glowAge;
+let physDt, physAccum = 0;
+let paused = false;
+let orderR = 0, orderPsi = 0;
+
+// Layer A: K_c-crossing feedback
+let prevAboveKc = null;
+let crossRingT  = 0;
+
+// Preallocated RK4 buffers (sized in rebuildPopulation)
+let buf_k1, buf_k2, buf_k3, buf_k4, buf_p;
+
+function lorentzianSample() {
+  // Inverse CDF of Lorentzian; clamp u away from endpoints to cap tan singularity
+  const u = 0.001 + Math.random() * 0.998;
+  return Math.tan(Math.PI * (u - 0.5));
+}
+
+function rebuildPopulation() {
+  // Ring positions xᵢ = 2πi/N — fixed spatial layout the chimera kernel couples over
+  cosX = new Float64Array(N_osc);
+  sinX = new Float64Array(N_osc);
+  for (let i = 0; i < N_osc; i++) {
+    const x = TAU * i / N_osc;
+    cosX[i] = Math.cos(x);
+    sinX[i] = Math.sin(x);
+  }
+
+  omegas = new Float64Array(N_osc);
+  if (mode === 'chimera') {
+    omegas.fill(OMEGA0);                              // identical natural frequency
+    physDt = Math.PI / (10 * (OMEGA0 + 1 + chimA));   // bound by ω + max coupling rate
+  } else {
+    let maxAbs = 0;
+    for (let i = 0; i < N_osc; i++) {
+      omegas[i] = OMEGA0 + gamma * lorentzianSample();
+      if (Math.abs(omegas[i]) > maxAbs) maxAbs = Math.abs(omegas[i]);
+    }
+    // dt guarantees fastest oscillator advances < π/10 per step
+    physDt = Math.PI / (10 * Math.max(maxAbs, 0.001));
+  }
+
+  phases = new Float64Array(N_osc);
+
+  buf_k1 = new Float64Array(N_osc);
+  buf_k2 = new Float64Array(N_osc);
+  buf_k3 = new Float64Array(N_osc);
+  buf_k4 = new Float64Array(N_osc);
+  buf_p  = new Float64Array(N_osc);
+
+  glowAge = new Int16Array(N_osc);
+  glowAge.fill(-1);
+
+  seedPhases();
+  physAccum = 0;
+  orderR = 0; orderPsi = 0;
+}
+
+// Mode-aware initial phases.
+//   mean-field: uniformly random — the population finds its own order from K alone.
+//   chimera:    a coherent bump at a random ring centre + incoherent scatter elsewhere,
+//               so a chimera reliably forms and its incoherent region lands somewhere
+//               fresh on every (re-)seed. This is the load-bearing re-run fingerprint.
+function seedPhases() {
+  if (!phases) return;
+  if (mode === 'chimera') {
+    const c = Math.random() * TAU;     // random centre of the coherent band
+    const width = 1.1;                 // angular half-width of the bump (radians)
+    for (let i = 0; i < N_osc; i++) {
+      const x = TAU * i / N_osc;
+      let d = Math.abs(x - c);
+      if (d > Math.PI) d = TAU - d;     // wrapped distance on the ring
+      const w = Math.exp(-(d * d) / (width * width));   // 1 at centre → 0 far away
+      const coherent   = (Math.random() - 0.5) * 0.4;   // tight spread near the bump
+      const incoherent = Math.random() * TAU;           // scatter away from it
+      phases[i] = ((w * coherent + (1 - w) * incoherent) % TAU + TAU) % TAU;
+    }
+  } else {
+    for (let i = 0; i < N_osc; i++) phases[i] = Math.random() * TAU;
+  }
+}
+
+// Re-run: reseed initial phases, keeping the population (ω) fixed. Mean-field keeps the
+// same frequency-outliers free every run; chimera relocates the incoherent region.
+function reseedPhases() {
+  if (!phases) return;
+  seedPhases();
+  if (glowAge) glowAge.fill(-1);
+  physAccum = 0;
+  recomputeOrderParam();
+}
+
+// ── Physics ────────────────────────────────────────────────────────────
+function computeDerivInto(ph, out) {
+  if (mode === 'chimera') { computeDerivChimera(ph, out); return; }
+  // O(N) mean-field: compute (r, ψ) from current phases, then derive each dθ/dt
+  let sx = 0, sy = 0;
+  for (let i = 0; i < N_osc; i++) { sx += Math.cos(ph[i]); sy += Math.sin(ph[i]); }
+  const n = N_osc;
+  const r   = Math.sqrt(sx * sx + sy * sy) / n;
+  const psi = Math.atan2(sy, sx);
+  for (let i = 0; i < n; i++) out[i] = omegas[i] + K * r * Math.sin(psi - ph[i]);
+}
+
+// Chimera derivative, O(N) reduction of the non-local cosine-kernel double sum:
+//   dθᵢ/dt = ω − (1/N) Σⱼ [1 + A·cos(xᵢ − xⱼ)] · sin(θᵢ − θⱼ + α)
+// Expanding the kernel and the sine lets six running sums replace the inner loop.
+function computeDerivChimera(ph, out) {
+  const n = N_osc, A = chimA, alpha = chimAlpha;
+  let C0 = 0, S0 = 0, Ccc = 0, Csc = 0, Ccs = 0, Css = 0;
+  for (let j = 0; j < n; j++) {
+    const c = Math.cos(ph[j]), s = Math.sin(ph[j]);
+    C0 += c;            S0 += s;
+    Ccc += cosX[j] * c; Csc += sinX[j] * c;
+    Ccs += cosX[j] * s; Css += sinX[j] * s;
+  }
+  for (let i = 0; i < n; i++) {
+    const Pi = C0 + A * (cosX[i] * Ccc + sinX[i] * Csc);  // Σⱼ wᵢⱼ cos θⱼ
+    const Qi = S0 + A * (cosX[i] * Ccs + sinX[i] * Css);  // Σⱼ wᵢⱼ sin θⱼ
+    const phi = ph[i] + alpha;
+    out[i] = OMEGA0 - (Math.sin(phi) * Pi - Math.cos(phi) * Qi) / n;
+  }
+}
+
+function rk4Step() {
+  const dt = physDt, n = N_osc;
+  computeDerivInto(phases, buf_k1);
+  for (let i = 0; i < n; i++) buf_p[i] = phases[i] + buf_k1[i] * dt * 0.5;
+  computeDerivInto(buf_p, buf_k2);
+  for (let i = 0; i < n; i++) buf_p[i] = phases[i] + buf_k2[i] * dt * 0.5;
+  computeDerivInto(buf_p, buf_k3);
+  for (let i = 0; i < n; i++) buf_p[i] = phases[i] + buf_k3[i] * dt;
+  computeDerivInto(buf_p, buf_k4);
+  for (let i = 0; i < n; i++) {
+    phases[i] = ((phases[i] + (buf_k1[i] + 2*buf_k2[i] + 2*buf_k3[i] + buf_k4[i]) * dt / 6) % TAU + TAU) % TAU;
+  }
+}
+
+function recomputeOrderParam() {
+  let sx = 0, sy = 0;
+  for (let i = 0; i < N_osc; i++) { sx += Math.cos(phases[i]); sy += Math.sin(phases[i]); }
+  orderR   = Math.sqrt(sx * sx + sy * sy) / N_osc;
+  orderPsi = Math.atan2(sy, sx);
+}
+
+// ── Mean-field verification (runs once at startup, result in console) ──
+function verifyMeanField() {
+  const n = 20;
+  const ph = new Float64Array(n), om = new Float64Array(n);
+  const testK = 1.5;
+  for (let i = 0; i < n; i++) { ph[i] = Math.random() * TAU; om[i] = 1 + Math.random(); }
+  const naive = new Float64Array(n);
+  for (let i = 0; i < n; i++) {
+    let s = 0;
+    for (let j = 0; j < n; j++) s += Math.sin(ph[j] - ph[i]);
+    naive[i] = om[i] + (testK / n) * s;
+  }
+  let sx = 0, sy = 0;
+  for (let j = 0; j < n; j++) { sx += Math.cos(ph[j]); sy += Math.sin(ph[j]); }
+  const r = Math.sqrt(sx*sx + sy*sy) / n, psi = Math.atan2(sy, sx);
+  let maxErr = 0;
+  for (let i = 0; i < n; i++) {
+    const mf = om[i] + testK * r * Math.sin(psi - ph[i]);
+    maxErr = Math.max(maxErr, Math.abs(naive[i] - mf));
+  }
+  console.log(`Kuramoto mean-field verification (N=20): max error = ${maxErr.toExponential(3)}`);
+}
+
+// Verify the chimera O(N) reduction against the direct O(N²) kernel sum (console only).
+function verifyChimera() {
+  const n = 24, A = 0.7, alpha = Math.PI / 2 - 0.12;
+  const ph = new Float64Array(n), cX = new Float64Array(n), sX = new Float64Array(n);
+  for (let i = 0; i < n; i++) {
+    ph[i] = Math.random() * TAU;
+    const x = TAU * i / n; cX[i] = Math.cos(x); sX[i] = Math.sin(x);
+  }
+  const direct = new Float64Array(n);
+  for (let i = 0; i < n; i++) {
+    let s = 0;
+    for (let j = 0; j < n; j++) {
+      const dx = (TAU * i / n) - (TAU * j / n);
+      s += (1 + A * Math.cos(dx)) * Math.sin(ph[i] - ph[j] + alpha);
+    }
+    direct[i] = OMEGA0 - s / n;
+  }
+  let C0 = 0, S0 = 0, Ccc = 0, Csc = 0, Ccs = 0, Css = 0;
+  for (let j = 0; j < n; j++) {
+    const c = Math.cos(ph[j]), s = Math.sin(ph[j]);
+    C0 += c; S0 += s; Ccc += cX[j]*c; Csc += sX[j]*c; Ccs += cX[j]*s; Css += sX[j]*s;
+  }
+  let maxErr = 0;
+  for (let i = 0; i < n; i++) {
+    const Pi = C0 + A * (cX[i]*Ccc + sX[i]*Csc);
+    const Qi = S0 + A * (cX[i]*Ccs + sX[i]*Css);
+    const phi = ph[i] + alpha;
+    const fast = OMEGA0 - (Math.sin(phi)*Pi - Math.cos(phi)*Qi) / n;
+    maxErr = Math.max(maxErr, Math.abs(direct[i] - fast));
+  }
+  console.log(`Chimera kernel O(N) reduction (N=24): max error = ${maxErr.toExponential(3)}`);
+}
+
+// ── Draw ───────────────────────────────────────────────────────────────
+// Hue map: dot color = (θᵢ − ψ) on the hue wheel, offset so phase-aligned dots are amber.
+// Below K_c: phases scatter → rainbow distribution.
+// Above K_c: locked dots all near ψ → share one hue. Outliers drift through and cycle the wheel.
+const HUE_OFFSET = 45; // amber sits at delta=0
+const GLOW_THRESHOLD = 0.5;
+const GLOW_ATTACK = 22, GLOW_HOLD = 6, GLOW_DECAY = 32;
+const GLOW_TOTAL = GLOW_ATTACK + GLOW_HOLD + GLOW_DECAY;
+
+function draw() {
+  const w = cvs.clientWidth, h = cvs.clientHeight;
+  ctx.fillStyle = BG;
+  ctx.fillRect(0, 0, w, h);
+
+  // Ease the drawing area left when the drawer is open (desktop widths only)
+  const drawerW = 360;
+  const targetShift = (drawerOpen && (w - drawerW) > 320) ? drawerW : 0;
+  uiShift += (targetShift - uiShift) * 0.18;
+  if (Math.abs(targetShift - uiShift) < 0.5) uiShift = targetShift;
+
+  const availW  = w - uiShift;   // usable width to the left of the drawer
+  const topRoom = 52;            // clearance below the mode pills
+
+  if (mode === 'chimera') { drawChimera(availW, h, topRoom); return; }
+
+  // ── Mean-field: clock face ──────────────────────────────────────────────
+  const cx = availW / 2;
+  const cy = topRoom + (h - topRoom) / 2;
+  const circR = Math.min(availW / 2, (h - topRoom) / 2) * 0.82;
+
+  // Unit circle
+  ctx.strokeStyle = crossRingT > 0 ? '#2c4763' : '#222238';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.arc(cx, cy, circR, 0, TAU);
+  ctx.stroke();
+
+  // K_c-crossing ripple — a brief expanding ring so the threshold reads as an event
+  if (crossRingT > 0) {
+    const e = crossRingT;
+    ctx.strokeStyle = `rgba(79, 195, 247, ${(0.55 * e).toFixed(3)})`;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(cx, cy, circR * (1 + (1 - e) * 0.07), 0, TAU);
+    ctx.stroke();
+    crossRingT = Math.max(0, crossRingT - 0.02);
+  }
+
+  // Oscillator dots (canvas y is downward, so sin flips)
+  const dotR = Math.max(2, Math.min(6, 180 / Math.sqrt(N_osc)));
+  const flashRate = orderR > GLOW_THRESHOLD ? (orderR - GLOW_THRESHOLD) * 0.0018 : 0;
+
+  for (let i = 0; i < N_osc; i++) {
+    const px = cx + circR * Math.cos(phases[i]);
+    const py = cy - circR * Math.sin(phases[i]);
+    const delta = ((phases[i] - orderPsi) % TAU + TAU) % TAU;
+    const hue = (delta / TAU * 360 + HUE_OFFSET) % 360;
+    ctx.fillStyle = `hsl(${hue.toFixed(1)}, 68%, 60%)`;
+    ctx.beginPath();
+    ctx.arc(px, py, dotR, 0, TAU);
+    ctx.fill();
+
+    // Trigger a new glow on an idle dot when the population is locked
+    if (flashRate > 0 && glowAge[i] < 0 && Math.random() < flashRate) {
+      glowAge[i] = 0;
+    }
+
+    // Render glow with attack / hold / decay envelope, smoothstep-eased
+    if (glowAge[i] >= 0) {
+      const age = glowAge[i];
+      let env;
+      if (age < GLOW_ATTACK)            env = age / GLOW_ATTACK;
+      else if (age < GLOW_ATTACK + GLOW_HOLD) env = 1;
+      else if (age < GLOW_TOTAL)        env = 1 - (age - GLOW_ATTACK - GLOW_HOLD) / GLOW_DECAY;
+      else { glowAge[i] = -1; env = 0; }
+
+      if (env > 0) {
+        const e = env * env * (3 - 2 * env); // smoothstep
+        ctx.shadowColor = '#ffb866';
+        ctx.shadowBlur = 18 * e;
+        ctx.fillStyle = `rgba(255, 198, 120, ${e * 0.55})`;
+        ctx.beginPath();
+        ctx.arc(px, py, dotR * (1 + e * 0.6), 0, TAU);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+      if (glowAge[i] >= 0) glowAge[i]++;
+    }
+  }
+}
+
+// ── Chimera view ─────────────────────────────────────────────────────────
+// The chimera lives in space, not on the clock face: a non-local chimera's coherent
+// region is a smooth phase *wave*, so on a phase-circle it just reads as a ring. The
+// canonical, unmistakable view is θ plotted against ring position — a smooth band
+// (coherent) beside a vertical smear (incoherent). A colour strip beneath shows the
+// same split as texture. Re-run relocates the boundary in both.
+function drawChimera(availW, h, topRoom) {
+  const gutter = 150;             // left column: clock face (top) + sync meter (below)
+  const padR = 42, gap = 12, stripH = 40;   // padR keeps the plot clear of the MATH drawer tab
+  const plotL = gutter, plotW = Math.max(20, availW - padR - plotL);
+  const plotTop = topRoom + 12;
+  const stripTop = h - 24 - stripH;
+  const plotBot = stripTop - gap;
+  const plotH = Math.max(20, plotBot - plotTop);
+
+  // Plot panel
+  ctx.fillStyle = '#08080f';
+  ctx.fillRect(plotL, plotTop, plotW, plotH);
+  ctx.strokeStyle = '#1a1a2a';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(plotL + 0.5, plotTop + 0.5, plotW - 1, plotH - 1);
+
+  // Axis hints
+  ctx.fillStyle = '#3e3e4e';
+  ctx.font = '8px system-ui';
+  ctx.textAlign = 'left';
+  ctx.fillText('θ vs spatial position  ·  smooth band = coherent,  vertical scatter = incoherent', plotL, plotTop - 5);
+  ctx.textAlign = 'right';
+  ctx.fillText('2π', plotL - 4, plotTop + 7);
+  ctx.fillText('0',  plotL - 4, plotBot - 1);
+  ctx.textAlign = 'left';
+
+  // θ vs x scatter (θ = 0 at bottom, 2π at top)
+  for (let i = 0; i < N_osc; i++) {
+    const px = plotL + (i / N_osc) * plotW;
+    const py = plotBot - (phases[i] / TAU) * plotH;
+    const hue = (phases[i] / TAU * 360) % 360;
+    ctx.fillStyle = `hsl(${hue.toFixed(1)}, 70%, 60%)`;
+    ctx.beginPath();
+    ctx.arc(px, py, 2.4, 0, TAU);
+    ctx.fill();
+  }
+
+  // Colour strip (same x axis): smooth run = coherent, noise = incoherent
+  for (let i = 0; i < N_osc; i++) {
+    const hue = (phases[i] / TAU * 360) % 360;
+    ctx.fillStyle = `hsl(${hue.toFixed(1)}, 68%, 56%)`;
+    const x0 = plotL + (i / N_osc) * plotW;
+    const x1 = plotL + ((i + 1) / N_osc) * plotW;
+    ctx.fillRect(x0, stripTop, (x1 - x0) + 0.7, stripH);
+  }
+  ctx.strokeStyle = '#1a1a2a';
+  ctx.strokeRect(plotL + 0.5, stripTop + 0.5, plotW - 1, stripH - 1);
+
+  // ── Left column (top-left): companion clock face, sync meter centred beneath it ──
+  const colX = gutter / 2;
+  const ccr  = Math.min(48, gutter * 0.32);
+  const ccy  = plotTop + ccr + 6;            // tucked under the pills row, top-left
+
+  ctx.fillStyle = '#3e3e4e';
+  ctx.font = '8px system-ui';
+  ctx.textAlign = 'center';
+  ctx.fillText('PHASE θ', colX, ccy - ccr - 7);
+
+  ctx.strokeStyle = '#222238';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.arc(colX, ccy, ccr, 0, TAU);
+  ctx.stroke();
+  const cdr = Math.max(1.3, Math.min(2.4, 110 / Math.sqrt(N_osc)));
+  for (let i = 0; i < N_osc; i++) {
+    const hue = (phases[i] / TAU * 360) % 360;
+    ctx.fillStyle = `hsl(${hue.toFixed(1)}, 68%, 60%)`;
+    ctx.beginPath();
+    ctx.arc(colX + ccr * Math.cos(phases[i]), ccy - ccr * Math.sin(phases[i]), cdr, 0, TAU);
+    ctx.fill();
+  }
+
+  // Sync meter — canvas twin of the mean-field r-bar, dropped to the bottom-left,
+  // staying horizontally centred under the companion clock face (colX). Its base lines
+  // up with the spatial strip's bottom (h − 24) so the two read as one baseline.
+  const trackW = 6, trackH = 100;
+  const tBot = h - 24, tTop = tBot - trackH, tx = colX - trackW / 2;
+  ctx.fillStyle = '#3e3e4e';
+  ctx.fillText('SYNC', colX, tTop - 7);
+  ctx.fillStyle = '#14142a';
+  ctx.fillRect(tx, tTop, trackW, trackH);
+  const fh = Math.max(0, Math.min(1, orderR)) * trackH;
+  if (fh > 0) {
+    const grad = ctx.createLinearGradient(0, tBot, 0, tBot - fh);
+    grad.addColorStop(0, '#2c4763');
+    grad.addColorStop(0.4, '#4fc3f7');
+    grad.addColorStop(1, '#ffca28');
+    ctx.fillStyle = grad;
+    ctx.fillRect(tx, tBot - fh, trackW, fh);
+  }
+  ctx.fillStyle = '#3e3e4e';
+  ctx.fillText('CHAOS', colX, tBot + 14);
+  ctx.textAlign = 'left';
+}
+
+// ── Readouts ───────────────────────────────────────────────────────────
+// A ripple on the canvas the moment K crosses K_c, so the threshold reads as an event.
+// Mean-field only — chimera mode has no K_c.
+function checkCrossing() {
+  if (mode !== 'meanfield') return;
+  const above = K >= 2 * gamma;
+  if (prevAboveKc !== null && above !== prevAboveKc) {
+    crossRingT = 1;
+  }
+  prevAboveKc = above;
+}
+
+function updateReadouts() {
+  document.getElementById('rFill').style.height = (orderR * 100).toFixed(1) + '%';
+  checkCrossing();
+  if (document.body.classList.contains('drawer-open')) {
+    if (mode === 'chimera') {
+      document.getElementById('cliveR').textContent    = orderR.toFixed(3);
+      document.getElementById('cliveA').textContent    = chimA.toFixed(3);
+      document.getElementById('cliveBeta').textContent = chimBeta.toFixed(2);
+    } else {
+      document.getElementById('liveR').textContent   = orderR.toFixed(3);
+      document.getElementById('livePsi').textContent = orderPsi.toFixed(2);
+      document.getElementById('liveK').textContent   = K.toFixed(2);
+      document.getElementById('liveKc').textContent  = (2 * gamma).toFixed(2);
+    }
+  }
+}
+
+// Position the K_c tick on the K slider track. K_c = 2γ, so it slides when γ changes.
+function updateKcMarker() {
+  if (mode !== 'meanfield') return;   // K slider (and its marker) are hidden in chimera mode
+  const sl = document.getElementById('sK');
+  const marker = document.getElementById('kcMarker');
+  if (!sl || !marker) return;
+  const kc  = 2 * gamma;
+  const min = parseFloat(sl.min), max = parseFloat(sl.max);
+  const frac = (kc - min) / (max - min);
+  // Account for the thumb inset so the tick lands under the thumb centre at K = K_c.
+  const THUMB = 14;
+  const w = sl.clientWidth;
+  const px = THUMB / 2 + Math.max(0, Math.min(1, frac)) * (w - THUMB);
+  marker.style.left = px + 'px';
+  marker.classList.toggle('offscale', frac >= 1 || frac <= 0);
+}
+
+// ── Animation loop ─────────────────────────────────────────────────────
+let lastTs = null;
+
+function frame(ts) {
+  if (lastTs === null) { lastTs = ts; requestAnimationFrame(frame); return; }
+  const elapsed = Math.min((ts - lastTs) / 1000, 0.05);
+  lastTs = ts;
+
+  if (!paused) {
+    physAccum += elapsed * speed;
+    const rawSteps = Math.floor(physAccum / physDt);
+    const steps    = Math.min(rawSteps, 300);
+    physAccum -= rawSteps * physDt; // drain full time even when capped
+    for (let k = 0; k < steps; k++) rk4Step();
+    if (steps > 0) recomputeOrderParam();
+  }
+
+  draw();
+  updateReadouts();
+  requestAnimationFrame(frame);
+}
+
+// ── Drawer toggle ──────────────────────────────────────────────────────
+let drawerOpen = false;
+
+function openDrawer() {
+  if (drawerOpen) return;
+  drawerOpen = true;
+  document.body.classList.add('drawer-open');
+}
+function closeDrawer() {
+  if (!drawerOpen) return;
+  drawerOpen = false;
+  document.body.classList.remove('drawer-open');
+}
+
+document.getElementById('drawerTab').addEventListener('click', openDrawer);
+document.getElementById('drawerClose').addEventListener('click', closeDrawer);
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && drawerOpen) closeDrawer(); });
+
+// ── Slider wiring ──────────────────────────────────────────────────────
+function bindSlider(slId, vId, decimals, onInput) {
+  const sl  = document.getElementById(slId);
+  const vEl = document.getElementById(vId);
+  const fmt = v => parseFloat(v).toFixed(decimals);
+
+  sl.addEventListener('input', () => {
+    vEl.value = fmt(sl.value);
+    onInput(parseFloat(sl.value));
+  });
+  vEl.addEventListener('change', () => {
+    let x = parseFloat(vEl.value);
+    if (isNaN(x)) { vEl.value = fmt(sl.value); return; }
+    x = Math.max(parseFloat(sl.min), Math.min(parseFloat(sl.max), x));
+    sl.value  = x;
+    vEl.value = fmt(x);
+    onInput(x);
+  });
+  vEl.addEventListener('keydown', e => { if (e.key === 'Enter') vEl.blur(); });
+  vEl.addEventListener('focus',   () => vEl.select());
+}
+
+bindSlider('sK',     'vK',     2, v => { K = v; });
+bindSlider('sN',     'vN',     0, v => { N_osc = Math.round(v); rebuildPopulation(); });
+bindSlider('sGamma', 'vGamma', 2, v => {
+  gamma = v;
+  document.getElementById('liveKc').textContent = (2 * gamma).toFixed(2);
+  updateKcMarker();
+  rebuildPopulation();
+});
+bindSlider('sSpeed', 'vSpeed', 1, v => { speed = v; physAccum = 0; });
+bindSlider('sA',    'vA',    2, v => {
+  chimA = v;
+  physDt = Math.PI / (10 * (OMEGA0 + 1 + chimA));  // dt depends on A; tunable live, no reseed
+});
+bindSlider('sBeta', 'vBeta', 2, v => { chimBeta = v; chimAlpha = Math.PI / 2 - v; });
+
+document.getElementById('bRerun').addEventListener('click', reseedPhases);
+document.getElementById('bPause').addEventListener('click', function() {
+  paused = !paused;
+  this.classList.toggle('on', paused);
+  this.textContent = paused ? 'Play' : 'Pause';
+  if (!paused) physAccum = 0;
+});
+
+// ── Mode toggle (regime selector) ────────────────────────────────────────
+function setMode(m) {
+  if (m === mode) return;
+  mode = m;
+  document.body.classList.remove('mode-meanfield', 'mode-chimera');
+  document.body.classList.add('mode-' + m);
+  document.querySelectorAll('.modepill').forEach(b =>
+    b.classList.toggle('active', b.dataset.mode === m));
+  prevAboveKc = null;
+  crossRingT  = 0;
+  rebuildPopulation();
+  updateKcMarker();
+}
+document.querySelectorAll('.modepill').forEach(b =>
+  b.addEventListener('click', () => setMode(b.dataset.mode)));
+
+// ── Tooltips ───────────────────────────────────────────────────────────
+function setupTooltips() {
+  document.querySelectorAll('.term').forEach(term => {
+    const tip = term.querySelector('.tip');
+    if (!tip) return;
+    // Move to body so the drawer's transform doesn't capture position:fixed
+    document.body.appendChild(tip);
+    function show() {
+      tip.style.display = 'block';
+      const tipRect  = tip.getBoundingClientRect();
+      const termRect = term.getBoundingClientRect();
+      const margin = 8;
+      let top  = termRect.top - tipRect.height - 8;
+      if (top < margin) top = termRect.bottom + 8;
+      let left = termRect.right - tipRect.width;
+      if (left < margin) left = margin;
+      if (left + tipRect.width > window.innerWidth - margin)
+        left = window.innerWidth - tipRect.width - margin;
+      tip.style.top  = top  + 'px';
+      tip.style.left = left + 'px';
+    }
+    function hide() { tip.style.display = 'none'; }
+    term.addEventListener('mouseenter', show);
+    term.addEventListener('mouseleave', hide);
+  });
+}
+
+// ── Init ───────────────────────────────────────────────────────────────
+window.addEventListener('resize', () => { resize(); updateKcMarker(); });
+resize();
+verifyMeanField();
+verifyChimera();
+rebuildPopulation();
+setupTooltips();
+updateKcMarker();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
