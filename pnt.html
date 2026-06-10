@@ -1,0 +1,1850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Position · Navigation · Timing</title>
+<meta name="description" content="Clock drift on the sphere — Kuramoto-Sakaguchi oscillators settling into a 'standing truce,' rendered as a satellite constellation. The true chimera is the next card.">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  background: #0e0e12;
+  color: #c8c8d0;
+  font-family: system-ui, sans-serif;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+#canvas-area {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+#cvs { display: block; width: 100%; height: 100%; }
+
+/* Order-parameter bar — bottom-left, chaos→sync (matches synchronization.html) */
+#rBar {
+  position: absolute;
+  bottom: 16px;
+  left: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  z-index: 4;
+  user-select: none;
+  pointer-events: none;
+  transition: transform .28s cubic-bezier(.4,0,.2,1);
+}
+body.selbar-open #rBar { transform: translateY(-116px); }
+#rBar .lbl {
+  font: 8px system-ui;
+  letter-spacing: .18em;
+  color: #3e3e4e;
+  text-transform: uppercase;
+}
+#rBar .track {
+  width: 5px;
+  height: 110px;
+  background: #14142a;
+  border-radius: 3px;
+  position: relative;
+  overflow: hidden;
+}
+#rBar .fill {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 0%;
+  background: linear-gradient(to top, #2c4763 0%, #4fc3f7 40%, #ffca28 100%);
+  transition: height .08s linear;
+  border-radius: 3px;
+}
+
+/* Drawer toggle tab */
+#drawerTab {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  background: #14142a;
+  color: #888;
+  border: 1px solid #222238;
+  border-right: none;
+  border-radius: 6px 0 0 6px;
+  padding: 14px 8px;
+  cursor: pointer;
+  font: 11px system-ui;
+  letter-spacing: .25em;
+  writing-mode: vertical-rl;
+  transform: translateY(-50%);
+  transition: opacity .25s, color .12s, background .12s;
+  z-index: 5;
+  user-select: none;
+}
+#drawerTab:hover { color: #4fc3f7; background: #1c1c38; }
+body.drawer-open #drawerTab { opacity: 0; pointer-events: none; }
+
+/* Right drawer — The Math */
+#drawer {
+  position: absolute;
+  top: 0; right: 0;
+  width: min(380px, 100vw);
+  height: 100%;
+  background: #0e0e18;
+  border-left: 1px solid #1a1a28;
+  transform: translateX(100%);
+  transition: transform .28s cubic-bezier(.4, 0, .2, 1);
+  display: flex;
+  flex-direction: column;
+  z-index: 6;
+  font-size: 12px;
+  color: #b8b8c2;
+}
+body.drawer-open #drawer { transform: translateX(0); }
+#drawerHeader {
+  padding: 14px 16px;
+  border-bottom: 1px solid #1a1a28;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+#drawerHeader h2 {
+  font-size: 11px; font-weight: 600;
+  letter-spacing: .18em; color: #4fc3f7;
+  text-transform: uppercase;
+}
+#drawerClose {
+  background: none; border: none; color: #777;
+  cursor: pointer; font-size: 20px; padding: 0 6px;
+  line-height: 1;
+}
+#drawerClose:hover { color: #4fc3f7; }
+#drawerBody {
+  overflow-y: auto;
+  overflow-x: visible;
+  padding: 16px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+#drawerBody section h3 {
+  font-size: 9px; font-weight: 600; letter-spacing: .18em;
+  color: #4a4a5a; text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.eq {
+  font-family: 'Cambria Math', 'Latin Modern Math', Georgia, serif;
+  font-size: 13px; line-height: 1.9; color: #d8d8e0;
+}
+.note {
+  font-size: 11px; color: #6a6a7a; margin-top: 8px; line-height: 1.55;
+}
+.live-block {
+  font-family: 'Cambria Math', Georgia, serif;
+  font-size: 12px;
+  line-height: 2.1;
+  padding: 10px 12px;
+  background: #14142a;
+  border-radius: 4px;
+  border: 1px solid #1e1e3a;
+}
+.live-block .dim { color: #555; }
+.live-block .val { color: #ffca28; }
+.concept {
+  background: #0c1622;
+  border: 1px solid #1e3a4a;
+  border-left: 2px solid #4fc3f7;
+  border-radius: 4px;
+  padding: 12px 14px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #aeb6c2;
+}
+.concept .q {
+  display: block;
+  margin-top: 9px;
+  color: #4fc3f7;
+  font-style: italic;
+}
+/* PNT footnote */
+.pnt {
+  background: #0c1018;
+  border: 1px solid #20202e;
+  border-left: 2px solid #6a6a7a;
+  border-radius: 4px;
+  padding: 11px 13px;
+  font-size: 11px;
+  line-height: 1.6;
+  color: #8a8a98;
+}
+.pnt a { color: #4fc3f7; text-decoration: none; border-bottom: 1px dotted rgba(79,195,247,.5); }
+.pnt a:hover { color: #7fd4f9; }
+
+/* Term tooltip */
+.term {
+  font-style: italic; color: #4fc3f7; cursor: help;
+  border-bottom: 1px dotted rgba(79, 195, 247, .6);
+  position: relative;
+  white-space: nowrap;
+}
+.tip {
+  display: none;
+  position: fixed;
+  background: #16162a;
+  border: 1px solid #2a2a3e;
+  color: #c8c8d0;
+  padding: 8px 11px;
+  border-radius: 4px;
+  white-space: normal;
+  width: 240px;
+  font-size: 11px;
+  font-style: normal;
+  text-align: left;
+  line-height: 1.5;
+  z-index: 100;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.5);
+  pointer-events: none;
+}
+.about-link {
+  display: block;
+  text-align: center;
+  color: #4a4a5a;
+  font-size: 11px;
+  text-decoration: none;
+  letter-spacing: .06em;
+  padding: 10px 0;
+  border-top: 1px solid #1a1a28;
+  margin-top: 4px;
+  transition: color .15s;
+}
+.about-link:hover { color: #4fc3f7; }
+
+/* Bottom selection bar */
+#selbar {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 116px;
+  background: #0e0e18;
+  border-top: 1px solid #1a1a28;
+  transform: translateY(100%);
+  transition: transform .28s cubic-bezier(.4,0,.2,1);
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  padding: 0 26px;
+}
+body.selbar-open #selbar { transform: translateY(0); }
+#selbar .sel-label {
+  font-size: 12px; color: #c8d4e6; min-width: 150px;
+  letter-spacing: .02em;
+}
+#selbar .sel-label b { color: #4fc3f7; font-weight: 600; }
+#selbar .sel-slider {
+  flex: 1; display: flex; flex-direction: column; gap: 5px;
+  max-width: 520px;
+}
+#selbar .sel-slider .row {
+  display: flex; justify-content: space-between; font-size: 10px;
+  color: #4a4a5a; letter-spacing: .07em; text-transform: uppercase;
+}
+#selbar .sel-slider .row .v {
+  color: #ffca28; font-family: 'Cambria Math', Georgia, serif;
+  text-transform: none; letter-spacing: 0;
+}
+#selbar input[type=range] { width: 100%; accent-color: #4fc3f7; cursor: pointer; }
+#selbar .sel-hint { font-size: 10px; color: #555; margin-top: 2px; }
+#selbar .sel-btns { display: flex; gap: 8px; margin-left: auto; }
+
+/* Controls bar */
+#controls {
+  background: #0e0e18;
+  border-top: 1px solid #1a1a28;
+  padding: 8px 16px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+.sg { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.sg label {
+  font-size: 10px; color: #4a4a5a;
+  letter-spacing: .07em; text-transform: uppercase;
+}
+.sr { display: flex; align-items: center; gap: 5px; }
+.sr input[type=range] {
+  width: 74px;
+  accent-color: #4fc3f7;
+  cursor: pointer;
+}
+.sv {
+  font-size: 11px; color: #888;
+  width: 34px; text-align: right;
+  font-family: 'Cambria Math', Georgia, serif;
+  background: transparent;
+  border: 1px solid transparent;
+  padding: 1px 4px;
+  border-radius: 2px;
+}
+.sv:hover { border-color: #2a2a3e; color: #aab; }
+.sv:focus { border-color: #4fc3f7; outline: none; color: #4fc3f7; }
+.sep { width: 1px; height: 28px; background: #1a1a28; flex-shrink: 0; }
+.btns { display: flex; gap: 8px; margin-left: auto; }
+button.action {
+  background: #14142a; color: #888;
+  border: 1px solid #222238;
+  padding: 5px 14px; font: 12px system-ui;
+  cursor: pointer; border-radius: 3px;
+  transition: background .12s, color .12s;
+}
+button.action:hover { background: #1c1c38; color: #aaa; }
+button.action.on { background: #0c1e30; color: #4fc3f7; border-color: #1e4a6a; }
+.ctl-hint {
+  flex-basis: 100%; order: 99;
+  font-size: 10px; color: #4a4a5a;
+  letter-spacing: .03em; text-align: center;
+  margin-top: 4px;
+}
+.ctl-hint b { color: #6a6a80; font-weight: 600; }
+.ctl-hint kbd {
+  font-family: inherit; font-size: 10px; color: #8a8a9a;
+  border: 1px solid #2a2a3e; border-radius: 3px; padding: 0 4px;
+}
+
+/* 2D phase-circle overlay — top-left (chimera signature: cluster + scatter) */
+#phaseClock {
+  position: absolute;
+  top: 12px; left: 12px;
+  z-index: 4;
+  pointer-events: none;
+  user-select: none;
+}
+#phaseClock canvas { display: block; width: 132px; height: 132px; }
+
+/* Telemetry readout (diagnostic, hidden by default — toggle with T) — under the phase clock */
+#telem {
+  position: absolute;
+  top: 162px; left: 14px;
+  z-index: 4;
+  pointer-events: none;
+  user-select: none;
+  display: none;
+  font: 10px ui-monospace, Consolas, monospace;
+  color: #6a8a9a;
+  background: rgba(14,14,24,.72);
+  border: 1px solid #1a1a28;
+  border-radius: 4px;
+  padding: 7px 9px;
+  line-height: 1.7;
+  white-space: pre;
+}
+body.telem-on #telem { display: block; }
+
+/* LISTEN presets — top-right */
+#listen {
+  position: absolute;
+  top: 14px; right: 16px;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 7px;
+  user-select: none;
+}
+#listen .listen-hdr {
+  font: 10px system-ui;
+  letter-spacing: .22em;
+  color: #4fc3f7;
+  text-transform: uppercase;
+}
+#listen .listen-pills { display: flex; gap: 6px; }
+.lpill {
+  background: #14142a; color: #9fb4c8;
+  border: 1px solid #222238;
+  padding: 5px 13px; border-radius: 999px;
+  font: 12px system-ui; letter-spacing: .03em;
+  cursor: pointer;
+  transition: background .12s, color .12s, border-color .12s;
+}
+.lpill:hover { background: #1c2c44; color: #cfe2f4; border-color: #1e4a6a; }
+.lpill.active { background: #4fc3f7; color: #0e0e12; border-color: #4fc3f7; font-weight: 600; }
+</style>
+</head>
+<body>
+<!-- ===== Mobile pre-view gate ===== -->
+<style>
+  #mobile-gate{ display:none; }
+  /* show on narrow screens, or coarse-pointer (touch) devices up to tablet width */
+  @media (max-width: 820px), (pointer: coarse) and (max-width: 1024px){
+    #mobile-gate{
+      display:flex; position:fixed; inset:0; z-index:99999;
+      flex-direction:column; align-items:center; justify-content:center;
+      text-align:center; padding:32px;
+      background:#0d1117; color:#e6edf3;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;
+      -webkit-font-smoothing:antialiased;
+    }
+    #mobile-gate.dismissed{ display:none; }
+    html.gate-open, body.gate-open{ overflow:hidden; }   /* block scroll/interaction behind */
+  }
+  #mobile-gate .mg-mark{ font-family:ui-monospace,"SF Mono",Consolas,monospace;
+    letter-spacing:.22em; text-transform:uppercase; font-size:13px; color:#3fb950; margin-bottom:22px; }
+  #mobile-gate h1{ font-size:26px; font-weight:800; letter-spacing:-.02em; line-height:1.2; margin:0 0 14px; }
+  #mobile-gate p{ font-size:16px; color:#8b949e; max-width:340px; margin:0 auto 28px; line-height:1.5; }
+  #mobile-gate a.mg-continue{ display:inline-block; text-decoration:none;
+    border:1px solid #30363d; color:#e6edf3; background:#161b22;
+    padding:13px 24px; border-radius:12px; font-size:15px; font-weight:600; }
+  #mobile-gate a.mg-continue:active{ background:#21262d; }
+  #mobile-gate .mg-soon{ margin-top:18px; font-size:12px; color:#8b949e; }
+</style>
+
+<div id="mobile-gate" role="dialog" aria-label="Desktop recommended">
+  <div class="mg-mark">kuramoto.dev</div>
+  <h1>Best viewed on desktop</h1>
+  <p>This is an interactive math experience built for a larger screen. A mobile version is coming soon.</p>
+  <a href="#" class="mg-continue" id="mg-continue">Continue anyway →</a>
+  <div class="mg-soon">Mobile coming soon</div>
+</div>
+
+<script>
+(function(){
+  var gate = document.getElementById('mobile-gate');
+  if(!gate) return;
+  // if the user already chose to continue this session, stay out of the way
+  try{ if(sessionStorage.getItem('kdev-gate-dismissed')==='1'){ gate.classList.add('dismissed'); return; } }catch(e){}
+  document.documentElement.classList.add('gate-open');
+  document.body.classList.add('gate-open');
+  document.getElementById('mg-continue').addEventListener('click', function(e){
+    e.preventDefault();
+    gate.classList.add('dismissed');
+    document.documentElement.classList.remove('gate-open');
+    document.body.classList.remove('gate-open');
+    try{ sessionStorage.setItem('kdev-gate-dismissed','1'); }catch(e){}
+  });
+})();
+</script>
+<!-- ===== /Mobile pre-view gate ===== -->
+
+<div id="canvas-area">
+  <canvas id="cvs"></canvas>
+
+  <!-- 2D phase-circle (top-left): the chimera signature as a clock face (twin of synchronization.html) -->
+  <div id="phaseClock" title="Phase circle θ — the clocks as hands on a dial: a tight cluster is lock, an even ring is scatter, a partial spread is the standing truce">
+    <canvas id="clockCvs"></canvas>
+  </div>
+
+  <!-- Telemetry readout (diagnostic): global R vs the incoherent fraction over a long run — toggle with T -->
+  <div id="telem"></div>
+
+  <!-- LISTEN presets (top-right): pre-seeded chaos · balance · sync -->
+  <div id="listen">
+    <div class="listen-hdr">Listen:</div>
+    <div class="listen-pills">
+      <button class="lpill" data-preset="chaos"   title="Complete chaos — no coordination, every clock for itself. The clatter.">Chaos</button>
+      <button class="lpill" data-preset="balance" title="The in-between — the whole field partly in step, holding a standing truce. The thrum.">Balance</button>
+      <button class="lpill" data-preset="sync"    title="Perfect sync — one lockstep, uniform and a single point of failure. One clean pulse.">Sync</button>
+    </div>
+  </div>
+
+  <div id="rBar" title="Order parameter R — chaos to synchronicity">
+    <div class="lbl">Sync</div>
+    <div class="track"><div class="fill" id="rFill"></div></div>
+    <div class="lbl">Chaos</div>
+  </div>
+
+  <div id="drawerTab" title="Show math">M A T H</div>
+
+  <aside id="drawer">
+    <div id="drawerHeader">
+      <h2>The Math</h2>
+      <button id="drawerClose" aria-label="Close">×</button>
+    </div>
+    <div id="drawerBody">
+
+      <section>
+        <div class="concept">
+          Think of the constellation as a field of clocks. Every satellite keeps its own time under one shared rule — each tugging its neighbours toward agreement — yet the way they fall into line can settle into three regimes. Knock them out of step and you get <b>chaos</b>: noise, no coordination, nothing you'd trust to hold a position. Pull them into perfect step and you get <b>rigid sync</b>: clean, uniform, and a single point of failure — when the one shared rhythm slips, every clock slips with it. The state you actually want sits <i>between</i> the two.
+          <span class="q">That held middle is a <b>standing truce</b> — never fully agreeing, never fully scattering. And it has a sound: a low <b>thrum</b>, the whole field beating in loose time. Hit Chaos · Balance · Sync (top-right) and listen. You can hear when it holds.</span>
+        </div>
+      </section>
+
+      <section>
+        <h3>Chimera on the sphere</h3>
+        <div class="eq">
+          dθᵢ/dt = ωᵢ − (K/N) Σⱼ G(dᵢⱼ)·sin(θᵢ − θⱼ + αᵢ)
+        </div>
+        <p class="note">
+          Each <span class="term">satellite<span class="tip">One oscillator in the constellation — a clock orbiting the sphere, running at its own phase until coupling pulls it toward its neighbours.</span></span> is one clock in the field, carrying a <span class="term">phase<span class="tip"><b>Phase θᵢ</b> — where the oscillator sits in its cycle, an angle in [0, 2π). Here it is the clock's offset; coupling tries to align it with the rest of the constellation.</span></span> θᵢ — where it sits in its cycle — and a <span class="term">natural frequency<span class="tip"><b>Natural frequency ωᵢ</b> — the rate the clock prefers with no coupling. Here each clock is given its own rate, drawn from a spread of width γ (this preset: γ = 0.13). That irreducible difference is what holds the truce open: with identical clocks (γ = 0) this field heals all the way to lockstep. The spread is deliberate — the difference the coupling isn't allowed to erase.</span></span> ωᵢ, the rhythm it would keep alone. The coupling is the link between clocks: it pulls each toward the others, weighted by the kernel and lagged by αᵢ. Change that lag and the same clocks settle into a different regime.
+        </p>
+      </section>
+
+      <section>
+        <h3>Kernel &amp; geodesic distance</h3>
+        <div class="eq">
+          G(d) = ½ + ½·A·cos(d)<br>
+          cos(dᵢⱼ) = rᵢ · rⱼ
+        </div>
+        <p class="note">
+          The coupling is <span class="term">non-local<span class="tip"><b>Non-local coupling</b> — strength falls off with the <b>geodesic distance</b> dᵢⱼ between two satellites on the sphere, set by the kernel ½ + ½A·cos(d). Near beats far. This is the structural ingredient a chimera needs; uniform all-to-all coupling cannot produce one.</span></span>: nearby clocks pull on each other harder than distant ones — the field has structure, not one uniform pull. <b>A</b> sets how sharply near beats far. Because rᵢ and rⱼ are unit position vectors, their dot product <i>is</i> cos(dᵢⱼ) — no arccos in the loop. As the satellites orbit, the distances change, so the coupling field breathes.
+        </p>
+      </section>
+
+      <section>
+        <h3>Phase lag</h3>
+        <div class="eq">αᵢ = π/2 − βᵢ</div>
+        <p class="note">
+          <b>β</b> is the <span class="term">phase lag<span class="tip"><b>Phase lag β</b> — the offset inside the sine, α = π/2 − β. Partial coherence lives in a narrow band of β. Push β up and the field heals into full sync; pull it toward zero and coherence breaks down. Select a satellite and drop its β alone to stress one clock.</span></span> — the one knob that carries the field between regimes. Large β → α near 0 → the clocks fall all the way into step (full sync). β → 0 → α near π/2 → the partial-coherence band: the standing truce, where the field settles between lock and scatter and holds there. Select a satellite and drop its β alone to stress a single clock and watch it drag on the rest.
+        </p>
+      </section>
+
+      <section>
+        <h3>Reading the colour</h3>
+        <p class="note">
+          Each satellite is tinted by its <span class="term">local order parameter<span class="tip"><b>Local order parameter Rᵢ</b> — how synchronized a satellite is with its spatial neighbourhood. Rᵢ rides high (amber) where clocks fall toward step, low (blue) where they drift apart. At Balance the sphere doesn't split into locked and scattered patches — it settles into an even, intermediate glow: every region partly in step, none fully locked, none fully loose. That held middle is the standing truce.</span></span> Rᵢ — amber where clocks fall into step, blue where they drift apart. At Balance the sphere holds an even, mid-band glow: no fully-locked amber, no fully-scattered blue — the truce, seen. The global bar lower-left tracks the whole field's R.
+        </p>
+      </section>
+
+      <section>
+        <h3>Reading the motion</h3>
+        <p class="note">
+          Colour shows <i>where</i> the field is coherent; the heading arrows show the clocks <i>moving together</i>. Each satellite carries a short arrow whose direction is set by its phase, drawn in the constellation's <span class="term">mean-rotating frame<span class="tip"><b>Mean-rotating frame (θᵢ − ψ)</b> — headings are measured relative to the global mean phase ψ, not raw θ. A fully locked field would otherwise spin all arrows in unison and read as restlessness; in the mean frame, lock becomes <i>stillness and alignment</i> instead.</span></span> (θᵢ − ψ), with a faint radial bob on the same phase. Where a region falls into step, its arrows settle into a steady, aligned flow and the satellites breathe in and out as one — coherence reading as stillness and alignment; where clocks scatter, the arrows churn and the motion turns to shimmer. Synchrony becomes stillness and alignment — the cue a Starlink train gives the eye for free. Toggle <b>Headings</b> to compare against colour alone.
+        </p>
+      </section>
+
+      <section>
+        <h3>Reading the sound</h3>
+        <p class="note">
+          The LISTEN presets give the same coherence to the ear: each clock sounds as it comes round, so the beat falls out of the field's own sweep. At Balance you hear a low <b>thrum</b> — the whole field beating in loose time. Not one clean pulse (that's Sync), not clatter (that's Chaos), but a thick, breathing beat with its edges blurred: hundreds of clocks crossing close together and never quite together. The blur <i>is</i> the truce, made audible. Toggle <b>Sound</b> and hit a preset.
+        </p>
+      </section>
+
+      <section>
+        <h3>Live state</h3>
+        <div class="live-block">
+          <span class="dim">R</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= <span class="val" id="liveR">0.000</span><br>
+          <span class="dim">t</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= <span class="val" id="liveT">0.0</span><br>
+          <span class="dim">sel</span>&nbsp;&nbsp;&nbsp;= <span class="val" id="liveSel">0</span><br>
+          <span class="dim">Ωorb</span>&nbsp;= <span class="val" id="liveOmega">0.00</span> rad/s<br>
+          <span class="dim">N</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= <span class="val" id="liveN">300</span>
+        </div>
+        <p class="note">
+          At Balance, global R sits at an intermediate plateau — neither 0 nor 1. It lands there not because half the field locks and half runs free, but because the <b>whole</b> field settles at a partial coherence and holds it — everyone half in step, together. That steady in-between value is the truce holding: not locked, not scattered, the field keeping its standing compromise.
+        </p>
+      </section>
+
+      <section>
+        <h3>The re-run fingerprint</h3>
+        <p class="note">
+          Identical clocks, identical rule — yet the field never settles the same way twice. This is partial synchronization holding its ground: a <span class="term">standing truce<span class="tip"><b>Symmetry breaking</b> — nothing distinguishes one satellite from another, so nothing fixes which regions run warmer or cooler; the arrangement is set by the initial phases alone. It stays partial because the kernel's mean-field term puts a floor under local coherence — no region can go fully incoherent, so the split a true chimera needs can't form here.</span></span> between falling into step and keeping your own time, and it stays there with no referee. Hit a preset or <b>Reseed φ</b> and the field re-forms its truce somewhere new every time — same character, never the same arrangement: proof the pattern is born from how the field starts, not from the recipe. <i>(A true chimera goes one step further — one region locking completely while another stays fully incoherent, side by side, with a sharp boundary. That's the next card.)</i>
+        </p>
+      </section>
+
+      <section>
+        <div class="pnt">
+          <b>PNT</b> (Position, Navigation, Timing) systems coordinate distributed sensors and clocks. When one node's local oscillator drifts — vibration, thermal stress, GNSS denial — its coupling to the constellation degrades the same way β → 0 degrades coherence here. The visible failure is a gradual loss of position accuracy that traces back to a single clock no one was listening to.
+        </div>
+      </section>
+
+      <a class="about-link" href="/kuramoto.html">About Yoshiki Kuramoto →</a>
+
+    </div>
+  </aside>
+
+  <!-- Bottom selection bar -->
+  <div id="selbar">
+    <div class="sel-label">Selected: <b id="selCount">0</b> satellite<span id="selPlural">s</span></div>
+    <div class="sel-slider">
+      <div class="row"><span>β (selected)</span><span class="v" id="selBetaVal">0.10</span></div>
+      <input type="range" id="selBeta" min="0" max="1.55" step="0.01" value="0.10">
+      <div class="sel-hint">drop this → one stressed clock erodes coherence around it</div>
+    </div>
+    <div class="sel-btns">
+      <button class="action" id="selMatch">Match global β</button>
+      <button class="action" id="selClear">Clear selection</button>
+    </div>
+  </div>
+</div>
+
+<div id="controls">
+  <div class="sg">
+    <label>β (lag)</label>
+    <div class="sr"><input type="range" id="sBeta" min="0" max="1.55" step="0.01" value="1.20"><input type="text" class="sv" id="vBeta" value="1.20"></div>
+  </div>
+  <div class="sg">
+    <label>K (coupling)</label>
+    <div class="sr"><input type="range" id="sK" min="0" max="4" step="0.05" value="1.20"><input type="text" class="sv" id="vK" value="1.20"></div>
+  </div>
+  <div class="sg">
+    <label>A (range)</label>
+    <div class="sr"><input type="range" id="sA" min="0" max="1" step="0.01" value="0.95"><input type="text" class="sv" id="vA" value="0.95"></div>
+  </div>
+  <div class="sg">
+    <label>N (satellites)</label>
+    <div class="sr"><input type="range" id="sN" min="80" max="700" step="10" value="300"><input type="text" class="sv" id="vN" value="300"></div>
+  </div>
+  <div class="sg">
+    <label>γ (spread)</label>
+    <div class="sr"><input type="range" id="sGamma" min="0" max="0.4" step="0.005" value="0.00"><input type="text" class="sv" id="vGamma" value="0.00"></div>
+  </div>
+  <div class="sg">
+    <label>ω₀ (drift)</label>
+    <div class="sr"><input type="range" id="sW0" min="-1" max="1" step="0.01" value="0.00"><input type="text" class="sv" id="vW0" value="0.00"></div>
+  </div>
+  <div class="sep"></div>
+  <div class="sg">
+    <label>Speed</label>
+    <div class="sr"><input type="range" id="sSpeed" min="0.1" max="4" step="0.1" value="1.0"><input type="text" class="sv" id="vSpeed" value="1.0"></div>
+  </div>
+  <div class="btns">
+    <button class="action on" id="bHeadings" title="Phase→motion channel: arrows comb and satellites breathe together where clocks lock">Headings</button>
+    <button class="action" id="bSound" title="Hear the coherence — the constellation as a heartbeat: unison when synced, a scattered flurry in chaos">Sound</button>
+    <button class="action" id="bTrails" title="Great-circle orbital trails (best at low N)">Trails</button>
+    <button class="action" id="bReseed" title="Reseed initial phases — relocates the incoherent region">Reseed φ</button>
+    <button class="action" id="bPause">Pause</button>
+  </div>
+  <div class="ctl-hint">
+    Press <kbd>T</kbd> for telemetry &nbsp;·&nbsp; Click a satellite to set its own <b>β</b> — from <b>Sync</b>, drop one to 0 to watch a single clock fall out of step
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function () {
+'use strict';
+
+// ── Constants ────────────────────────────────────────────────────────────
+const TAU = Math.PI * 2;
+const EARTH_R   = 1.0;
+const R_ORBIT   = 3.2;                 // (6371+~14000)/6371 ≈ 3.2; pulled in slightly from 3.51 so the field reads dense
+const TILT       = 23.45 * Math.PI / 180;
+const EARTH_RATE = TAU / 90;           // one Earth revolution per 90 s of visual time
+const ORBIT_RATE = 2.6 * EARTH_RATE;   // ~one orbit per 34.6 s — proportional, both visible
+const SIM_RATE   = 2.5;                // phase-dynamics sim-seconds per real-second at Speed=1
+                                       // (decoupled from the slow orbital/Earth visual rate so the
+                                       //  chimera forms in a few seconds while satellites drift calmly)
+const SIGMA_R    = 0.40;               // local-order-parameter neighbourhood half-width (rad)
+const GAUSS_MAX  = 500;                // N ≤ this → sharp O(N²) Gaussian Rᵢ; above → separable O(N) Rᵢ
+const TRAIL_LEN  = 56;                 // orbital-trail history length (frames sampled)
+const BOB_EPS    = 0.06;               // Channel B radial-bob amplitude (fraction of R_ORBIT), keyed to θ−ψ
+
+// Site colormap (identical to synchronization.html) — chaos(cyan) → sync(amber)
+const STOPS = [
+  [0.00, [ 79, 195, 247]],
+  [0.30, [122, 142, 240]],
+  [0.55, [171,  71, 188]],
+  [0.80, [255, 123, 172]],
+  [1.00, [255, 202,  40]],
+];
+function colormap(t, out) {
+  t = t < 0 ? 0 : (t > 1 ? 1 : t);
+  for (let i = 0; i < STOPS.length - 1; i++) {
+    const a = STOPS[i], b = STOPS[i + 1];
+    if (t <= b[0]) {
+      const f = (t - a[0]) / (b[0] - a[0]);
+      out[0] = (a[1][0] + (b[1][0] - a[1][0]) * f) / 255;
+      out[1] = (a[1][1] + (b[1][1] - a[1][1]) * f) / 255;
+      out[2] = (a[1][2] + (b[1][2] - a[1][2]) * f) / 255;
+      return;
+    }
+  }
+  out[0] = STOPS[4][1][0] / 255; out[1] = STOPS[4][1][1] / 255; out[2] = STOPS[4][1][2] / 255;
+}
+
+// ── Parameters ───────────────────────────────────────────────────────────
+const P = { N: 300, K: 1.20, A: 0.95, w0: 0.0, gamma: 0.0, beta: 1.20, speed: 1.0 };
+let running = true;
+let trailsOn = false;
+let headingsOn = true;   // Channel B (phase→motion: heading arrows + radial bob), default ON
+
+// ── three.js scene ───────────────────────────────────────────────────────
+const canvas = document.getElementById('cvs');
+const area = document.getElementById('canvas-area');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0e0e12);
+
+const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100);
+let cameraRadius = 10;
+function updateCamera() {
+  // Fixed viewing angle — sphere auto-rotates, camera does not (no drag, wheel-zoom only)
+  const az = 0.5, el = 0.32;
+  camera.position.set(
+    cameraRadius * Math.cos(el) * Math.sin(az),
+    cameraRadius * Math.sin(el),
+    cameraRadius * Math.cos(el) * Math.cos(az)
+  );
+  camera.lookAt(0, 0, 0);
+}
+
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+// rootGroup: panned for drawer/selbar-aware fitView. earthGroup tilts+spins (cosmetic).
+// satGroup holds satellites — NOT a child of earthGroup, so Earth's spin never moves them.
+const rootGroup  = new THREE.Group();
+const tiltGroup  = new THREE.Group();   // applies the 23.45° axial tilt toward +x
+const earthGroup = new THREE.Group();   // spins about its local y inside the tilt
+const satGroup   = new THREE.Group();
+scene.add(rootGroup);
+rootGroup.add(tiltGroup);
+tiltGroup.add(earthGroup);
+rootGroup.add(satGroup);
+tiltGroup.rotation.z = -TILT;           // lean the spin axis toward world +x
+
+// Ghosted charcoal Earth (back face first for depth without occluding far satellites)
+earthGroup.add(new THREE.Mesh(
+  new THREE.SphereGeometry(EARTH_R, 48, 32),
+  new THREE.MeshBasicMaterial({ color: 0x15151c, transparent: true, opacity: 0.12, side: THREE.BackSide })
+));
+earthGroup.add(new THREE.Mesh(
+  new THREE.SphereGeometry(EARTH_R * 0.999, 48, 32),
+  new THREE.MeshBasicMaterial({ color: 0x15151c, transparent: true, opacity: 0.12, side: THREE.FrontSide, depthWrite: false })
+));
+// Faint wireframe — the orientation cue during rotation
+earthGroup.add(new THREE.Mesh(
+  new THREE.SphereGeometry(EARTH_R, 24, 16),
+  new THREE.MeshBasicMaterial({ color: 0x2a2a3a, wireframe: true, transparent: true, opacity: 0.15 })
+));
+
+// ── Simulation state ─────────────────────────────────────────────────────
+let state = null;
+let visualTime = 0;   // drives orbit + Earth spin (scaled by speed)
+
+function fibonacciSphere(N) {
+  const pts = new Float64Array(N * 3);
+  const phi = Math.PI * (3 - Math.sqrt(5));
+  for (let i = 0; i < N; i++) {
+    const y = 1 - (i / (N - 1)) * 2;
+    const r = Math.sqrt(Math.max(0, 1 - y * y));
+    const t = phi * i;
+    pts[i*3] = Math.cos(t) * r; pts[i*3+1] = y; pts[i*3+2] = Math.sin(t) * r;
+  }
+  return pts;
+}
+
+// Truncated Lorentzian — clamp to ±5γ so a single roll can't fling one ωᵢ to ±10³ rad/s
+function lorentzianSample(gamma) {
+  if (gamma <= 0) return 0;
+  for (let tries = 0; tries < 12; tries++) {
+    const u = Math.random();
+    const v = gamma * Math.tan(Math.PI * (u - 0.5));
+    if (Math.abs(v) <= 5 * gamma) return v;
+  }
+  return 0;
+}
+
+function norm3(x, y, z) {
+  const m = Math.hypot(x, y, z) || 1;
+  return [x/m, y/m, z/m];
+}
+
+function initState(N) {
+  const home = fibonacciSphere(N);          // mean position on the shell (unit)
+  const bvec = new Float64Array(N * 3);      // orbit_axis × home_dir (unit, ⟂ home)
+  const phase0 = new Float64Array(N);        // orbit phase at t=0
+  const theta = new Float64Array(N);
+  const omega = new Float64Array(N);
+  const beta = new Float32Array(N);
+  const selected = new Uint8Array(N);
+
+  for (let i = 0; i < N; i++) {
+    const hx = home[i*3], hy = home[i*3+1], hz = home[i*3+2];
+    // random orbit axis, then remove its component along home → a perpendicular inclination
+    let rx = Math.random()*2-1, ry = Math.random()*2-1, rz = Math.random()*2-1;
+    const d = rx*hx + ry*hy + rz*hz;
+    let ax = rx - d*hx, ay = ry - d*hy, az = rz - d*hz;
+    const a = norm3(ax, ay, az); ax = a[0]; ay = a[1]; az = a[2];
+    // bvec = orbit_axis × home_dir
+    bvec[i*3]   = ay*hz - az*hy;
+    bvec[i*3+1] = az*hx - ax*hz;
+    bvec[i*3+2] = ax*hy - ay*hx;
+    phase0[i] = Math.random() * TAU;
+    theta[i]  = Math.random() * TAU;
+    omega[i]  = P.w0 + lorentzianSample(P.gamma);
+    beta[i]   = P.beta;
+  }
+  return { N, home, bvec, phase0, theta, omega, beta, selected, t: 0,
+           pos: new Float64Array(N*3), vel: new Float64Array(N*3),
+           renderPos: new Float64Array(N*3), Rloc: new Float32Array(N) };
+}
+
+// Seed a coherent cap at a random location + incoherent scatter elsewhere, so a chimera
+// reliably forms and its incoherent region lands somewhere fresh on every reseed. This is
+// the load-bearing re-run fingerprint (mirrors synchronization.html's chimera seed). At high
+// β the cap just gives full sync a head start; at low β it becomes the coherent patch.
+function seedPhases(mode) {
+  mode = mode || 'chimera';
+  const N = state.N, pos = state.pos, theta = state.theta;
+  resetClickPhase();   // teleported phases must not register as θ*-crossings next frame
+  if (mode === 'coherent') {            // near-uniform phases → heals to R≈1 (the Sync preset)
+    for (let i = 0; i < N; i++) { let v = (Math.random() - 0.5) * 0.20; v %= TAU; if (v < 0) v += TAU; theta[i] = v; }
+    state.t = 0; return;
+  }
+  if (mode === 'scatter') {             // fully incoherent phases → R≈0 (the Chaos preset)
+    for (let i = 0; i < N; i++) theta[i] = Math.random() * TAU;
+    state.t = 0; return;
+  }
+  // 'chimera' — coherent cap at a random centre + incoherent scatter elsewhere (Balance / Reseed)
+  const u = Math.random()*2 - 1, t = Math.random()*TAU, rr = Math.sqrt(Math.max(0, 1 - u*u));
+  const cx = rr*Math.cos(t), cy = u, cz = rr*Math.sin(t);   // random cap centre (unit)
+  const width = 0.9;                                          // angular half-width (rad)
+  for (let i = 0; i < N; i++) {
+    let dot = pos[i*3]*cx + pos[i*3+1]*cy + pos[i*3+2]*cz;
+    if (dot > 1) dot = 1; else if (dot < -1) dot = -1;
+    const ang = Math.acos(dot);
+    const w = Math.exp(-(ang*ang) / (width*width));           // 1 at centre → 0 far away
+    let v = w * ((Math.random() - 0.5) * 0.5) + (1 - w) * (Math.random() * TAU);
+    v %= TAU; if (v < 0) v += TAU;
+    theta[i] = v;
+  }
+  state.t = 0;
+}
+
+// Current satellite positions (unit dirs) from their orbital tracks at visualTime
+function updatePositions() {
+  const N = state.N, home = state.home, bvec = state.bvec, p0 = state.phase0, pos = state.pos, vel = state.vel;
+  for (let i = 0; i < N; i++) {
+    const phi = p0[i] + ORBIT_RATE * visualTime;
+    const c = Math.cos(phi), s = Math.sin(phi);
+    pos[i*3]   = c*home[i*3]   + s*bvec[i*3];
+    pos[i*3+1] = c*home[i*3+1] + s*bvec[i*3+1];
+    pos[i*3+2] = c*home[i*3+2] + s*bvec[i*3+2];
+    // orbital velocity direction d(pos)/dφ = −sin·home + cos·bvec (exactly unit; home⊥bvec, both unit).
+    // This is e1, the in-plane tangent the heading field is built on.
+    vel[i*3]   = -s*home[i*3]   + c*bvec[i*3];
+    vel[i*3+1] = -s*home[i*3+1] + c*bvec[i*3+1];
+    vel[i*3+2] = -s*home[i*3+2] + c*bvec[i*3+2];
+  }
+}
+
+// ── Meshes ───────────────────────────────────────────────────────────────
+let satMesh = null, haloMesh = null, coneMesh = null, trailLine = null;
+let trailBuf = null, trailColBuf = null, trailHead = 0, trailFilled = 0;
+let coneDist = 0;                       // distance the heading arrowhead floats off the dot (set in buildMeshes)
+const _m = new THREE.Matrix4();
+const _c = new THREE.Color();
+const _hidden = new THREE.Matrix4().makeScale(0, 0, 0);
+const _rgb = [0, 0, 0];
+const _q     = new THREE.Quaternion();
+const _dir   = new THREE.Vector3();
+const _posV  = new THREE.Vector3();
+const _yAxis = new THREE.Vector3(0, 1, 0);   // ConeGeometry's native axis
+const _one   = new THREE.Vector3(1, 1, 1);
+
+function disposeMesh(mesh, group) {
+  if (!mesh) return;
+  group.remove(mesh);
+  mesh.geometry.dispose();
+  mesh.material.dispose();
+}
+
+function buildMeshes(N) {
+  disposeMesh(satMesh, satGroup);
+  disposeMesh(haloMesh, satGroup);
+  disposeMesh(coneMesh, satGroup);
+  disposeMesh(trailLine, satGroup);
+
+  const r = Math.max(0.030, Math.min(0.075, 1.7 / Math.sqrt(N)));
+  satMesh = new THREE.InstancedMesh(
+    new THREE.SphereGeometry(r, 10, 8),
+    new THREE.MeshBasicMaterial(), N
+  );
+  satMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  satGroup.add(satMesh);
+
+  // Channel B — heading arrows. Short, squat arrowheads floated OFF the body (a clear gap),
+  // tangent-plane direction encodes θ−ψ. coneDist pushes the arrowhead along the heading so it
+  // reads as a separate little compass-tip beside the dot, not a spike growing out of it.
+  const coneH = r * 1.15, coneR = r * 0.80;
+  coneDist = r * 2.3;
+  coneMesh = new THREE.InstancedMesh(
+    new THREE.ConeGeometry(coneR, coneH, 6),
+    new THREE.MeshBasicMaterial(), N
+  );
+  coneMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  coneMesh.visible = headingsOn;
+  coneMesh.frustumCulled = false;
+  satGroup.add(coneMesh);
+
+  haloMesh = new THREE.InstancedMesh(
+    new THREE.SphereGeometry(r * 1.9, 12, 10),
+    new THREE.MeshBasicMaterial({ color: 0x6ea0ff, transparent: true, opacity: 0.42, depthWrite: false }),
+    N
+  );
+  haloMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  for (let i = 0; i < N; i++) haloMesh.setMatrixAt(i, _hidden);
+  haloMesh.instanceMatrix.needsUpdate = true;
+  satGroup.add(haloMesh);
+
+  // Trails: N polylines of TRAIL_LEN points → (TRAIL_LEN-1) segments each, as LineSegments
+  const segPerSat = TRAIL_LEN - 1;
+  const vertCount = N * segPerSat * 2;
+  trailBuf = new Float32Array(vertCount * 3);
+  trailColBuf = new Float32Array(vertCount * 3);
+  const tgeo = new THREE.BufferGeometry();
+  tgeo.setAttribute('position', new THREE.BufferAttribute(trailBuf, 3));
+  tgeo.setAttribute('color', new THREE.BufferAttribute(trailColBuf, 3));
+  trailLine = new THREE.LineSegments(
+    tgeo,
+    new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.55, depthWrite: false })
+  );
+  trailLine.visible = false;
+  trailLine.frustumCulled = false;
+  satGroup.add(trailLine);
+
+  trailHist = new Float32Array(N * TRAIL_LEN * 3);
+  trailHead = 0; trailFilled = 0;
+}
+let trailHist = null;
+
+// ── Physics: O(N) separable Kuramoto-Sakaguchi on the sphere ─────────────
+// G_ij = ½ + ½A(rᵢ·rⱼ);  dθᵢ/dt = ωᵢ − (K/N) Σⱼ G_ij sin(θᵢ − θⱼ + αᵢ)
+// Σⱼ G_ij sin(θᵢ−θⱼ+αᵢ) = sin(φᵢ)·Pᵢ − cos(φᵢ)·Qᵢ,  φᵢ = θᵢ+αᵢ
+//   Pᵢ = ½C0 + ½A(xᵢCx+yᵢCy+zᵢCz),  Qᵢ = ½S0 + ½A(xᵢSx+yᵢSy+zᵢSz)
+// 8 running sums → whole step is O(N). Verified to 1e-16 against the direct O(N²) sum.
+let _k1, _k2, _k3, _k4, _pb;
+let g_C0 = 0, g_S0 = 0;   // last-computed global cos/sin sums (for global R)
+
+function allocBuffers(N) {
+  _k1 = new Float64Array(N); _k2 = new Float64Array(N);
+  _k3 = new Float64Array(N); _k4 = new Float64Array(N); _pb = new Float64Array(N);
+}
+
+function derivInto(ph, out) {
+  const N = state.N, pos = state.pos, omega = state.omega, beta = state.beta;
+  const A = P.A, KoN = P.K / N, halfA = 0.5 * A;
+  let C0=0, S0=0, Cx=0, Cy=0, Cz=0, Sx=0, Sy=0, Sz=0;
+  for (let j = 0; j < N; j++) {
+    const c = Math.cos(ph[j]), s = Math.sin(ph[j]);
+    const x = pos[j*3], y = pos[j*3+1], z = pos[j*3+2];
+    C0 += c; S0 += s;
+    Cx += x*c; Cy += y*c; Cz += z*c;
+    Sx += x*s; Sy += y*s; Sz += z*s;
+  }
+  for (let i = 0; i < N; i++) {
+    const x = pos[i*3], y = pos[i*3+1], z = pos[i*3+2];
+    const Pi = 0.5*C0 + halfA*(x*Cx + y*Cy + z*Cz);
+    const Qi = 0.5*S0 + halfA*(x*Sx + y*Sy + z*Sz);
+    const phi = ph[i] + (Math.PI*0.5 - beta[i]);   // φᵢ = θᵢ + αᵢ
+    out[i] = omega[i] - KoN * (Math.sin(phi)*Pi - Math.cos(phi)*Qi);
+  }
+}
+
+function rk4Step(dt) {
+  const N = state.N, theta = state.theta;
+  derivInto(theta, _k1);
+  for (let i = 0; i < N; i++) _pb[i] = theta[i] + _k1[i]*dt*0.5;
+  derivInto(_pb, _k2);
+  for (let i = 0; i < N; i++) _pb[i] = theta[i] + _k2[i]*dt*0.5;
+  derivInto(_pb, _k3);
+  for (let i = 0; i < N; i++) _pb[i] = theta[i] + _k3[i]*dt;
+  derivInto(_pb, _k4);
+  for (let i = 0; i < N; i++) {
+    let v = theta[i] + (_k1[i] + 2*_k2[i] + 2*_k3[i] + _k4[i]) * dt / 6;
+    v %= TAU; if (v < 0) v += TAU;
+    theta[i] = v;
+  }
+  state.t += dt;
+}
+
+// ── Local order parameter Rᵢ (Channel A: colour) ─────────────────────────
+function computeGlobalSums() {
+  const N = state.N, theta = state.theta;
+  let C0 = 0, S0 = 0;
+  for (let i = 0; i < N; i++) { C0 += Math.cos(theta[i]); S0 += Math.sin(theta[i]); }
+  g_C0 = C0; g_S0 = S0;
+  return Math.hypot(C0, S0) / N;
+}
+
+// Sharp Gaussian neighbourhood (O(N²)) — chord approx d² ≈ 2(1−r·r) skips arccos.
+// Writes state.Rloc unless an explicit target is passed (telemetry samples one sharp
+// pass on demand at large N, where the colour path runs the broad separable kernel).
+function computeRlocGaussian(out) {
+  const N = state.N, pos = state.pos, theta = state.theta, Rloc = out || state.Rloc;
+  const inv = 1 / (SIGMA_R * SIGMA_R);
+  const cs = _k1, sn = _k2;                      // borrow RK buffers for cos/sin caches
+  for (let j = 0; j < N; j++) { cs[j] = Math.cos(theta[j]); sn[j] = Math.sin(theta[j]); }
+  for (let i = 0; i < N; i++) {
+    const xi = pos[i*3], yi = pos[i*3+1], zi = pos[i*3+2];
+    let rx = 0, ry = 0, w = 0;
+    for (let j = 0; j < N; j++) {
+      let dot = xi*pos[j*3] + yi*pos[j*3+1] + zi*pos[j*3+2];
+      if (dot > 1) dot = 1; else if (dot < -1) dot = -1;
+      const wij = Math.exp(-(1 - dot) * inv);     // ≈ exp(−d²/2σ²) for the near field
+      rx += wij * cs[j]; ry += wij * sn[j]; w += wij;
+    }
+    Rloc[i] = w > 0 ? Math.hypot(rx, ry) / w : 0;
+  }
+}
+
+// Separable degree-1 neighbourhood (O(N)) — reuses the integrator running sums.
+// w_ij = ½ + ½(rᵢ·rⱼ); broader than the Gaussian but exact and free. Scales to large N.
+function computeRlocSeparable() {
+  const N = state.N, pos = state.pos, theta = state.theta, Rloc = state.Rloc;
+  let C0=0,S0=0,Cx=0,Cy=0,Cz=0,Sx=0,Sy=0,Sz=0, Px=0,Py=0,Pz=0;
+  for (let j = 0; j < N; j++) {
+    const c = Math.cos(theta[j]), s = Math.sin(theta[j]);
+    const x = pos[j*3], y = pos[j*3+1], z = pos[j*3+2];
+    C0+=c; S0+=s; Cx+=x*c; Cy+=y*c; Cz+=z*c; Sx+=x*s; Sy+=y*s; Sz+=z*s;
+    Px+=x; Py+=y; Pz+=z;
+  }
+  for (let i = 0; i < N; i++) {
+    const x = pos[i*3], y = pos[i*3+1], z = pos[i*3+2];
+    const rx = 0.5*C0 + 0.5*(x*Cx + y*Cy + z*Cz);
+    const ry = 0.5*S0 + 0.5*(x*Sx + y*Sy + z*Sz);
+    const w  = 0.5*N  + 0.5*(x*Px + y*Py + z*Pz);
+    Rloc[i] = w > 0 ? Math.hypot(rx, ry) / w : 0;
+  }
+}
+
+// ── Render update ────────────────────────────────────────────────────────
+function updateSatellites() {
+  const N = state.N, pos = state.pos, vel = state.vel, theta = state.theta, Rloc = state.Rloc, sel = state.selected, rp = state.renderPos;
+  // ψ = global mean phase. Channel B renders in this mean-rotating frame (θ−ψ) so a fully locked
+  // field is STILL + ALIGNED rather than a fast coherent spin (the harmony-inversion trap).
+  const psi = Math.atan2(g_S0, g_C0);
+  for (let i = 0; i < N; i++) {
+    const ux = pos[i*3], uy = pos[i*3+1], uz = pos[i*3+2];
+    // Channel B radial bob (gated by the headings toggle): locked neighbours share θ−ψ → breathe as one.
+    let rad = R_ORBIT, c = 1, s = 0;
+    if (headingsOn) {
+      const dphi = theta[i] - psi;
+      c = Math.cos(dphi); s = Math.sin(dphi);
+      rad = R_ORBIT * (1 + BOB_EPS * s);
+    }
+    const px = ux*rad, py = uy*rad, pz = uz*rad;
+    rp[i*3] = px; rp[i*3+1] = py; rp[i*3+2] = pz;   // exact rendered position → trails attach here
+    _m.makeTranslation(px, py, pz);
+    satMesh.setMatrixAt(i, _m);
+    colormap(Rloc[i], _rgb);
+    _c.setRGB(_rgb[0], _rgb[1], _rgb[2]);
+    satMesh.setColorAt(i, _c);
+    if (sel[i]) { _m.makeTranslation(px, py, pz); haloMesh.setMatrixAt(i, _m); }
+    else haloMesh.setMatrixAt(i, _hidden);
+
+    if (headingsOn) {
+      // tangent frame at the satellite: e1 = orbital velocity (unit), e2 = pos × e1 (unit).
+      // heading = cos(θ−ψ)·e1 + sin(θ−ψ)·e2 — a unit vector in the tangent plane.
+      const e1x = vel[i*3], e1y = vel[i*3+1], e1z = vel[i*3+2];
+      const e2x = uy*e1z - uz*e1y, e2y = uz*e1x - ux*e1z, e2z = ux*e1y - uy*e1x;
+      const dx = c*e1x + s*e2x, dy = c*e1y + s*e2y, dz = c*e1z + s*e2z;
+      _dir.set(dx, dy, dz);
+      _q.setFromUnitVectors(_yAxis, _dir);
+      _posV.set(px + dx*coneDist, py + dy*coneDist, pz + dz*coneDist);
+      _m.compose(_posV, _q, _one);
+      coneMesh.setMatrixAt(i, _m);
+      coneMesh.setColorAt(i, _c);     // fuse with channel A — same colormap(Rᵢ) tint as the satellite
+    }
+  }
+  satMesh.instanceMatrix.needsUpdate = true;
+  satMesh.instanceColor.needsUpdate = true;
+  haloMesh.instanceMatrix.needsUpdate = true;
+  if (headingsOn) {
+    coneMesh.instanceMatrix.needsUpdate = true;
+    if (coneMesh.instanceColor) coneMesh.instanceColor.needsUpdate = true;
+  }
+}
+
+function updateTrails() {
+  const N = state.N, rp = state.renderPos;
+  // push the EXACT rendered positions (incl. bob) into the ring buffer so the trail head
+  // stays glued to the dot instead of trailing the un-bobbed shell
+  for (let i = 0; i < N; i++) {
+    const b = (i*TRAIL_LEN + trailHead)*3;
+    trailHist[b]   = rp[i*3];
+    trailHist[b+1] = rp[i*3+1];
+    trailHist[b+2] = rp[i*3+2];
+  }
+  trailHead = (trailHead + 1) % TRAIL_LEN;
+  if (trailFilled < TRAIL_LEN) trailFilled++;
+  if (!trailsOn) return;
+
+  const segPerSat = TRAIL_LEN - 1;
+  colormap(0.9, _rgb);                      // warm amber-ish trail tint
+  let v = 0;
+  for (let i = 0; i < N; i++) {
+    for (let k = 0; k < segPerSat; k++) {
+      // oldest→newest indices into the ring buffer
+      const i0 = (trailHead + k) % TRAIL_LEN;
+      const i1 = (trailHead + k + 1) % TRAIL_LEN;
+      const a0 = (i*TRAIL_LEN + i0)*3, a1 = (i*TRAIL_LEN + i1)*3;
+      const fade = (k + 1) / segPerSat;     // tail faint → head bright
+      const vis = (k >= TRAIL_LEN - trailFilled) ? 1 : 0;
+      // segment start vertex (slightly fainter than its end)
+      const f0 = fade * 0.6 * vis;
+      trailBuf[v*3] = trailHist[a0]; trailBuf[v*3+1] = trailHist[a0+1]; trailBuf[v*3+2] = trailHist[a0+2];
+      trailColBuf[v*3] = _rgb[0]*f0; trailColBuf[v*3+1] = _rgb[1]*f0; trailColBuf[v*3+2] = _rgb[2]*f0;
+      v++;
+      // segment end vertex
+      const f1 = fade * vis;
+      trailBuf[v*3] = trailHist[a1]; trailBuf[v*3+1] = trailHist[a1+1]; trailBuf[v*3+2] = trailHist[a1+2];
+      trailColBuf[v*3] = _rgb[0]*f1; trailColBuf[v*3+1] = _rgb[1]*f1; trailColBuf[v*3+2] = _rgb[2]*f1;
+      v++;
+    }
+  }
+  trailLine.geometry.attributes.position.needsUpdate = true;
+  trailLine.geometry.attributes.color.needsUpdate = true;
+}
+
+// ── Drawer / selbar-aware pan (rootGroup translate, preserves zoom) ──────
+let panX = 0, panY = 0;
+function worldPerPixel() {
+  const h = area.clientHeight || 1;
+  return (2 * cameraRadius * Math.tan((camera.fov * Math.PI / 180) / 2)) / h;
+}
+function updatePan() {
+  const wpp = worldPerPixel();
+  const drawerW = Math.min(380, area.clientWidth);
+  const targetX = (drawerOpen && (area.clientWidth - drawerW) > 320) ? -(drawerW/2) * wpp : 0;
+  const targetY = selOpen ? (116/2) * wpp : 0;     // lift sphere above the 116px bottom bar
+  panX += (targetX - panX) * 0.18;
+  panY += (targetY - panY) * 0.18;
+  if (Math.abs(targetX - panX) < 1e-4) panX = targetX;
+  if (Math.abs(targetY - panY) < 1e-4) panY = targetY;
+  rootGroup.position.set(panX, panY, 0);
+}
+
+// ── Selection: manual ray–shell intersection, then nearest satellite ─────
+const raycaster = new THREE.Raycaster();
+const _ndc = new THREE.Vector2();
+const _center = new THREE.Vector3();
+const _local = new THREE.Vector3();
+
+function pickSatellite(clientX, clientY) {
+  const rect = canvas.getBoundingClientRect();
+  _ndc.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+  _ndc.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+  raycaster.setFromCamera(_ndc, camera);
+  const ro = raycaster.ray.origin, rd = raycaster.ray.direction;
+  // intersect sphere of radius R_ORBIT centred at the (panned) rootGroup origin
+  rootGroup.getWorldPosition(_center);
+  const ox = ro.x - _center.x, oy = ro.y - _center.y, oz = ro.z - _center.z;
+  const b = ox*rd.x + oy*rd.y + oz*rd.z;
+  const c = ox*ox + oy*oy + oz*oz - R_ORBIT*R_ORBIT;
+  const disc = b*b - c;
+  if (disc < 0) return -1;
+  const tHit = -b - Math.sqrt(disc);             // near intersection
+  if (tHit < 0) return -1;
+  _local.set(ro.x + rd.x*tHit - _center.x, ro.y + rd.y*tHit - _center.y, ro.z + rd.z*tHit - _center.z);
+  // nearest satellite to the hit direction
+  const N = state.N, pos = state.pos;
+  let best = -1, bestD = Infinity;
+  for (let i = 0; i < N; i++) {
+    const dx = pos[i*3]*R_ORBIT - _local.x, dy = pos[i*3+1]*R_ORBIT - _local.y, dz = pos[i*3+2]*R_ORBIT - _local.z;
+    const d2 = dx*dx + dy*dy + dz*dz;
+    if (d2 < bestD) { bestD = d2; best = i; }
+  }
+  const sat_r = Math.max(0.030, Math.min(0.075, 1.7 / Math.sqrt(N)));
+  return bestD <= (sat_r * 5.5) * (sat_r * 5.5) ? best : -1;   // forgiving hit radius
+}
+
+// pointer: click-to-select, no drag-to-rotate (camera is fixed)
+let downX = 0, downY = 0, moved = false;
+canvas.addEventListener('pointerdown', e => { downX = e.clientX; downY = e.clientY; moved = false; });
+canvas.addEventListener('pointermove', e => {
+  if (e.buttons && Math.hypot(e.clientX - downX, e.clientY - downY) > 5) moved = true;
+});
+canvas.addEventListener('pointerup', e => {
+  if (moved) return;
+  const i = pickSatellite(e.clientX, e.clientY);
+  if (i < 0) return;
+  if (!e.shiftKey) state.selected.fill(0);
+  state.selected[i] = state.selected[i] ? 0 : 1;
+  syncSelectionUI();
+});
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  cameraRadius *= e.deltaY > 0 ? 1.08 : 0.93;
+  cameraRadius = Math.max(5.5, Math.min(15, cameraRadius));
+  updateCamera();
+}, { passive: false });
+
+// ── Selection UI ─────────────────────────────────────────────────────────
+let selOpen = false;
+const selBeta = document.getElementById('selBeta');
+const selBetaVal = document.getElementById('selBetaVal');
+
+function selectedCount() { let n = 0; for (let i = 0; i < state.N; i++) if (state.selected[i]) n++; return n; }
+function syncSelectionUI() {
+  const n = selectedCount();
+  document.getElementById('selCount').textContent = n;
+  document.getElementById('selPlural').textContent = n === 1 ? '' : 's';
+  selOpen = n > 0;
+  document.body.classList.toggle('selbar-open', selOpen);
+  if (n > 0) {
+    // snap the selected-β slider to the first selected satellite's β
+    for (let i = 0; i < state.N; i++) if (state.selected[i]) {
+      selBeta.value = state.beta[i].toFixed(2);
+      selBetaVal.textContent = state.beta[i].toFixed(2);
+      break;
+    }
+  }
+}
+selBeta.addEventListener('input', () => {
+  const v = parseFloat(selBeta.value);
+  selBetaVal.textContent = v.toFixed(2);
+  for (let i = 0; i < state.N; i++) if (state.selected[i]) state.beta[i] = v;
+});
+document.getElementById('selMatch').addEventListener('click', () => {
+  for (let i = 0; i < state.N; i++) if (state.selected[i]) state.beta[i] = P.beta;
+  selBeta.value = P.beta.toFixed(2);
+  selBetaVal.textContent = P.beta.toFixed(2);
+});
+document.getElementById('selClear').addEventListener('click', () => {
+  for (let i = 0; i < state.N; i++) { state.selected[i] = 0; state.beta[i] = P.beta; }
+  syncSelectionUI();
+});
+
+// ── Drawer ───────────────────────────────────────────────────────────────
+let drawerOpen = false;
+function openDrawer()  { drawerOpen = true;  document.body.classList.add('drawer-open'); }
+function closeDrawer() { drawerOpen = false; document.body.classList.remove('drawer-open'); }
+document.getElementById('drawerTab').addEventListener('click', openDrawer);
+document.getElementById('drawerClose').addEventListener('click', closeDrawer);
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && drawerOpen) closeDrawer(); });
+
+// ── Controls wiring ──────────────────────────────────────────────────────
+function bindSlider(slId, vId, decimals, onInput) {
+  const sl = document.getElementById(slId), vEl = document.getElementById(vId);
+  const fmt = v => parseFloat(v).toFixed(decimals);
+  sl.addEventListener('input', () => { vEl.value = fmt(sl.value); onInput(parseFloat(sl.value)); clearActivePreset(); });
+  vEl.addEventListener('change', () => {
+    let x = parseFloat(vEl.value);
+    if (isNaN(x)) { vEl.value = fmt(sl.value); return; }
+    x = Math.max(parseFloat(sl.min), Math.min(parseFloat(sl.max), x));
+    sl.value = x; vEl.value = fmt(x); onInput(x);
+  });
+  vEl.addEventListener('keydown', e => { if (e.key === 'Enter') vEl.blur(); });
+  vEl.addEventListener('focus', () => vEl.select());
+}
+
+bindSlider('sBeta', 'vBeta', 2, v => {
+  P.beta = v;
+  for (let i = 0; i < state.N; i++) if (!state.selected[i]) state.beta[i] = v;   // global β leaves selected alone
+});
+bindSlider('sK', 'vK', 2, v => { P.K = v; });
+bindSlider('sA', 'vA', 2, v => { P.A = v; });
+bindSlider('sN', 'vN', 0, v => rebuild(Math.round(v)));
+bindSlider('sGamma', 'vGamma', 3, v => { P.gamma = v; reseedOmegas(); });
+bindSlider('sW0', 'vW0', 2, v => { P.w0 = v; reseedOmegas(); });
+bindSlider('sSpeed', 'vSpeed', 1, v => { P.speed = v; });
+
+function reseedOmegas() {
+  for (let i = 0; i < state.N; i++) state.omega[i] = P.w0 + lorentzianSample(P.gamma);
+}
+
+document.getElementById('bReseed').addEventListener('click', () => {
+  seedPhases();        // relocates the chimera's incoherent region — the re-run fingerprint
+  trailFilled = 0;
+});
+document.getElementById('bPause').addEventListener('click', function () {
+  running = !running;
+  this.classList.toggle('on', !running);
+  this.textContent = running ? 'Pause' : 'Play';
+});
+document.getElementById('bTrails').addEventListener('click', function () {
+  trailsOn = !trailsOn;
+  this.classList.toggle('on', trailsOn);
+  if (trailLine) trailLine.visible = trailsOn;
+});
+document.getElementById('bHeadings').addEventListener('click', function () {
+  headingsOn = !headingsOn;
+  this.classList.toggle('on', headingsOn);
+  if (coneMesh) coneMesh.visible = headingsOn;
+  // next frame's updateSatellites re-renders sat positions without the bob when off
+});
+
+// ── LISTEN presets — pre-seeded states. Each turns sound/trails/headings on, runs at max
+//    speed and max N, and seeds one of the three regimes the LISTEN presets show:
+//    chaos (clatter, R≈0) · balance (the thrum / standing truce, R intermediate) · sync (one pulse, R→1)
+const PRESETS = {
+  // seed + ω₀ matter for the audio: a synced field with ω₀=0 is frozen → silent. A uniform ω₀ gives the
+  // locked region a real collective rotation Ω for the authentic heartbeat to track, without breaking coherence
+  // (all oscillators share it, so they stay identical).
+  chaos:   { beta: 0.10, K: 0.30, A: 0.95, gamma: 0.40, w0: 0.00, seed: 'scatter'  },  // weak coupling + spread → R≈0, no pulse
+  balance: { beta: 0.55, K: 1.20, A: 1.00, gamma: 0.13, w0: 1.00, seed: 'chimera'  },  // Dan-tuned partial-coherence band (standing truce); γ=0.13 spread holds it off full lock at β=0.55 → intermediate-R thrum
+  sync:    { beta: 1.55, K: 1.20, A: 0.95, gamma: 0.00, w0: 0.60, seed: 'coherent' },  // α≈0, coherent seed → R→1, clean heartbeat
+};
+function setControl(slId, vId, val, dec) {
+  document.getElementById(slId).value = val;
+  document.getElementById(vId).value = parseFloat(val).toFixed(dec);
+}
+function clearActivePreset() {
+  document.querySelectorAll('.lpill').forEach(b => b.classList.remove('active'));
+}
+function applyPreset(name) {
+  const p = PRESETS[name];
+  if (!p) return;
+  // 1. parameters (max speed; max N applied via rebuild below)
+  P.beta = p.beta; P.K = p.K; P.A = p.A; P.gamma = p.gamma; P.w0 = p.w0; P.speed = 4.0;
+  setControl('sBeta', 'vBeta', P.beta, 2);
+  setControl('sK', 'vK', P.K, 2);
+  setControl('sA', 'vA', P.A, 2);
+  setControl('sGamma', 'vGamma', P.gamma, 3);
+  setControl('sW0', 'vW0', P.w0, 2);
+  setControl('sSpeed', 'vSpeed', P.speed, 1);
+  setControl('sN', 'vN', 700, 0);
+
+  // 2. channels ON — sound must start inside this user-gesture call stack
+  soundOn = true;
+  document.getElementById('bSound').classList.add('on');
+  startAudio();
+  if (masterGain) masterGain.gain.setTargetAtTime(MASTER_VOL, actx.currentTime, 0.05);
+  trailsOn = true;   document.getElementById('bTrails').classList.add('on');
+  headingsOn = true; document.getElementById('bHeadings').classList.add('on');
+
+  // 3. resume if paused
+  if (!running) {
+    running = true;
+    const pb = document.getElementById('bPause');
+    pb.classList.remove('on'); pb.textContent = 'Pause';
+  }
+
+  // 4. rebuild at max N → fresh ω (uses P.gamma) + regime-specific phase seed
+  rebuild(700, p.seed);
+  if (trailLine) trailLine.visible = true;   // buildMeshes resets this to false
+  if (coneMesh)  coneMesh.visible = true;
+  trailFilled = 0;
+  resetClickPhase();   // re-prime the θ*-crossing detector for the freshly seeded field
+
+  document.querySelectorAll('.lpill').forEach(b => b.classList.toggle('active', b.dataset.preset === name));
+}
+document.querySelectorAll('.lpill').forEach(b =>
+  b.addEventListener('click', () => applyPreset(b.dataset.preset)));
+
+// ── Tooltips (re-parented to body so the drawer transform can't capture them) ──
+function setupTooltips() {
+  document.querySelectorAll('.term').forEach(term => {
+    const tip = term.querySelector('.tip');
+    if (!tip) return;
+    document.body.appendChild(tip);
+    term.addEventListener('mouseenter', () => {
+      tip.style.display = 'block';
+      const tr = term.getBoundingClientRect(), tp = tip.getBoundingClientRect();
+      const margin = 8;
+      let top = tr.top - tp.height - 8;
+      if (top < margin) top = tr.bottom + 8;
+      let left = tr.right - tp.width;
+      if (left < margin) left = margin;
+      if (left + tp.width > window.innerWidth - margin) left = window.innerWidth - tp.width - margin;
+      tip.style.top = top + 'px'; tip.style.left = left + 'px';
+    });
+    term.addEventListener('mouseleave', () => { tip.style.display = 'none'; });
+  });
+}
+
+// ── Rebuild (live N change) ──────────────────────────────────────────────
+function rebuild(N, seedMode) {
+  state = initState(N);
+  allocBuffers(N);
+  buildMeshes(N);
+  updatePositions();
+  seedPhases(seedMode);
+  computeGlobalSums();      // primes g_C0/g_S0 so ψ (the heading frame) is correct on the first frame
+  if (state.N <= GAUSS_MAX) computeRlocGaussian(); else computeRlocSeparable();
+  updateSatellites();
+  syncSelectionUI();
+  document.getElementById('liveN').textContent = N;
+}
+
+// ── Resize ───────────────────────────────────────────────────────────────
+function resize() {
+  const w = area.clientWidth, h = area.clientHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h, false);
+  sizeClock();
+}
+window.addEventListener('resize', resize);
+
+// ── Console verification: O(N) reduction vs direct O(N²) ─────────────────
+function verifyReduction() {
+  const N = 60, A = 0.8, K = 1.3;
+  const pos = new Float64Array(N*3), th = new Float64Array(N), bt = new Float64Array(N), om = new Float64Array(N);
+  for (let i = 0; i < N; i++) {
+    const u = Math.random()*2-1, t = Math.random()*TAU, r = Math.sqrt(1-u*u);
+    pos[i*3]=r*Math.cos(t); pos[i*3+1]=u; pos[i*3+2]=r*Math.sin(t);
+    th[i]=Math.random()*TAU; bt[i]=Math.random()*1.5; om[i]=0.1*(Math.random()*2-1);
+  }
+  const direct = new Float64Array(N);
+  for (let i = 0; i < N; i++) {
+    const ai = Math.PI/2 - bt[i]; let sum = 0;
+    for (let j = 0; j < N; j++) {
+      const d = pos[i*3]*pos[j*3]+pos[i*3+1]*pos[j*3+1]+pos[i*3+2]*pos[j*3+2];
+      sum += (0.5+0.5*A*d) * Math.sin(th[i]-th[j]+ai);
+    }
+    direct[i] = om[i] - (K/N)*sum;
+  }
+  let C0=0,S0=0,Cx=0,Cy=0,Cz=0,Sx=0,Sy=0,Sz=0;
+  for (let j = 0; j < N; j++) {
+    const c=Math.cos(th[j]), s=Math.sin(th[j]);
+    C0+=c;S0+=s;Cx+=pos[j*3]*c;Cy+=pos[j*3+1]*c;Cz+=pos[j*3+2]*c;Sx+=pos[j*3]*s;Sy+=pos[j*3+1]*s;Sz+=pos[j*3+2]*s;
+  }
+  let maxErr = 0;
+  for (let i = 0; i < N; i++) {
+    const x=pos[i*3],y=pos[i*3+1],z=pos[i*3+2];
+    const Pi=0.5*C0+0.5*A*(x*Cx+y*Cy+z*Cz), Qi=0.5*S0+0.5*A*(x*Sx+y*Sy+z*Sz);
+    const phi=th[i]+(Math.PI/2-bt[i]);
+    const red=om[i]-(K/N)*(Math.sin(phi)*Pi-Math.cos(phi)*Qi);
+    maxErr=Math.max(maxErr,Math.abs(direct[i]-red));
+  }
+  console.log('PNT chimera O(N) reduction (N=60): max error = ' + maxErr.toExponential(3));
+}
+
+// ── Readouts + FPS ───────────────────────────────────────────────────────
+let fpsAccum = 0, fpsFrames = 0;
+function updateReadouts(R, realDt) {
+  document.getElementById('rFill').style.height = (R * 100).toFixed(1) + '%';
+  document.getElementById('liveSel').textContent = selectedCount();
+  if (drawerOpen) {
+    document.getElementById('liveR').textContent = R.toFixed(3);
+    document.getElementById('liveT').textContent = state.t.toFixed(1);
+    document.getElementById('liveOmega').textContent = (ORBIT_RATE * P.speed).toFixed(2);
+  }
+  fpsAccum += realDt; fpsFrames++;
+  if (fpsAccum >= 1.0) {
+    if (window.__pntFps !== undefined) window.__pntFps = fpsFrames / fpsAccum;
+    fpsAccum = 0; fpsFrames = 0;
+  }
+}
+window.__pntFps = 0;
+
+// ── Telemetry (diagnostic, off by default — toggle with T or window.__pntTelem(true)) ──
+// Tracks what a long run actually does. Global R says how ordered the whole field reads;
+// the incoherent fraction says how many parts are locally scattered. The two can disagree —
+// R can climb while the scattered share grows — so both are logged, alongside the mean local
+// Rᵢ, a coarse Rᵢ histogram, and the firing-time circular variance from the audio pass
+// (the ear's own spread measure: 0 = unison firing, 1 = uniform spray). Samples land in
+// window.__pntTrace at ~2 Hz; the small on-canvas readout shows the live values.
+const INC_THRESH = 0.85;        // local Rᵢ below this counts a satellite as incoherent
+const TELEM_DT = 0.5;           // sample period (real seconds)
+let telemOn = false, telemAccum = 0;
+let lastFCV = -1;               // firing-time circular variance, set by updateAudio (−1 = no data)
+const telemEl = document.getElementById('telem');
+window.__pntTrace = [];
+
+function setTelem(on) {
+  telemOn = !!on;
+  telemAccum = 0;
+  document.body.classList.toggle('telem-on', telemOn);
+}
+window.__pntTelem = setTelem;
+document.addEventListener('keydown', e => {
+  if (e.key !== 't' && e.key !== 'T') return;
+  const tag = (e.target && e.target.tagName || '').toLowerCase();
+  if (tag === 'input' || tag === 'textarea') return;
+  setTelem(!telemOn);
+});
+
+let telemRloc = null;   // sharp-Rᵢ scratch buffer (telemetry only — never the colour field)
+
+function telemSample(R) {
+  const N = state.N, colorRloc = state.Rloc;
+  // The broad separable kernel the colour path uses at large N washes local structure out
+  // (Rᵢ ≈ R everywhere), so the instrument runs its own sharp Gaussian pass per sample —
+  // O(N²) but only at ~2 Hz. incC logs what the colour channel itself can resolve.
+  if (!telemRloc || telemRloc.length !== N) telemRloc = new Float32Array(N);
+  computeRlocGaussian(telemRloc);
+  let inc = 0, incC = 0, sum = 0;
+  const hist = [0,0,0,0,0,0,0,0,0,0];
+  for (let i = 0; i < N; i++) {
+    const r = telemRloc[i];
+    sum += r;
+    if (r < INC_THRESH) inc++;
+    if (colorRloc[i] < INC_THRESH) incC++;
+    let b = (r * 10) | 0; if (b > 9) b = 9;
+    hist[b]++;
+  }
+  const s = {
+    tw: +(performance.now() / 1000).toFixed(1),   // wall clock (s)
+    t:  +state.t.toFixed(1),                       // sim time (s)
+    R:  +R.toFixed(4),
+    inc: +(inc / N).toFixed(4),                    // incoherent fraction, sharp local Rᵢ < INC_THRESH
+    incC: +(incC / N).toFixed(4),                  // same threshold on the colour channel's Rᵢ
+    mR: +(sum / N).toFixed(4),                     // mean sharp local Rᵢ
+    fcv: lastFCV < 0 ? null : +lastFCV.toFixed(4),
+    hist,
+  };
+  window.__pntTrace.push(s);
+  telemEl.textContent =
+    'R    ' + s.R.toFixed(3) +
+    '\ninc  ' + s.inc.toFixed(3) +
+    '\nmRi  ' + s.mR.toFixed(3) +
+    '\nfcv  ' + (s.fcv === null ? '  —' : s.fcv.toFixed(3)) +
+    '\nt    ' + s.t.toFixed(0);
+}
+
+// Debug hook: scale (or freeze, at 0) the orbital motion without touching the phase dynamics.
+// The satellites' orbits make the geodesic distances — and so the coupling kernel — change
+// every frame ("the coupling field breathes"); this hook holds the kernel still to test how
+// much of the long-run behaviour that breathing drives.
+window.__pntOrbitScale = 1;
+
+// ── LISTEN audio: one emergent voice (phase-triggered impulse train) ──────
+// The eye has no channel for clock-phase; the ear does. Every oscillator emits one
+// short click each time its phase θᵢ sweeps past the trigger phase θ*=0, and the
+// field's sound is the SUM of those clicks — no carrier, no noise bed:
+//   locked   → all phases cross θ* together → clicks coincide → one clean thump
+//   balance  → the coherent cluster thumps while the incoherent arc sprays clicks
+//              around it → a thump wrapped in a smeared halo (the thrum)
+//   scatter  → uniform phase density → clicks at every offset → a steady clatter
+// 1−R is no longer an amplitude; it is the temporal blur of the one beat. Silence is
+// automatic: a frozen ω₀=0 field never crosses θ* → no clicks.
+let soundOn = false;
+let actx = null, masterGain = null, comp = null;
+let clickNoiseBuf = null;            // short noise burst reused for the click attack edge
+let resoBus = null;                  // input to the resonant low body (a damped comb), fed by warm clicks
+let resoBus2 = null;                 // input to the rough/diffuse body that smooths out-of-sync static, fed by cool clicks
+let prevTheta = null;                // previous-frame phases, for crossing detection
+let audioPrimed = false;             // gates the first frame after a (re)seed so it can't fire
+const MASTER_VOL = 0.42;
+const NBINS = 18;                    // sub-frame time bins = the voice budget (≤ NBINS clicks/frame)
+const CLICK_FREQ = 60;               // warm low-body fundamental (Hz); cool ticks ride higher
+const _binCount = new Int32Array(NBINS);
+const _binSumR = new Float64Array(NBINS);   // Σ local order Rᵢ per bin → the bin's mean warmth
+window.__pntClicks = 0;              // diagnostics: voices scheduled last frame
+window.__pntCrossings = 0;           // diagnostics: θ*-crossings counted last frame
+
+function makeClickNoiseBuffer() {
+  const len = Math.floor((actx.sampleRate || 44100) * 1.0);    // 1 s of noise — grains read a random slice (no loop seam)
+  const buf = actx.createBuffer(1, len, actx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+  return buf;
+}
+
+function startAudio() {
+  if (actx) { if (actx.resume) actx.resume(); return; }
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return;
+  actx = new AC();
+  comp = actx.createDynamicsCompressor();            // gentle safety limiter only — high threshold so
+  comp.threshold.value = -6; comp.knee.value = 6;    // sustains ring through (no ducking/pumping), and
+  comp.ratio.value = 4; comp.attack.value = 0.003; comp.release.value = 0.25;   // only pile-up peaks get caught
+  masterGain = actx.createGain(); masterGain.gain.value = MASTER_VOL;
+  masterGain.connect(comp); comp.connect(actx.destination);
+  // Resonant low body. Warm (coherent) clicks excite a damped comb tuned to the
+  // warm fundamental, so a population running together rings a sustained ~60 Hz hum between downbeats;
+  // an incoherent population (cool ticks) barely drives it and stays a dry clatter. The body has no
+  // source of its own — no crossings → nothing excites it → it rings down to silence. The constellation
+  // is silent in orbit; this is the ground it rings on.
+  resoBus = actx.createGain(); resoBus.gain.value = 1;
+  const resoDelay = actx.createDelay(0.05); resoDelay.delayTime.value = 1 / CLICK_FREQ;   // tuned to ~60 Hz
+  const resoFb = actx.createGain(); resoFb.gain.value = 0.80;          // feedback → how long the body sustains
+  const resoLP = actx.createBiquadFilter(); resoLP.type = 'lowpass'; resoLP.frequency.value = 432; resoLP.Q.value = 0.7;  // brighter body (Dan's experiment) — more harmonics ring through
+  const resoOut = actx.createGain(); resoOut.gain.value = 0.65;        // body level into the mix
+  resoBus.connect(resoDelay);
+  resoDelay.connect(resoLP); resoLP.connect(resoFb); resoFb.connect(resoDelay);   // damped feedback loop
+  resoDelay.connect(resoOut); resoOut.connect(comp);
+  // Second body — the rough resonator. Cool/incoherent clicks excite a diffuse, heavily damped resonator
+  // detuned off any clean pitch, so the static smears into a low rumble instead of digital hiss. It smooths
+  // the out-of-sync texture without filling in a beat. No source of its own → silent when nothing fires.
+  resoBus2 = actx.createGain(); resoBus2.gain.value = 1;
+  const resoDelay2 = actx.createDelay(0.06); resoDelay2.delayTime.value = 0.028;   // detuned (~36 Hz) → diffuse, not pitched
+  const resoFb2 = actx.createGain(); resoFb2.gain.value = 0.80;        // feedback → how much it smears/sustains
+  const resoLP2 = actx.createBiquadFilter(); resoLP2.type = 'lowpass'; resoLP2.frequency.value = 180; resoLP2.Q.value = 0.5;  // strip the harsh highs → rumble, not hiss
+  const resoOut2 = actx.createGain(); resoOut2.gain.value = 0.60;      // rough-body level into the mix
+  resoBus2.connect(resoDelay2);
+  resoDelay2.connect(resoLP2); resoLP2.connect(resoFb2); resoFb2.connect(resoDelay2);   // damped feedback loop
+  resoDelay2.connect(resoOut2); resoOut2.connect(comp);
+  clickNoiseBuf = makeClickNoiseBuffer();
+  buildVoicePools();   // fixed voice pools — the graph never grows after this line
+}
+
+// Re-prime the crossing detector. Called wherever the phases are teleported (preset /
+// reseed) so a fresh seed registers no spurious crossings on its first frame.
+function resetClickPhase() { audioPrimed = false; }
+
+// ── Voice pools — a fixed set of persistent voices, reused for every click ──────────────
+// The first build allocated fresh oscillator/buffer/gain nodes per click (~1000 nodes/s at
+// N=700 with the long cool tails) and they piled up faster than GC collected — RAM climbed
+// until the tab froze. Pooling caps the audio graph at a fixed size: each voice's source
+// runs forever into a gain parked near silence, and a trigger only re-schedules envelopes.
+// If every voice is busy, the oldest-ending one is stolen (its envelope is held and ramped
+// down over 3 ms first, so the handover doesn't step-click). This also makes the voice
+// budget a hard ceiling on the graph rather than a hope about GC.
+const TONE_POOL = 24, NOISE_POOL = 32;
+const VFLOOR = 1e-5;                 // envelopes park here, never at true 0 (exp ramps need > 0)
+let tonePool = null, noisePool = null;
+window.__pntSteals = 0;              // diagnostics: voice steals since audio start
+
+// Freeze a gain param's in-flight envelope at time t so a new one can take over cleanly.
+function holdGainAt(p, t) {
+  if (p.cancelAndHoldAtTime) p.cancelAndHoldAtTime(t);
+  else { p.cancelScheduledValues(t); p.setValueAtTime(VFLOOR, t); }   // fallback: tiny step
+}
+
+function buildVoicePools() {
+  tonePool = [];
+  for (let i = 0; i < TONE_POOL; i++) {
+    const o = actx.createOscillator(); o.type = 'sine'; o.frequency.value = CLICK_FREQ;
+    const g = actx.createGain(); g.gain.value = VFLOOR;
+    const rs = actx.createGain(); rs.gain.value = 0;     // send into the low body (body 1)
+    o.connect(g); g.connect(masterGain);
+    g.connect(rs); rs.connect(resoBus);
+    o.start();
+    tonePool.push({ o, g, rs, busyUntil: 0 });
+  }
+  noisePool = [];
+  for (let i = 0; i < NOISE_POOL; i++) {
+    const src = actx.createBufferSource(); src.buffer = clickNoiseBuf; src.loop = true;
+    src.playbackRate.value = 0.9 + Math.random() * 0.5;
+    const bp = actx.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 0.5;
+    bp.frequency.value = 2600 + Math.random() * 1800;
+    const ng = actx.createGain(); ng.gain.value = VFLOOR;
+    const rs = actx.createGain(); rs.gain.value = 0;     // send into the rough body (body 2)
+    src.connect(bp); bp.connect(ng); ng.connect(masterGain);
+    ng.connect(rs); rs.connect(resoBus2);
+    src.start(0, Math.random());   // stagger the loop positions → voices stay decorrelated
+    noisePool.push({ src, bp, ng, rs, busyUntil: 0 });
+  }
+}
+
+// A free voice if one exists, else steal the one whose envelope ends soonest.
+function takeVoice(pool, t) {
+  let best = null;
+  for (let i = 0; i < pool.length; i++) {
+    const v = pool[i];
+    if (v.busyUntil <= t) return v;
+    if (!best || v.busyUntil < best.busyUntil) best = v;
+  }
+  window.__pntSteals++;
+  return best;
+}
+
+// One click, rendered as a coherence crossfade between two grains. LOUDNESS still tracks how many
+// oscillators fired together. TIMBRE tracks the bin's mean local order Rᵢ (warmth): a coherent click is a
+// discrete tonal thump; an incoherent one is a soft, airy noise grain
+// that overlaps its neighbours and fuses into a steady 'shhh' — so order reads as distinct beats and
+// disorder as static, the honest sound of many uncoordinated firings. Same cyan→amber axis, in the ear.
+function clickVoice(t, gain, warmth) {
+  if (gain < 0.0006 || !tonePool) return;
+  let w = warmth < 0 ? 0 : (warmth > 1 ? 1 : warmth);
+  w = Math.min(1, Math.max(0, (w - 0.5) * 1.4 + 0.5));   // expand contrast so the warm/cool split reads
+  const vol = gain * (0.6 + 0.4 * w);              // out-of-sync (low-Rᵢ) clicks are quieter; 0.6 floor keeps chaos present
+
+  // ── Tonal grain: the discrete tonal thump. Amplitude tracks coherence, so a coherent click is a clear
+  //    beat and an incoherent one emits (almost) no discrete pop — disorder stops reading as ticks.
+  const toneAmp = vol * w;
+  if (toneAmp > 0.0006) {
+    const freq  = CLICK_FREQ + 92 * (1 - w);       // warm → ~60 Hz (deep body)
+    const decay = 0.10 + 0.35 * w;                 // warm → ~450 ms (long sustain)
+    const v = takeVoice(tonePool, t);
+    const f = v.o.frequency;
+    f.cancelScheduledValues(t);
+    f.setValueAtTime(freq * 1.5, t);                            // downward chirp = percussive body
+    f.exponentialRampToValueAtTime(freq, t + 0.018);
+    holdGainAt(v.g.gain, t);
+    v.g.gain.exponentialRampToValueAtTime(VFLOOR, t + 0.003);   // hand over from any in-flight tail
+    v.g.gain.exponentialRampToValueAtTime(toneAmp, t + 0.007);  // fast attack
+    v.g.gain.exponentialRampToValueAtTime(VFLOOR, t + 0.003 + decay);
+    v.rs.gain.setValueAtTime(toneAmp * 0.7, t);                 // the tone rings the low body (body 1)
+    v.busyUntil = t + 0.003 + decay;
+  }
+
+  // ── Noise grain: the static. Amplitude tracks incoherence; a soft (linear) attack and a longer tail let
+  //    dense cool firing OVERLAP and fuse into a steady 'shhh' rather than discrete ticks. The pooled voices
+  //    loop the noise buffer from staggered positions at randomized rates, so grains stay decorrelated.
+  const noiseAmp = vol * (1 - w);
+  if (noiseAmp > 0.0006) {
+    const v = takeVoice(noisePool, t);
+    v.src.playbackRate.setValueAtTime(0.9 + Math.random() * 0.5, t);
+    v.bp.frequency.setValueAtTime(2600 + Math.random() * 1800, t);   // airy 'shhh' band
+    const att = 0.012 + 0.045 * (1 - w);                       // softer attack for cooler → no pop, just wash
+    const dec = 0.08 + 0.22 * (1 - w);                         // long tail for cooler → grains heavily overlap → creamy fusion
+    holdGainAt(v.ng.gain, t);
+    v.ng.gain.exponentialRampToValueAtTime(VFLOOR, t + 0.003);     // hand over from any in-flight tail
+    v.ng.gain.linearRampToValueAtTime(noiseAmp * 0.5, t + 0.003 + att);  // gentle linear attack — no transient onset
+    v.ng.gain.exponentialRampToValueAtTime(VFLOOR, t + 0.003 + att + dec);
+    v.rs.gain.setValueAtTime(noiseAmp * 0.5, t);                // the static also feeds the rough low body (body 2)
+    v.busyUntil = t + 0.003 + att + dec;
+  }
+}
+
+// Walk the population once per frame (O(N), the same pass cost as the reduction). Count each
+// oscillator that swept past θ*=0 since last frame, place it in a sub-frame time bin by WHEN in
+// the frame it crossed, then schedule one click per occupied bin with gain ∝ the bin's count.
+// Tempo is not injected — phases advance at ~ω and cross θ* on their own, so the beat rate falls
+// out of the sweep and a frozen ω₀=0 field is silent for free.
+function updateAudio(R, realDt) {
+  if (!soundOn || !actx) { lastFCV = -1; return; }
+  const N = state.N, theta = state.theta, Rloc = state.Rloc;
+  if (!prevTheta || prevTheta.length !== N) prevTheta = new Float64Array(N);
+  // need two consecutive frames to measure a crossing; a fresh seed primes, then bails.
+  if (!audioPrimed) {
+    prevTheta.set(theta); audioPrimed = true;
+    window.__pntClicks = 0; window.__pntCrossings = 0;
+    return;
+  }
+
+  _binCount.fill(0); _binSumR.fill(0);
+  let crossings = 0;
+  for (let i = 0; i < N; i++) {
+    const prev = prevTheta[i];
+    let d = theta[i] - prev;                  // short-arc signed delta in (−π, π]
+    if (d >  Math.PI) d -= TAU;
+    if (d < -Math.PI) d += TAU;
+    const next = prev + d;                     // unwrapped landing point
+    let f = -1;                                // sub-frame fraction of the θ*=0 crossing, if any
+    if (next >= TAU)    f = (TAU - prev) / d;  // forward crossing
+    else if (next < 0)  f = prev / (-d);       // backward crossing (chaos has ω of both signs)
+    if (f >= 0) {
+      let b = (f * NBINS) | 0;
+      if (b < 0) b = 0; else if (b >= NBINS) b = NBINS - 1;
+      _binCount[b]++; _binSumR[b] += Rloc ? Rloc[i] : 0.5; crossings++;
+    }
+    prevTheta[i] = theta[i];
+  }
+  window.__pntCrossings = crossings;
+  if (crossings === 0) { window.__pntClicks = 0; lastFCV = -1; return; }   // silence property — no crossings, no sound
+
+  // firing-time circular variance across this frame's crossings (bin resolution, for telemetry):
+  // 0 = every part fired in unison, 1 = firings spread uniformly across the frame.
+  let fx = 0, fy = 0;
+  for (let b = 0; b < NBINS; b++) {
+    const cb = _binCount[b];
+    if (!cb) continue;
+    const a = ((b + 0.5) / NBINS) * TAU;
+    fx += cb * Math.cos(a); fy += cb * Math.sin(a);
+  }
+  lastFCV = 1 - Math.hypot(fx, fy) / crossings;
+
+  // spread the bins across the real frame interval so successive frames butt together into one
+  // continuous texture; clamp so a long stalled frame can't smear a click too far.
+  const t0 = actx.currentTime + 0.02;
+  const win = Math.min(Math.max(realDt, 0.008), 0.05);
+  const norm = 1 / Math.sqrt(N);              // N-stable loudness: a full-population unison ≈ constant
+  let fired = 0;
+  for (let b = 0; b < NBINS; b++) {
+    const c = _binCount[b];
+    if (c === 0) continue;
+    const gain = Math.min(0.9, 1.7 * Math.sqrt(c) * norm);   // simultaneity → loudness, compressed
+    const warmth = _binSumR[b] / c;                          // the bin's mean local order Rᵢ
+    clickVoice(t0 + (b / NBINS) * win, gain, warmth);
+    fired++;
+  }
+  window.__pntClicks = fired;
+}
+
+document.getElementById('bSound').addEventListener('click', function () {
+  soundOn = !soundOn;
+  this.classList.toggle('on', soundOn);
+  if (soundOn) { startAudio(); if (masterGain) masterGain.gain.setTargetAtTime(MASTER_VOL, actx.currentTime, 0.05); }
+  else if (masterGain) masterGain.gain.setTargetAtTime(0, actx.currentTime, 0.05);
+});
+
+// ── 2D phase-circle overlay (top-left): the chimera signature on a clock face ──
+// Faithful 2D twin of synchronization.html's chimera clock: each satellite's phase θᵢ is a
+// dot on the unit circle, hue = phase. A tight same-hue cluster beside a rainbow scatter IS
+// the chimera; full sync collapses to one rotating clump; chaos spreads to an even ring.
+const clockCvs = document.getElementById('clockCvs');
+const cctx = clockCvs.getContext('2d');
+const CLOCK_CSS = 132;
+function sizeClock() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  clockCvs.width  = Math.round(CLOCK_CSS * dpr);
+  clockCvs.height = Math.round(CLOCK_CSS * dpr);
+  cctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+const _crgb = [0, 0, 0];
+function drawPhaseClock() {
+  const w = CLOCK_CSS, h = CLOCK_CSS;
+  cctx.clearRect(0, 0, w, h);
+  const cx = w / 2, cy = h / 2 + 5;
+  const R = Math.min(w, h) * 0.33;
+  cctx.fillStyle = '#3e3e4e';
+  cctx.font = '8px system-ui';
+  cctx.textAlign = 'center';
+  cctx.fillText('PHASE θ', cx, cy - R - 9);
+  cctx.strokeStyle = '#222238';
+  cctx.lineWidth = 1;
+  cctx.beginPath(); cctx.arc(cx, cy, R, 0, TAU); cctx.stroke();
+
+  const N = state.N, theta = state.theta, Rloc = state.Rloc, sel = state.selected;
+  const dr = Math.max(1.1, Math.min(2.3, 95 / Math.sqrt(N)));
+  // dots positioned by phase θᵢ, tinted by the local order parameter Rᵢ through the site colormap —
+  // the SAME channel as the satellites, so the clock warms cyan→amber in lockstep with the sphere
+  // and the sync bar. Cluster + amber = a locked region; rainbow-free cyan scatter = the incoherent half.
+  for (let i = 0; i < N; i++) {
+    colormap(Rloc[i], _crgb);
+    cctx.fillStyle = 'rgb(' + ((_crgb[0]*255)|0) + ',' + ((_crgb[1]*255)|0) + ',' + ((_crgb[2]*255)|0) + ')';
+    cctx.beginPath();
+    cctx.arc(cx + R * Math.cos(theta[i]), cy - R * Math.sin(theta[i]), dr, 0, TAU);
+    cctx.fill();
+  }
+  // selected satellites drawn on top with the sphere's blue halo ring, so a stressed clock is trackable
+  // here: drop its β in the bottom bar and watch its dot drift off the cluster and cool toward cyan.
+  for (let i = 0; i < N; i++) {
+    if (!sel[i]) continue;
+    const px = cx + R * Math.cos(theta[i]), py = cy - R * Math.sin(theta[i]);
+    colormap(Rloc[i], _crgb);
+    cctx.fillStyle = 'rgb(' + ((_crgb[0]*255)|0) + ',' + ((_crgb[1]*255)|0) + ',' + ((_crgb[2]*255)|0) + ')';
+    cctx.beginPath(); cctx.arc(px, py, dr + 1.2, 0, TAU); cctx.fill();
+    cctx.strokeStyle = 'rgba(110,160,255,0.95)';
+    cctx.lineWidth = 1.6;
+    cctx.beginPath(); cctx.arc(px, py, dr + 3.2, 0, TAU); cctx.stroke();
+  }
+}
+
+// ── Main loop ────────────────────────────────────────────────────────────
+const physDtBase = () => Math.PI / (10 * (Math.abs(P.w0) + P.K + 1 + P.A));
+let physAccum = 0, lastTs = null, colorTick = 0;
+
+function frame(ts) {
+  requestAnimationFrame(frame);
+  if (lastTs === null) { lastTs = ts; return; }
+  const realDt = Math.min((ts - lastTs) / 1000, 0.05);
+  lastTs = ts;
+
+  if (running) {
+    visualTime += realDt * P.speed * (isFinite(+window.__pntOrbitScale) ? +window.__pntOrbitScale : 1);
+    updatePositions();
+
+    const dt = physDtBase();
+    physAccum += realDt * P.speed * SIM_RATE;   // phase sim runs faster than the visual orbit
+    let steps = Math.floor(physAccum / dt);
+    physAccum -= steps * dt;
+    if (steps > 60) steps = 60;
+    for (let k = 0; k < steps; k++) rk4Step(dt);
+  } else {
+    updatePositions();
+  }
+
+  const R = computeGlobalSums();
+
+  // colour field updates every other frame (Rᵢ is a smoothed field — 30Hz is invisible)
+  if ((colorTick++ & 1) === 0) {
+    if (state.N <= GAUSS_MAX) computeRlocGaussian(); else computeRlocSeparable();
+  }
+
+  // Earth spin (cosmetic) + orbital motion already in updatePositions
+  earthGroup.rotation.y = EARTH_RATE * visualTime;
+
+  updatePan();
+  updateSatellites();
+  updateTrails();
+  updateReadouts(R, realDt);
+  updateAudio(R, realDt);
+  if (telemOn) {
+    telemAccum += realDt;
+    if (telemAccum >= TELEM_DT) { telemAccum = 0; telemSample(R); }
+  }
+  drawPhaseClock();
+  renderer.render(scene, camera);
+}
+
+// ── Boot ─────────────────────────────────────────────────────────────────
+resize();
+updateCamera();
+verifyReduction();
+rebuild(P.N);
+setupTooltips();
+requestAnimationFrame(frame);
+
+})();
+</script>
+</body>
+</html>

@@ -17,6 +17,8 @@
     --accent-2: #00b8d4;
     --accent-3: #ff6b9d;
     --accent-4: #ffa94d;
+    --accent-5: #2dd4bf;
+    --accent-6: #e0a64b;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; }
@@ -74,6 +76,8 @@
   .card[data-accent="2"]:hover { border-color: var(--accent-2); }
   .card[data-accent="3"]:hover { border-color: var(--accent-3); }
   .card[data-accent="4"]:hover { border-color: var(--accent-4); }
+  .card[data-accent="5"]:hover { border-color: var(--accent-5); }
+  .card[data-accent="6"]:hover { border-color: var(--accent-6); }
   .card-title {
     font-size: 1.15rem;
     font-weight: 500;
@@ -155,6 +159,15 @@
         <div class="card-title">Synchronization</div>
         <div class="card-subtitle">Kuramoto model — coupled phase oscillators</div>
       </a>
+      <a class="card" data-accent="5" href="pnt.html">
+        <div class="card-title">Position · Navigation · Timing</div>
+        <div class="card-subtitle">Clock drift on the sphere — a Kuramoto 'standing truce'</div>
+      </a>
+      <div class="card coming-soon" data-accent="6">
+        <span class="badge">soon</span>
+        <div class="card-title">The Chimera</div>
+        <div class="card-subtitle">The real thing, on the sphere — coherence and incoherence holding side by side</div>
+      </div>
     </div>
     <footer>
       <span>kuramoto.dev</span>
