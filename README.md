@@ -9,11 +9,13 @@ Live at [kuramoto.dev](https://kuramoto.dev).
 - **Chaos Theory** — Double pendulum with chaos demonstration. Real-time RK4 integration; configurable pendulum count for the divergence demo.
 - **The Limit** — Riemann sums approaching definite integrals. Three rules (left, midpoint, right), five functions, live convergence panel.
 - **Self Similarity** — Apollonian gasket viewer. Descartes circle theorem, Vieta recursion, integer-curvature mode auto-detection. Soddy-swap drawer for any selected circle.
-- **Synchronization** *(planned)* — Kuramoto model of coupled phase oscillators. The synchronization order parameter as the coupling parameter crosses the critical threshold.
+- **Synchronization** — Kuramoto model of coupled phase oscillators: the order parameter forming as coupling crosses the critical threshold, plus a chimera mode in which identical, identically-coupled oscillators split into coexisting coherent and incoherent domains.
+- **PNT** — Positioning, Navigation, and Timing as a Kuramoto field on the sphere: a constellation of orbiting satellite clocks holding a standing truce between locking together and keeping their own time.
+- **Kuramoto** — A short biography of Yoshiki Kuramoto, the physicist the site is named for.
 
 ## Stack
 
-Vanilla JavaScript, HTML5 Canvas, no framework. Each visualization is a single self-contained HTML file with embedded JS and CSS. The landing page is planned to use three.js for a Lo Shu Rubik's-cube animation.
+Vanilla JavaScript, HTML5 Canvas, no framework. Each visualization is a single self-contained HTML file with embedded JS and CSS.
 
 No build step. No package manager. No dev server required.
 

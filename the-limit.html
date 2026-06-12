@@ -37,7 +37,11 @@ canvas { display: block; }
 .sg { display: flex; flex-direction: column; align-items: center; gap: 2px; }
 .sg label { font-size: 10px; color: #4a5068; letter-spacing: .07em; text-transform: uppercase; }
 .sr { display: flex; align-items: center; gap: 5px; }
-.sv { font-size: 11px; color: #666; min-width: 30px; text-align: right; }
+.sv { font-size: 11px; color: #888; width: 36px; text-align: right;
+      font-family: inherit; background: transparent;
+      border: 1px solid transparent; padding: 1px 3px; border-radius: 2px; outline: none; }
+.sv:hover { border-color: #2a2a3e; color: #aab; }
+.sv:focus { border-color: #4fc3f7; color: #4fc3f7; }
 input[type=range] { width: 80px; accent-color: #58a6ff; cursor: pointer; }
 
 .sep { width: 1px; height: 28px; background: #1a1f2e; flex-shrink: 0; }
@@ -154,7 +158,7 @@ button.rbut.on { background: #0c1e36; color: #58a6ff; border-color: #1f4c8a; }
     <label>n</label>
     <div class="sr">
       <input type="range" id="nsl" min="1" max="300" step="1" value="16" style="width:130px">
-      <span class="sv" id="nval">16</span>
+      <input type="text" class="sv" id="nval" value="16">
     </div>
   </div>
   <div class="sep" id="psep" style="display:none"></div>
@@ -428,7 +432,7 @@ function drawTop() {
     `n = ${n}`,
     rule,
     `approx = ${approx.toFixed(5)}`,
-    `true = ${trueVal.toFixed(5)}`,
+    `reference = ${trueVal.toFixed(5)}`,
     `err = ${err.toExponential(2)}`,
     `${pct.toFixed(2)}%`
   ];
@@ -551,16 +555,27 @@ function buildParams() {
     row.className = 'sr';
     const sl = document.createElement('input');
     sl.type = 'range'; sl.min = p.min; sl.max = p.max; sl.step = p.step; sl.value = P[p.key];
-    const vspan = document.createElement('span');
-    vspan.className = 'sv';
-    vspan.textContent = parseFloat(P[p.key]).toFixed(p.step < 0.1 ? 2 : p.step < 1 ? 1 : 0);
+    const dec = p.step < 0.1 ? 2 : p.step < 1 ? 1 : 0;
+    const vinp = document.createElement('input');
+    vinp.type = 'text'; vinp.className = 'sv';
+    vinp.value = parseFloat(P[p.key]).toFixed(dec);
     sl.addEventListener('input', () => {
       P[p.key] = parseFloat(sl.value);
-      vspan.textContent = P[p.key].toFixed(p.step < 0.1 ? 2 : p.step < 1 ? 1 : 0);
+      vinp.value = P[p.key].toFixed(dec);
       dirty = true;
       draw();
     });
-    row.append(sl, vspan);
+    vinp.addEventListener('change', () => {
+      let x = parseFloat(vinp.value);
+      if (isNaN(x)) { vinp.value = P[p.key].toFixed(dec); return; }
+      x = Math.max(p.min, Math.min(p.max, x));
+      P[p.key] = x; sl.value = x; vinp.value = x.toFixed(dec);
+      dirty = true;
+      draw();
+    });
+    vinp.addEventListener('keydown', e => { if (e.key === 'Enter') vinp.blur(); });
+    vinp.addEventListener('focus', () => vinp.select());
+    row.append(sl, vinp);
     wrap.append(lbl, row);
     container.append(wrap);
   }
@@ -576,7 +591,7 @@ document.getElementById('ftabs').addEventListener('click', e => {
   fi = parseInt(btn.dataset.fi);
   n = 16;
   document.getElementById('nsl').value = 16;
-  document.getElementById('nval').textContent = 16;
+  document.getElementById('nval').value = 16;
   dirty = true;
   buildParams();
   draw();
@@ -591,11 +606,22 @@ document.getElementById('rbuts').addEventListener('click', e => {
   draw();
 });
 
-document.getElementById('nsl').addEventListener('input', function() {
+const nslEl  = document.getElementById('nsl');
+const nvalEl = document.getElementById('nval');
+nslEl.addEventListener('input', function() {
   n = parseInt(this.value);
-  document.getElementById('nval').textContent = n;
+  nvalEl.value = n;
   draw();
 });
+nvalEl.addEventListener('change', () => {
+  let x = parseInt(nvalEl.value);
+  if (isNaN(x)) { nvalEl.value = n; return; }
+  x = Math.max(parseInt(nslEl.min), Math.min(parseInt(nslEl.max), x));
+  n = x; nslEl.value = x; nvalEl.value = x;
+  draw();
+});
+nvalEl.addEventListener('keydown', e => { if (e.key === 'Enter') nvalEl.blur(); });
+nvalEl.addEventListener('focus', () => nvalEl.select());
 
 // ── Convergence dot drag-scrub ─────────────────────────────────────────
 
@@ -617,7 +643,7 @@ window.addEventListener('mousemove', e => {
   if (newN !== n) {
     n = newN;
     document.getElementById('nsl').value = n;
-    document.getElementById('nval').textContent = n;
+    document.getElementById('nval').value = n;
     draw();
   }
 });

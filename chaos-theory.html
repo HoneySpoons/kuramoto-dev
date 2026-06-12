@@ -35,7 +35,11 @@ canvas { display: block; }
 .sg { display: flex; flex-direction: column; align-items: center; gap: 2px; }
 .sg label { font-size: 10px; color: #4a4a5a; letter-spacing: .07em; text-transform: uppercase; }
 .sr { display: flex; align-items: center; gap: 5px; }
-.sv { font-size: 11px; color: #666; min-width: 26px; text-align: right; }
+.sv { font-size: 11px; color: #888; width: 30px; text-align: right;
+      font-family: inherit; background: transparent;
+      border: 1px solid transparent; padding: 1px 3px; border-radius: 2px; outline: none; }
+.sv:hover { border-color: #2a2a3e; color: #aab; }
+.sv:focus { border-color: #4fc3f7; color: #4fc3f7; }
 input[type=range] { width: 76px; accent-color: #4fc3f7; cursor: pointer; }
 .btns { margin-left: auto; display: flex; gap: 8px; }
 button {
@@ -115,22 +119,22 @@ button.on { background: #0c1e30; color: #4fc3f7; border-color: #1e4a6a; }
 <div id="controls">
   <div class="sg"><label>Rod 1</label>
     <div class="sr"><input type="range" id="sL1" min=".2" max="1.5" step=".05" value=".5">
-    <span class="sv" id="vL1">0.5</span></div></div>
+    <input type="text" class="sv" id="vL1" value="0.5"></div></div>
   <div class="sg"><label>Rod 2</label>
     <div class="sr"><input type="range" id="sL2" min=".2" max="1.5" step=".05" value="1">
-    <span class="sv" id="vL2">1.0</span></div></div>
+    <input type="text" class="sv" id="vL2" value="1.0"></div></div>
   <div class="sg"><label>Mass 1</label>
     <div class="sr"><input type="range" id="sm1" min=".1" max="3" step=".1" value="1">
-    <span class="sv" id="vm1">1.0</span></div></div>
+    <input type="text" class="sv" id="vm1" value="1.0"></div></div>
   <div class="sg"><label>Mass 2</label>
     <div class="sr"><input type="range" id="sm2" min=".1" max="3" step=".1" value=".5">
-    <span class="sv" id="vm2">0.5</span></div></div>
+    <input type="text" class="sv" id="vm2" value="0.5"></div></div>
   <div class="sg"><label>Pendulums</label>
     <div class="sr"><input type="range" id="sN" min="1" max="10" step="1" value="1">
-    <span class="sv" id="vN">1</span></div></div>
+    <input type="text" class="sv" id="vN" value="1"></div></div>
   <div class="sg"><label>Speed</label>
     <div class="sr"><input type="range" id="sSp" min=".1" max="2" step=".1" value=".3">
-    <span class="sv" id="vSp">0.3</span></div></div>
+    <input type="text" class="sv" id="vSp" value="0.3"></div></div>
   <div class="btns">
     <button id="bRand">Random Start</button>
     <button id="bStop">Stop</button>
@@ -258,7 +262,7 @@ function drawSim() {
   ctx.globalAlpha=1;
 
   // rods and bobs (frozen during drag, showing last state)
-  const br = Math.max(3, 7-Math.floor(N/2));
+  const br = Math.min(5, Math.max(3, 7-Math.floor(N/2)));
   for (let i=0; i<pends.length; i++) {
     const {x1,y1,x2,y2}=bobPos(pends[i].s);
     const col=COLORS[i%10];
@@ -402,13 +406,29 @@ scvs.addEventListener('mouseleave', endDrag);
 
 function bindSlider(id, valId, key, fmt) {
   const sl=document.getElementById(id), vEl=document.getElementById(valId);
-  sl.addEventListener('input', () => {
-    const v = fmt==='int' ? parseInt(sl.value) : parseFloat(sl.value);
+  const fmtVal = x => fmt==='int' ? String(parseInt(x)) : parseFloat(x).toFixed(1);
+  const apply = raw => {
+    const v = fmt==='int' ? parseInt(raw) : parseFloat(raw);
+    if (key==='Sp') { speed = v; physAccum = 0; return; }
     if (key==='N') N=v; else P[key]=v;
-    vEl.textContent = fmt==='int' ? v : parseFloat(v).toFixed(1);
     if (key==='L1'||key==='L2') updateTransform();
     restart();
+  };
+  sl.addEventListener('input', () => {
+    vEl.value = fmtVal(sl.value);
+    apply(sl.value);
   });
+  vEl.addEventListener('change', () => {
+    let x = parseFloat(vEl.value);
+    if (isNaN(x)) { vEl.value = fmtVal(sl.value); return; }
+    x = Math.max(parseFloat(sl.min), Math.min(parseFloat(sl.max), x));
+    if (fmt==='int') x = Math.round(x);
+    sl.value = x;
+    vEl.value = fmtVal(x);
+    apply(x);
+  });
+  vEl.addEventListener('keydown', e => { if (e.key==='Enter') vEl.blur(); });
+  vEl.addEventListener('focus', () => vEl.select());
 }
 
 bindSlider('sL1','vL1','L1','f');
@@ -416,12 +436,7 @@ bindSlider('sL2','vL2','L2','f');
 bindSlider('sm1','vm1','m1','f');
 bindSlider('sm2','vm2','m2','f');
 bindSlider('sN', 'vN', 'N', 'int');
-
-document.getElementById('sSp').addEventListener('input', function() {
-  speed = parseFloat(this.value);
-  document.getElementById('vSp').textContent = speed.toFixed(1);
-  physAccum = 0;
-});
+bindSlider('sSp','vSp','Sp','f');
 
 document.getElementById('bRand').addEventListener('click', () =>
   restart(Math.random()*Math.PI*2-Math.PI, Math.random()*Math.PI*2-Math.PI)

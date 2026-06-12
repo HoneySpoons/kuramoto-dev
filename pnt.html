@@ -263,13 +263,15 @@ body.selbar-open #selbar { transform: translateY(0); }
 #controls {
   background: #0e0e18;
   border-top: 1px solid #1a1a28;
-  padding: 8px 16px 14px;
+  padding: 7px 16px 9px;
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 7px;
   flex-shrink: 0;
-  flex-wrap: wrap;
 }
+.ctl-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.ctl-row2 { gap: 16px; }
 .sg { display: flex; flex-direction: column; align-items: center; gap: 2px; }
 .sg label {
   font-size: 10px; color: #4a4a5a;
@@ -304,10 +306,10 @@ button.action {
 button.action:hover { background: #1c1c38; color: #aaa; }
 button.action.on { background: #0c1e30; color: #4fc3f7; border-color: #1e4a6a; }
 .ctl-hint {
-  flex-basis: 100%; order: 99;
+  order: -1;
   font-size: 10px; color: #4a4a5a;
-  letter-spacing: .03em; text-align: center;
-  margin-top: 4px;
+  letter-spacing: .03em; text-align: left;
+  align-self: center;
 }
 .ctl-hint b { color: #6a6a80; font-weight: 600; }
 .ctl-hint kbd {
@@ -456,7 +458,7 @@ body.telem-on #telem { display: block; }
     <div class="lbl">Chaos</div>
   </div>
 
-  <div id="drawerTab" title="Show math">M A T H</div>
+  <button type="button" id="drawerTab" title="Show math">M A T H</button>
 
   <aside id="drawer">
     <div id="drawerHeader">
@@ -489,7 +491,7 @@ body.telem-on #telem { display: block; }
           cos(dᵢⱼ) = rᵢ · rⱼ
         </div>
         <p class="note">
-          The coupling is <span class="term">non-local<span class="tip"><b>Non-local coupling</b> — strength falls off with the <b>geodesic distance</b> dᵢⱼ between two satellites on the sphere, set by the kernel ½ + ½A·cos(d). Near beats far. This is the structural ingredient a chimera needs; uniform all-to-all coupling cannot produce one.</span></span>: nearby clocks pull on each other harder than distant ones — the field has structure, not one uniform pull. <b>A</b> sets how sharply near beats far. Because rᵢ and rⱼ are unit position vectors, their dot product <i>is</i> cos(dᵢⱼ) — no arccos in the loop. As the satellites orbit, the distances change, so the coupling field breathes.
+          The coupling is <span class="term">non-local<span class="tip"><b>Non-local coupling</b> — strength falls off with the <b>geodesic distance</b> dᵢⱼ between two satellites on the sphere, set by the kernel ½ + ½A·cos(d). Near beats far. This is the structural ingredient a chimera needs; uniform all-to-all coupling cannot produce one in a phase-only model like this.</span></span>: nearby clocks pull on each other harder than distant ones — the field has structure, not one uniform pull. <b>A</b> sets how sharply near beats far. Because rᵢ and rⱼ are unit position vectors, their dot product <i>is</i> cos(dᵢⱼ) — no arccos in the loop. As the satellites orbit, the distances change, so the coupling field breathes.
         </p>
       </section>
 
@@ -539,7 +541,7 @@ body.telem-on #telem { display: block; }
       <section>
         <h3>The re-run fingerprint</h3>
         <p class="note">
-          Identical clocks, identical rule — yet the field never settles the same way twice. This is partial synchronization holding its ground: a <span class="term">standing truce<span class="tip"><b>Symmetry breaking</b> — nothing distinguishes one satellite from another, so nothing fixes which regions run warmer or cooler; the arrangement is set by the initial phases alone. It stays partial because the kernel's mean-field term puts a floor under local coherence — no region can go fully incoherent, so the split a true chimera needs can't form here.</span></span> between falling into step and keeping your own time, and it stays there with no referee. Hit a preset or <b>Reseed φ</b> and the field re-forms its truce somewhere new every time — same character, never the same arrangement: proof the pattern is born from how the field starts, not from the recipe. <i>(A true chimera goes one step further — one region locking completely while another stays fully incoherent, side by side, with a sharp boundary. That's the next card.)</i>
+          Identical clocks, identical rule — yet the field never settles the same way twice. This is partial synchronization holding its ground: a <span class="term">standing truce<span class="tip"><b>Symmetry breaking</b> — nothing distinguishes one satellite from another, so nothing fixes which regions run warmer or cooler; the arrangement is set by the initial phases alone. It stays partial because the kernel's mean-field term puts a floor under local coherence — no region can go fully incoherent, so the split a true chimera needs can't form here.</span></span> between falling into step and keeping your own time, and it stays there with no referee. Hit a preset or <b>Reseed φ</b> and the field re-forms its truce somewhere new every time — same character, never the same arrangement: proof the pattern is born from how the field starts, not from the recipe. <i>(A true chimera goes one step further — one region locking completely while another stays fully incoherent, side by side, with a sharp boundary. That's the next card — on the sphere.)</i>
         </p>
       </section>
 
@@ -570,6 +572,7 @@ body.telem-on #telem { display: block; }
 </div>
 
 <div id="controls">
+  <div class="ctl-row">
   <div class="sg">
     <label>β (lag)</label>
     <div class="sr"><input type="range" id="sBeta" min="0" max="1.55" step="0.01" value="1.20"><input type="text" class="sv" id="vBeta" value="1.20"></div>
@@ -599,6 +602,8 @@ body.telem-on #telem { display: block; }
     <label>Speed</label>
     <div class="sr"><input type="range" id="sSpeed" min="0.1" max="4" step="0.1" value="1.0"><input type="text" class="sv" id="vSpeed" value="1.0"></div>
   </div>
+  </div>
+  <div class="ctl-row ctl-row2">
   <div class="btns">
     <button class="action on" id="bHeadings" title="Phase→motion channel: arrows comb and satellites breathe together where clocks lock">Headings</button>
     <button class="action" id="bSound" title="Hear the coherence — the constellation as a heartbeat: unison when synced, a scattered flurry in chaos">Sound</button>
@@ -607,7 +612,8 @@ body.telem-on #telem { display: block; }
     <button class="action" id="bPause">Pause</button>
   </div>
   <div class="ctl-hint">
-    Press <kbd>T</kbd> for telemetry &nbsp;·&nbsp; Click a satellite to set its own <b>β</b> — from <b>Sync</b>, drop one to 0 to watch a single clock fall out of step
+    Press <kbd>T</kbd> for telemetry &nbsp;·&nbsp; Click a satellite to set its own <b>β</b> — drop it to 0 to watch a single clock fall out of step
+  </div>
   </div>
 </div>
 
@@ -625,7 +631,7 @@ const EARTH_RATE = TAU / 90;           // one Earth revolution per 90 s of visua
 const ORBIT_RATE = 2.6 * EARTH_RATE;   // ~one orbit per 34.6 s — proportional, both visible
 const SIM_RATE   = 2.5;                // phase-dynamics sim-seconds per real-second at Speed=1
                                        // (decoupled from the slow orbital/Earth visual rate so the
-                                       //  chimera forms in a few seconds while satellites drift calmly)
+                                       //  standing-truce field settles while satellites drift calmly)
 const SIGMA_R    = 0.40;               // local-order-parameter neighbourhood half-width (rad)
 const GAUSS_MAX  = 500;                // N ≤ this → sharp O(N²) Gaussian Rᵢ; above → separable O(N) Rᵢ
 const TRAIL_LEN  = 56;                 // orbital-trail history length (frames sampled)
@@ -1736,10 +1742,10 @@ document.getElementById('bSound').addEventListener('click', function () {
   else if (masterGain) masterGain.gain.setTargetAtTime(0, actx.currentTime, 0.05);
 });
 
-// ── 2D phase-circle overlay (top-left): the chimera signature on a clock face ──
+// ── 2D phase-circle overlay (top-left): the standing-truce signature on a clock face ──
 // Faithful 2D twin of synchronization.html's chimera clock: each satellite's phase θᵢ is a
-// dot on the unit circle, hue = phase. A tight same-hue cluster beside a rainbow scatter IS
-// the chimera; full sync collapses to one rotating clump; chaos spreads to an even ring.
+// dot on the unit circle, hue = phase. A tight same-hue cluster beside a rainbow scatter is
+// the standing truce here; full sync collapses to one rotating clump; scatter spreads to an even ring.
 const clockCvs = document.getElementById('clockCvs');
 const cctx = clockCvs.getContext('2d');
 const CLOCK_CSS = 132;

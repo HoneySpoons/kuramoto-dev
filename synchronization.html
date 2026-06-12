@@ -381,9 +381,9 @@ button.action.on { background: #0c1e30; color: #4fc3f7; border-color: #1e4a6a; }
   <div id="rBar" title="Order parameter r — chaos to synchronicity">
     <div class="lbl">Sync</div>
     <div class="track"><div class="fill" id="rFill"></div></div>
-    <div class="lbl">Chaos</div>
+    <div class="lbl">Scatter</div>
   </div>
-  <div id="drawerTab" title="Show math">M A T H</div>
+  <button type="button" id="drawerTab" title="Show math">M A T H</button>
   <aside id="drawer">
     <div id="drawerHeader">
       <h2>The Math</h2>
@@ -393,7 +393,7 @@ button.action.on { background: #0c1e30; color: #4fc3f7; border-color: #1e4a6a; }
 
       <section class="only-meanfield">
         <div class="concept">
-          Below <span class="kc">K<sub>c</sub></span> the population is mathematically chaotic. Above the <span class="kc">K<sub>c</sub></span> threshold, the population is mathematically synchronized.
+          Below <span class="kc">K<sub>c</sub></span> the population stays incoherent — no shared rhythm survives the spread. Above <span class="kc">K<sub>c</sub></span>, a synchronized cluster spontaneously forms and grows.
           <span class="q">What do you see when you pass the threshold? Chaos or Order?</span>
         </div>
       </section>
@@ -411,7 +411,7 @@ button.action.on { background: #0c1e30; color: #4fc3f7; border-color: #1e4a6a; }
           dθᵢ/dt = ωᵢ + (K/N) Σⱼ sin(θⱼ − θᵢ)
         </div>
         <p class="note">
-          Each <span class="term">oscillator<span class="tip">One rhythmic unit in the population — a single dot on the circle, running at its own preferred speed until coupling pulls it toward the rest.</span></span> has a <span class="term">natural frequency<span class="tip"><b>Natural frequency ωᵢ</b> — how fast the oscillator prefers to run on its own, with no coupling. Drawn from a Lorentzian distribution centered at ω₀. Dot color encodes ω: cool (cyan) is slower, warm (amber) is faster.</span></span> ωᵢ and a current <span class="term">phase<span class="tip"><b>Phase θᵢ</b> — where the oscillator sits in its cycle, measured as an angle in [0, 2π). Each dot's position on the unit circle is its current phase.</span></span> θᵢ. The coupling term pulls each oscillator toward the rest, weighted by how out-of-phase they are.
+          Each <span class="term">oscillator<span class="tip">One rhythmic unit in the population — a single dot on the circle, running at its own preferred speed until coupling pulls it toward the rest.</span></span> has a <span class="term">natural frequency<span class="tip"><b>Natural frequency ωᵢ</b> — how fast the oscillator prefers to run on its own, with no coupling. Drawn from a Lorentzian distribution centered at ω₀. Dot color tracks each oscillator's offset from the mean phase ψ — aligned dots share one hue.</span></span> ωᵢ and a current <span class="term">phase<span class="tip"><b>Phase θᵢ</b> — where the oscillator sits in its cycle, measured as an angle in [0, 2π). Each dot's position on the unit circle is its current phase.</span></span> θᵢ. The coupling term pulls each oscillator toward the rest, weighted by how out-of-phase they are.
         </p>
       </section>
 
@@ -452,7 +452,7 @@ button.action.on { background: #0c1e30; color: #4fc3f7; border-color: #1e4a6a; }
           dθᵢ/dt = ω − (1/N) Σⱼ [1 + A·cos(xᵢ − xⱼ)] · sin(θᵢ − θⱼ + α)
         </div>
         <p class="note">
-          Every oscillator shares one <span class="term">natural frequency<span class="tip"><b>Identical ω</b> — in chimera mode there is no frequency spread. All N oscillators want to run at exactly the same speed. Any difference in their behaviour is created by the dynamics, not baked into the population.</span></span> ω. Coupling is <span class="term">non-local<span class="tip"><b>Non-local coupling</b> — strength depends on how far apart two oscillators sit on the ring, set by the kernel 1 + A·cos(xᵢ − xⱼ). Neighbours pull harder than distant units. This is the structural ingredient chimeras need; all-to-all (mean-field) coupling cannot produce them.</span></span>: each unit sits at a ring position xᵢ = 2πi/N and feels its neighbours more strongly than distant units.
+          Every oscillator shares one <span class="term">natural frequency<span class="tip"><b>Identical ω</b> — in chimera mode there is no frequency spread. All N oscillators want to run at exactly the same speed. Any difference in their behaviour is created by the dynamics, not baked into the population.</span></span> ω. Coupling is <span class="term">non-local<span class="tip"><b>Non-local coupling</b> — strength depends on how far apart two oscillators sit on the ring, set by the kernel 1 + A·cos(xᵢ − xⱼ). Neighbours pull harder than distant units. This is the structural ingredient chimeras need; all-to-all (mean-field) coupling cannot produce them in phase-only models like this one.</span></span>: each unit sits at a ring position xᵢ = 2πi/N and feels its neighbours more strongly than distant units.
         </p>
       </section>
 
@@ -463,7 +463,7 @@ button.action.on { background: #0c1e30; color: #4fc3f7; border-color: #1e4a6a; }
           α = π/2 − β
         </div>
         <p class="note">
-          <b>A</b> sets the coupling range — how sharply near beats far. <b>β</b> is the <span class="term">phase lag<span class="tip"><b>Phase lag β</b> — a small offset inside the sine, α = π/2 − β. Chimeras live in a narrow wedge of (A, β). Push β up and the incoherent region heals into full synchrony; pull it toward zero and order breaks down. The default sits inside the chimera band.</span></span>. The chimera regime is a narrow band — the defaults sit inside it; nudge β to find its edges.
+          <b>A</b> sets the coupling range — how sharply near beats far. <b>β</b> is the <span class="term">phase lag<span class="tip"><b>Phase lag β</b> — a small offset inside the sine, α = π/2 − β. Chimeras live in a narrow wedge of (A, β). Push β up and the incoherent region heals into full synchrony; pull it toward zero and the locked band erodes. The default sits inside the chimera band.</span></span>. The chimera regime is a narrow band — the defaults sit inside it; nudge β to find its edges.
         </p>
       </section>
 
@@ -475,14 +475,14 @@ button.action.on { background: #0c1e30; color: #4fc3f7; border-color: #1e4a6a; }
           <span class="dim">β</span>&nbsp;&nbsp;&nbsp;&nbsp;= <span class="kc" id="cliveBeta">0.10</span>
         </div>
         <p class="note">
-          Global r sits at an intermediate plateau — neither 0 nor 1. Half the population is locked and half is not, so the population-wide order parameter lands in between and stays there. That steady in-between value is itself the chimera signature.
+          Global r sits at an intermediate plateau — neither 0 nor 1. Part of the population locks while the rest stays incoherent, so the population-wide order parameter lands in between and stays there. That steady in-between value is itself the chimera signature.
         </p>
       </section>
 
       <section class="only-chimera">
         <h3>The re-run fingerprint</h3>
         <p class="note">
-          Identical units, identical rule — yet the population splits into a coherent band and an <span class="term">incoherent<span class="tip"><b>Symmetry breaking</b> — nothing in the setup distinguishes one oscillator from another, so nothing predicts which ones end up incoherent. The split is chosen by the initial conditions alone. This is what makes a chimera a <i>chimera</i> and not just partial synchronization.</span></span> band. Nothing in the parameters says <i>where</i>. Hit <b>Re-run</b> and the boundary in the spatial strip lands somewhere new every time — that relocation is the proof the split is born from the dynamics, not the recipe.
+          Identical units, identical rule — yet the population splits into a coherent band and an <span class="term">incoherent<span class="tip"><b>Symmetry breaking</b> — nothing in the setup distinguishes one oscillator from another, so nothing predicts which ones end up incoherent. The split is chosen by the initial conditions alone. This is what makes a chimera a <i>chimera</i> and not just partial synchronization.</span></span> band. Nothing in the parameters says <i>where</i>. Hit <b>Re-run</b> and the boundary in the spatial strip lands somewhere new every time — that relocation is the proof the split is born from the dynamics, not the recipe (like Kuramoto &amp; Battogtokh's original experiment, the sim seeds a coherent patch — chimeras coexist with full sync and must be steered into; what's not chosen is that the split holds).
         </p>
       </section>
 
@@ -1135,6 +1135,12 @@ function setMode(m) {
   document.body.classList.add('mode-' + m);
   document.querySelectorAll('.modepill').forEach(b =>
     b.classList.toggle('active', b.dataset.mode === m));
+  if (m === 'chimera') {
+    speed = 2;
+    physAccum = 0;
+    document.getElementById('sSpeed').value = 2;
+    document.getElementById('vSpeed').value = '2.0';
+  }
   prevAboveKc = null;
   crossRingT  = 0;
   rebuildPopulation();
