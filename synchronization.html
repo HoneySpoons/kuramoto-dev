@@ -38,7 +38,7 @@ canvas { display: block; }
 #rBar .lbl {
   font: 8px system-ui;
   letter-spacing: .18em;
-  color: #3e3e4e;
+  color: #666678;
   text-transform: uppercase;
 }
 #rBar .track {
@@ -189,7 +189,7 @@ body.drawer-open #drawer { transform: translateX(0); }
 }
 #drawerBody section h3 {
   font-size: 9px; font-weight: 600; letter-spacing: .18em;
-  color: #4a4a5a; text-transform: uppercase;
+  color: #6f6f82; text-transform: uppercase;
   margin-bottom: 10px;
 }
 .eq {
@@ -260,7 +260,7 @@ body.drawer-open #drawer { transform: translateX(0); }
 .about-link {
   display: block;
   text-align: center;
-  color: #4a4a5a;
+  color: #6f6f82;
   font-size: 11px;
   text-decoration: none;
   letter-spacing: .06em;
@@ -284,7 +284,7 @@ body.drawer-open #drawer { transform: translateX(0); }
 }
 .sg { display: flex; flex-direction: column; align-items: center; gap: 2px; }
 .sg label {
-  font-size: 10px; color: #4a4a5a;
+  font-size: 10px; color: #6f6f82;
   letter-spacing: .07em; text-transform: uppercase;
 }
 .sr { display: flex; align-items: center; gap: 5px; }
@@ -315,63 +315,20 @@ button.action {
 }
 button.action:hover { background: #1c1c38; color: #aaa; }
 button.action.on { background: #0c1e30; color: #4fc3f7; border-color: #1e4a6a; }
+
+/* ── Mobile-lite: reflow + larger tap targets (≤600px) ─────────────────── */
+@media (max-width: 600px) {
+  #controls { gap: 12px 14px; padding: 12px 12px 22px; }
+  .sr input[type=range] { width: 110px; }
+  .modepill { padding: 9px 18px; }            /* ~44px tap target */
+  button.action { padding: 10px 16px; }       /* ~44px tap target */
+  #drawerTab { padding: 20px 12px; }          /* bigger tab to grab */
+  #drawer { width: 100vw; }                   /* full-width sheet */
+  .tip { width: min(280px, calc(100vw - 24px)); }
+}
 </style>
 </head>
 <body class="mode-meanfield">
-<!-- ===== Mobile pre-view gate ===== -->
-<style>
-  #mobile-gate{ display:none; }
-  /* show on narrow screens, or coarse-pointer (touch) devices up to tablet width */
-  @media (max-width: 820px), (pointer: coarse) and (max-width: 1024px){
-    #mobile-gate{
-      display:flex; position:fixed; inset:0; z-index:99999;
-      flex-direction:column; align-items:center; justify-content:center;
-      text-align:center; padding:32px;
-      background:#0d1117; color:#e6edf3;
-      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;
-      -webkit-font-smoothing:antialiased;
-    }
-    #mobile-gate.dismissed{ display:none; }
-    html.gate-open, body.gate-open{ overflow:hidden; }   /* block scroll/interaction behind */
-  }
-  #mobile-gate .mg-mark{ font-family:ui-monospace,"SF Mono",Consolas,monospace;
-    letter-spacing:.22em; text-transform:uppercase; font-size:13px; color:#3fb950; margin-bottom:22px; }
-  #mobile-gate h1{ font-size:26px; font-weight:800; letter-spacing:-.02em; line-height:1.2; margin:0 0 14px; }
-  #mobile-gate p{ font-size:16px; color:#8b949e; max-width:340px; margin:0 auto 28px; line-height:1.5; }
-  #mobile-gate a.mg-continue{ display:inline-block; text-decoration:none;
-    border:1px solid #30363d; color:#e6edf3; background:#161b22;
-    padding:13px 24px; border-radius:12px; font-size:15px; font-weight:600; }
-  #mobile-gate a.mg-continue:active{ background:#21262d; }
-  #mobile-gate .mg-soon{ margin-top:18px; font-size:12px; color:#8b949e; }
-</style>
-
-<div id="mobile-gate" role="dialog" aria-label="Desktop recommended">
-  <div class="mg-mark">kuramoto.dev</div>
-  <h1>Best viewed on desktop</h1>
-  <p>This is an interactive math experience built for a larger screen. A mobile version is coming soon.</p>
-  <a href="#" class="mg-continue" id="mg-continue">Continue anyway →</a>
-  <div class="mg-soon">Mobile coming soon</div>
-</div>
-
-<script>
-(function(){
-  var gate = document.getElementById('mobile-gate');
-  if(!gate) return;
-  // if the user already chose to continue this session, stay out of the way
-  try{ if(sessionStorage.getItem('kdev-gate-dismissed')==='1'){ gate.classList.add('dismissed'); return; } }catch(e){}
-  document.documentElement.classList.add('gate-open');
-  document.body.classList.add('gate-open');
-  document.getElementById('mg-continue').addEventListener('click', function(e){
-    e.preventDefault();
-    gate.classList.add('dismissed');
-    document.documentElement.classList.remove('gate-open');
-    document.body.classList.remove('gate-open');
-    try{ sessionStorage.setItem('kdev-gate-dismissed','1'); }catch(e){}
-  });
-})();
-</script>
-<!-- ===== /Mobile pre-view gate ===== -->
-
 <div id="canvas-area">
   <canvas id="cvs"></canvas>
   <div id="modeToggle">
@@ -579,7 +536,7 @@ const cvs = document.getElementById('cvs');
 const ctx = cvs.getContext('2d');
 
 function resize() {
-  const dpr  = window.devicePixelRatio || 1;
+  const dpr  = Math.min(window.devicePixelRatio || 1, 2);   // cap retina cost on mobile
   const area = document.getElementById('canvas-area');
   const w = area.clientWidth, h = area.clientHeight;
   cvs.style.width  = w + 'px';
@@ -918,7 +875,7 @@ function drawChimera(availW, h, topRoom) {
   ctx.strokeRect(plotL + 0.5, plotTop + 0.5, plotW - 1, plotH - 1);
 
   // Axis hints
-  ctx.fillStyle = '#3e3e4e';
+  ctx.fillStyle = '#666678';
   ctx.font = '8px system-ui';
   ctx.textAlign = 'left';
   ctx.fillText('θ vs spatial position  ·  smooth band = coherent,  vertical scatter = incoherent', plotL, plotTop - 5);
@@ -954,7 +911,7 @@ function drawChimera(availW, h, topRoom) {
   const ccr  = Math.min(48, gutter * 0.32);
   const ccy  = plotTop + ccr + 6;            // tucked under the pills row, top-left
 
-  ctx.fillStyle = '#3e3e4e';
+  ctx.fillStyle = '#666678';
   ctx.font = '8px system-ui';
   ctx.textAlign = 'center';
   ctx.fillText('PHASE θ', colX, ccy - ccr - 7);
@@ -978,7 +935,7 @@ function drawChimera(availW, h, topRoom) {
   // up with the spatial strip's bottom (h − 24) so the two read as one baseline.
   const trackW = 6, trackH = 100;
   const tBot = h - 24, tTop = tBot - trackH, tx = colX - trackW / 2;
-  ctx.fillStyle = '#3e3e4e';
+  ctx.fillStyle = '#666678';
   ctx.fillText('SYNC', colX, tTop - 7);
   ctx.fillStyle = '#14142a';
   ctx.fillRect(tx, tTop, trackW, trackH);
@@ -991,7 +948,7 @@ function drawChimera(availW, h, topRoom) {
     ctx.fillStyle = grad;
     ctx.fillRect(tx, tBot - fh, trackW, fh);
   }
-  ctx.fillStyle = '#3e3e4e';
+  ctx.fillStyle = '#666678';
   ctx.fillText('CHAOS', colX, tBot + 14);
   ctx.textAlign = 'left';
 }
@@ -1151,12 +1108,17 @@ document.querySelectorAll('.modepill').forEach(b =>
 
 // ── Tooltips ───────────────────────────────────────────────────────────
 function setupTooltips() {
+  // Desktop hovers; touch devices (no hover) tap-to-toggle — the hover handlers
+  // are dead on a phone, so without this the .term tips would do nothing on tap.
+  const canHover = window.matchMedia('(hover: hover)').matches;
+  let openTip = null;
   document.querySelectorAll('.term').forEach(term => {
     const tip = term.querySelector('.tip');
     if (!tip) return;
     // Move to body so the drawer's transform doesn't capture position:fixed
     document.body.appendChild(tip);
     function show() {
+      if (openTip && openTip !== tip) openTip.style.display = 'none';
       tip.style.display = 'block';
       const tipRect  = tip.getBoundingClientRect();
       const termRect = term.getBoundingClientRect();
@@ -1169,11 +1131,25 @@ function setupTooltips() {
         left = window.innerWidth - tipRect.width - margin;
       tip.style.top  = top  + 'px';
       tip.style.left = left + 'px';
+      openTip = tip;
     }
-    function hide() { tip.style.display = 'none'; }
-    term.addEventListener('mouseenter', show);
-    term.addEventListener('mouseleave', hide);
+    function hide() { tip.style.display = 'none'; if (openTip === tip) openTip = null; }
+    if (canHover) {
+      term.addEventListener('mouseenter', show);
+      term.addEventListener('mouseleave', hide);
+    } else {
+      term.addEventListener('click', e => {
+        e.stopPropagation();
+        tip.style.display === 'block' ? hide() : show();
+      });
+    }
   });
+  // Tap anywhere else dismisses an open tip (touch only)
+  if (!canHover) {
+    document.addEventListener('click', () => {
+      if (openTip) { openTip.style.display = 'none'; openTip = null; }
+    });
+  }
 }
 
 // ── Init ───────────────────────────────────────────────────────────────
@@ -1181,6 +1157,12 @@ window.addEventListener('resize', () => { resize(); updateKcMarker(); });
 resize();
 verifyMeanField();
 verifyChimera();
+// Mobile: start with fewer oscillators for frame-rate headroom (still O(N); slider raises it)
+if (window.matchMedia('(max-width: 600px)').matches) {
+  N_osc = 120;
+  document.getElementById('sN').value = 120;
+  document.getElementById('vN').value = '120';
+}
 rebuildPopulation();
 setupTooltips();
 updateKcMarker();

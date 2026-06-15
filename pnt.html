@@ -22,7 +22,7 @@ body {
   overflow: hidden;
   min-height: 0;
 }
-#cvs { display: block; width: 100%; height: 100%; }
+#cvs { display: block; width: 100%; height: 100%; touch-action: manipulation; }
 
 /* Order-parameter bar — bottom-left, chaos→sync (matches synchronization.html) */
 #rBar {
@@ -42,7 +42,7 @@ body.selbar-open #rBar { transform: translateY(-116px); }
 #rBar .lbl {
   font: 8px system-ui;
   letter-spacing: .18em;
-  color: #3e3e4e;
+  color: #666678;
   text-transform: uppercase;
 }
 #rBar .track {
@@ -132,7 +132,7 @@ body.drawer-open #drawer { transform: translateX(0); }
 }
 #drawerBody section h3 {
   font-size: 9px; font-weight: 600; letter-spacing: .18em;
-  color: #4a4a5a; text-transform: uppercase;
+  color: #6f6f82; text-transform: uppercase;
   margin-bottom: 10px;
 }
 .eq {
@@ -211,7 +211,7 @@ body.drawer-open #drawer { transform: translateX(0); }
 .about-link {
   display: block;
   text-align: center;
-  color: #4a4a5a;
+  color: #6f6f82;
   font-size: 11px;
   text-decoration: none;
   letter-spacing: .06em;
@@ -249,7 +249,7 @@ body.selbar-open #selbar { transform: translateY(0); }
 }
 #selbar .sel-slider .row {
   display: flex; justify-content: space-between; font-size: 10px;
-  color: #4a4a5a; letter-spacing: .07em; text-transform: uppercase;
+  color: #6f6f82; letter-spacing: .07em; text-transform: uppercase;
 }
 #selbar .sel-slider .row .v {
   color: #ffca28; font-family: 'Cambria Math', Georgia, serif;
@@ -274,7 +274,7 @@ body.selbar-open #selbar { transform: translateY(0); }
 .ctl-row2 { gap: 16px; }
 .sg { display: flex; flex-direction: column; align-items: center; gap: 2px; }
 .sg label {
-  font-size: 10px; color: #4a4a5a;
+  font-size: 10px; color: #6f6f82;
   letter-spacing: .07em; text-transform: uppercase;
 }
 .sr { display: flex; align-items: center; gap: 5px; }
@@ -307,7 +307,7 @@ button.action:hover { background: #1c1c38; color: #aaa; }
 button.action.on { background: #0c1e30; color: #4fc3f7; border-color: #1e4a6a; }
 .ctl-hint {
   order: -1;
-  font-size: 10px; color: #4a4a5a;
+  font-size: 10px; color: #6f6f82;
   letter-spacing: .03em; text-align: left;
   align-self: center;
 }
@@ -374,63 +374,28 @@ body.telem-on #telem { display: block; }
 }
 .lpill:hover { background: #1c2c44; color: #cfe2f4; border-color: #1e4a6a; }
 .lpill.active { background: #4fc3f7; color: #0e0e12; border-color: #4fc3f7; font-weight: 600; }
+
+/* ── Mobile-lite: reflow + larger tap targets (≤600px) ─────────────────── */
+@media (max-width: 600px) {
+  #controls { padding: 8px 12px 10px; }
+  .ctl-row { gap: 10px 12px; }
+  .sr input[type=range] { width: 92px; }
+  button.action { padding: 9px 14px; }          /* ~44px tap target */
+  .lpill { padding: 8px 14px; }
+  #drawerTab { padding: 20px 12px; }
+  #drawer { width: 100vw; }                      /* full-width sheet */
+  .tip { width: min(280px, calc(100vw - 24px)); }
+  #listen { top: 10px; right: 12px; }
+  #phaseClock canvas { width: 112px; height: 112px; }   /* clear the LISTEN pills on narrow screens */
+  /* selection bar: stack the buttons so it fits a narrow phone */
+  #selbar { gap: 12px; padding: 0 14px; }
+  #selbar .sel-label { min-width: 0; font-size: 11px; }
+  #selbar .sel-btns { flex-direction: column; gap: 6px; }
+  #selbar .sel-btns .action { padding: 7px 10px; }
+}
 </style>
 </head>
 <body>
-<!-- ===== Mobile pre-view gate ===== -->
-<style>
-  #mobile-gate{ display:none; }
-  /* show on narrow screens, or coarse-pointer (touch) devices up to tablet width */
-  @media (max-width: 820px), (pointer: coarse) and (max-width: 1024px){
-    #mobile-gate{
-      display:flex; position:fixed; inset:0; z-index:99999;
-      flex-direction:column; align-items:center; justify-content:center;
-      text-align:center; padding:32px;
-      background:#0d1117; color:#e6edf3;
-      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;
-      -webkit-font-smoothing:antialiased;
-    }
-    #mobile-gate.dismissed{ display:none; }
-    html.gate-open, body.gate-open{ overflow:hidden; }   /* block scroll/interaction behind */
-  }
-  #mobile-gate .mg-mark{ font-family:ui-monospace,"SF Mono",Consolas,monospace;
-    letter-spacing:.22em; text-transform:uppercase; font-size:13px; color:#3fb950; margin-bottom:22px; }
-  #mobile-gate h1{ font-size:26px; font-weight:800; letter-spacing:-.02em; line-height:1.2; margin:0 0 14px; }
-  #mobile-gate p{ font-size:16px; color:#8b949e; max-width:340px; margin:0 auto 28px; line-height:1.5; }
-  #mobile-gate a.mg-continue{ display:inline-block; text-decoration:none;
-    border:1px solid #30363d; color:#e6edf3; background:#161b22;
-    padding:13px 24px; border-radius:12px; font-size:15px; font-weight:600; }
-  #mobile-gate a.mg-continue:active{ background:#21262d; }
-  #mobile-gate .mg-soon{ margin-top:18px; font-size:12px; color:#8b949e; }
-</style>
-
-<div id="mobile-gate" role="dialog" aria-label="Desktop recommended">
-  <div class="mg-mark">kuramoto.dev</div>
-  <h1>Best viewed on desktop</h1>
-  <p>This is an interactive math experience built for a larger screen. A mobile version is coming soon.</p>
-  <a href="#" class="mg-continue" id="mg-continue">Continue anyway →</a>
-  <div class="mg-soon">Mobile coming soon</div>
-</div>
-
-<script>
-(function(){
-  var gate = document.getElementById('mobile-gate');
-  if(!gate) return;
-  // if the user already chose to continue this session, stay out of the way
-  try{ if(sessionStorage.getItem('kdev-gate-dismissed')==='1'){ gate.classList.add('dismissed'); return; } }catch(e){}
-  document.documentElement.classList.add('gate-open');
-  document.body.classList.add('gate-open');
-  document.getElementById('mg-continue').addEventListener('click', function(e){
-    e.preventDefault();
-    gate.classList.add('dismissed');
-    document.documentElement.classList.remove('gate-open');
-    document.body.classList.remove('gate-open');
-    try{ sessionStorage.setItem('kdev-gate-dismissed','1'); }catch(e){}
-  });
-})();
-</script>
-<!-- ===== /Mobile pre-view gate ===== -->
-
 <div id="canvas-area">
   <canvas id="cvs"></canvas>
 
@@ -665,6 +630,10 @@ const P = { N: 300, K: 1.20, A: 0.95, w0: 0.0, gamma: 0.0, beta: 1.20, speed: 1.
 let running = true;
 let trailsOn = false;
 let headingsOn = true;   // Channel B (phase→motion: heading arrows + radial bob), default ON
+
+// Mobile-lite: keep the N=700 heavy three.js path desktop-only; presets + default N drop on small screens.
+const IS_SMALL = window.matchMedia('(max-width: 600px)').matches;
+const PRESET_N = IS_SMALL ? 320 : 700;
 
 // ── three.js scene ───────────────────────────────────────────────────────
 const canvas = document.getElementById('cvs');
@@ -1292,7 +1261,7 @@ function applyPreset(name) {
   setControl('sGamma', 'vGamma', P.gamma, 3);
   setControl('sW0', 'vW0', P.w0, 2);
   setControl('sSpeed', 'vSpeed', P.speed, 1);
-  setControl('sN', 'vN', 700, 0);
+  setControl('sN', 'vN', PRESET_N, 0);
 
   // 2. channels ON — sound must start inside this user-gesture call stack
   soundOn = true;
@@ -1309,8 +1278,8 @@ function applyPreset(name) {
     pb.classList.remove('on'); pb.textContent = 'Pause';
   }
 
-  // 4. rebuild at max N → fresh ω (uses P.gamma) + regime-specific phase seed
-  rebuild(700, p.seed);
+  // 4. rebuild at preset N → fresh ω (uses P.gamma) + regime-specific phase seed
+  rebuild(PRESET_N, p.seed);
   if (trailLine) trailLine.visible = true;   // buildMeshes resets this to false
   if (coneMesh)  coneMesh.visible = true;
   trailFilled = 0;
@@ -1323,11 +1292,16 @@ document.querySelectorAll('.lpill').forEach(b =>
 
 // ── Tooltips (re-parented to body so the drawer transform can't capture them) ──
 function setupTooltips() {
+  // Desktop hovers; touch devices (no hover) tap-to-toggle — the .term spans aren't
+  // focusable, so the hover handlers are dead on a phone without this.
+  const canHover = window.matchMedia('(hover: hover)').matches;
+  let openTip = null;
   document.querySelectorAll('.term').forEach(term => {
     const tip = term.querySelector('.tip');
     if (!tip) return;
     document.body.appendChild(tip);
-    term.addEventListener('mouseenter', () => {
+    function show() {
+      if (openTip && openTip !== tip) openTip.style.display = 'none';
       tip.style.display = 'block';
       const tr = term.getBoundingClientRect(), tp = tip.getBoundingClientRect();
       const margin = 8;
@@ -1337,9 +1311,24 @@ function setupTooltips() {
       if (left < margin) left = margin;
       if (left + tp.width > window.innerWidth - margin) left = window.innerWidth - tp.width - margin;
       tip.style.top = top + 'px'; tip.style.left = left + 'px';
-    });
-    term.addEventListener('mouseleave', () => { tip.style.display = 'none'; });
+      openTip = tip;
+    }
+    function hide() { tip.style.display = 'none'; if (openTip === tip) openTip = null; }
+    if (canHover) {
+      term.addEventListener('mouseenter', show);
+      term.addEventListener('mouseleave', hide);
+    } else {
+      term.addEventListener('click', e => {
+        e.stopPropagation();
+        tip.style.display === 'block' ? hide() : show();
+      });
+    }
   });
+  if (!canHover) {
+    document.addEventListener('click', () => {
+      if (openTip) { openTip.style.display = 'none'; openTip = null; }
+    });
+  }
 }
 
 // ── Rebuild (live N change) ──────────────────────────────────────────────
@@ -1527,6 +1516,7 @@ function startAudio() {
   const AC = window.AudioContext || window.webkitAudioContext;
   if (!AC) return;
   actx = new AC();
+  if (actx.resume) actx.resume();   // iOS: a freshly-created context starts suspended — resume inside this user gesture
   comp = actx.createDynamicsCompressor();            // gentle safety limiter only — high threshold so
   comp.threshold.value = -6; comp.knee.value = 6;    // sustains ring through (no ducking/pumping), and
   comp.ratio.value = 4; comp.attack.value = 0.003; comp.release.value = 0.25;   // only pile-up peaks get caught
@@ -1761,7 +1751,7 @@ function drawPhaseClock() {
   cctx.clearRect(0, 0, w, h);
   const cx = w / 2, cy = h / 2 + 5;
   const R = Math.min(w, h) * 0.33;
-  cctx.fillStyle = '#3e3e4e';
+  cctx.fillStyle = '#666678';
   cctx.font = '8px system-ui';
   cctx.textAlign = 'center';
   cctx.fillText('PHASE θ', cx, cy - R - 9);
@@ -1846,8 +1836,19 @@ function frame(ts) {
 resize();
 updateCamera();
 verifyReduction();
+if (IS_SMALL) {
+  // Cap the satellite slider so the 700-sat heavy path stays desktop-only, and
+  // start lower for frame-rate headroom on a phone (the user can still raise it).
+  document.getElementById('sN').max = 420;
+  P.N = 200;
+  setControl('sN', 'vN', P.N, 0);
+}
 rebuild(P.N);
 setupTooltips();
+// iOS Safari: revive a suspended AudioContext on any later tap (belt-and-suspenders to startAudio's own resume)
+['pointerup', 'touchend'].forEach(ev => document.addEventListener(ev, () => {
+  if (actx && actx.state === 'suspended' && actx.resume) actx.resume();
+}, { passive: true }));
 requestAnimationFrame(frame);
 
 })();
