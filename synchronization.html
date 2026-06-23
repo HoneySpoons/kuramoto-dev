@@ -105,6 +105,7 @@ canvas { display: block; }
   border: 1px solid #1e4a6a;
   padding: 5px 16px; border-radius: 999px;
   font: 12px system-ui; letter-spacing: .04em;
+  white-space: nowrap;   /* keep "Mean-Field" on one line — wrapping made the toggle tall enough to overlap the caption */
   cursor: pointer; user-select: none;
   transition: background .12s, color .12s, border-color .12s;
 }
@@ -546,6 +547,11 @@ function resize() {
   cvs.width  = Math.round(w * dpr);
   cvs.height = Math.round(h * dpr);
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  // Clearance below the mode pills, measured from their actual rendered height so the chimera
+  // caption + clock never slide under the (taller, sometimes wrapped) mobile pills. +2 reproduces
+  // the prior desktop value of 52 (toggle bottom ≈ 50) exactly, expanding only where pills are taller.
+  const mt = document.getElementById('modeToggle');
+  topRoom = mt ? Math.max(52, mt.offsetTop + mt.offsetHeight + 2) : 52;
 }
 
 // ── Simulation state ───────────────────────────────────────────────────
@@ -561,6 +567,7 @@ let chimBeta = 0.10;                  // chimera phase lag β
 let chimAlpha = Math.PI / 2 - chimBeta; // α = π/2 − β
 let cosX, sinX;                       // ring positions xᵢ = 2πi/N (chimera spatial coupling)
 let uiShift = 0;                      // eased left-shift of the drawing area when the drawer is open
+let topRoom = 52;                     // clearance below the mode pills — recomputed from their real height in resize()
 
 let phases, omegas, glowAge;
 let physDt, physAccum = 0;
@@ -784,7 +791,7 @@ function draw() {
   if (Math.abs(targetShift - uiShift) < 0.5) uiShift = targetShift;
 
   const availW  = w - uiShift;   // usable width to the left of the drawer
-  const topRoom = 52;            // clearance below the mode pills
+  // topRoom (clearance below the mode pills) is computed in resize() from their real height
 
   if (mode === 'chimera') { drawChimera(availW, h, topRoom); return; }
 
