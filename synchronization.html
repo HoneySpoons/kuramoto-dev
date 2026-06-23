@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Synchronization</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -13,7 +13,8 @@ body {
   font-family: system-ui, sans-serif;
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100vh;   /* fallback for browsers without svh */
+  height: 100svh;  /* small viewport — keeps the control row above mobile browser chrome */
 }
 #canvas-area {
   position: relative;
@@ -276,6 +277,7 @@ body.drawer-open #drawer { transform: translateX(0); }
   background: #0e0e18;
   border-top: 1px solid #1a1a28;
   padding: 8px 16px 18px;   /* extra bottom room for the Kc caption under the K slider */
+  padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px));   /* + clear the iOS home-indicator / toolbar */
   display: flex;
   align-items: center;
   gap: 12px;
@@ -318,7 +320,7 @@ button.action.on { background: #0c1e30; color: #4fc3f7; border-color: #1e4a6a; }
 
 /* ── Mobile-lite: reflow + larger tap targets (≤600px) ─────────────────── */
 @media (max-width: 600px) {
-  #controls { gap: 12px 14px; padding: 12px 12px 22px; }
+  #controls { gap: 12px 14px; padding: 12px 12px 22px; padding-bottom: calc(22px + env(safe-area-inset-bottom, 0px)); }
   .sr input[type=range] { width: 110px; }
   .modepill { padding: 9px 18px; }            /* ~44px tap target */
   button.action { padding: 10px 16px; }       /* ~44px tap target */

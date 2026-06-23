@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Position · Navigation · Timing</title>
 <meta name="description" content="Clock drift on the sphere — Kuramoto-Sakaguchi oscillators settling into a 'standing truce,' rendered as a satellite constellation. The true chimera is the next card.">
 <style>
@@ -14,7 +14,8 @@ body {
   font-family: system-ui, sans-serif;
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100vh;   /* fallback for browsers without svh */
+  height: 100svh;  /* small viewport — keeps the control row above mobile browser chrome */
 }
 #canvas-area {
   position: relative;
@@ -264,6 +265,7 @@ body.selbar-open #selbar { transform: translateY(0); }
   background: #0e0e18;
   border-top: 1px solid #1a1a28;
   padding: 7px 16px 9px;
+  padding-bottom: calc(9px + env(safe-area-inset-bottom, 0px));   /* clear the iOS home-indicator / toolbar */
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -377,7 +379,7 @@ body.telem-on #telem { display: block; }
 
 /* ── Mobile-lite: reflow + larger tap targets (≤600px) ─────────────────── */
 @media (max-width: 600px) {
-  #controls { padding: 8px 12px 10px; }
+  #controls { padding: 8px 12px 10px; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); }
   .ctl-row { gap: 10px 12px; }
   .sr input[type=range] { width: 92px; }
   button.action { padding: 9px 14px; }          /* ~44px tap target */
@@ -643,6 +645,7 @@ scene.background = new THREE.Color(0x0e0e12);
 
 const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100);
 let cameraRadius = 10;
+let userZoomed = false;   // set once the user wheel-zooms (desktop only) — frameCamera() then backs off
 function updateCamera() {
   // Fixed viewing angle — sphere auto-rotates, camera does not (no drag, wheel-zoom only)
   const az = 0.5, el = 0.32;
@@ -652,6 +655,25 @@ function updateCamera() {
     cameraRadius * Math.cos(el) * Math.cos(az)
   );
   camera.lookAt(0, 0, 0);
+}
+
+// Aspect-aware framing. THREE's fov is the *vertical* field of view, so on a portrait
+// phone the constellation (radius R_ORBIT) overflows the width and crowds the top corners
+// where the phase clock + LISTEN pills sit. On narrow viewports pull the camera back so the
+// cloud clears that band — mild left/right edge-bleed is fine, it reads as a starfield.
+// Desktop/landscape framing is unchanged, and we bail the moment the user wheel-zooms.
+function frameCamera() {
+  if (userZoomed) return;
+  const aspect = (area.clientWidth || 1) / (area.clientHeight || 1);
+  const t = Math.tan((camera.fov * Math.PI / 180) / 2);
+  const half = R_ORBIT * (1 + BOB_EPS);            // constellation half-extent (incl. radial bob)
+  let r = 10;                                      // desktop / landscape: keep the current framing
+  if (aspect < 1) {                                // portrait: relieve the horizontal crowding
+    const fitW = half / (t * aspect);              // distance that would fully contain the width
+    r = Math.max(10, Math.min(15, fitW * 0.78));   // partial fit (~70% vertical), capped to zoom range
+  }
+  cameraRadius = r;
+  updateCamera();
 }
 
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
@@ -1132,6 +1154,7 @@ canvas.addEventListener('pointerup', e => {
 });
 canvas.addEventListener('wheel', e => {
   e.preventDefault();
+  userZoomed = true;   // user took manual control of zoom — stop auto-framing on resize
   cameraRadius *= e.deltaY > 0 ? 1.08 : 0.93;
   cameraRadius = Math.max(5.5, Math.min(15, cameraRadius));
   updateCamera();
@@ -1350,6 +1373,7 @@ function resize() {
   const w = area.clientWidth, h = area.clientHeight;
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
+  frameCamera();          // re-fit the constellation for the new aspect (portrait pulls back)
   renderer.setSize(w, h, false);
   sizeClock();
 }
