@@ -117,7 +117,7 @@ button.action:hover { background: #1c1c38; color: #aaa; }
 /* Mobile-lite: reflow + larger tap targets (<=600px) */
 @media (max-width: 600px) {
   #controls { gap: 9px 12px; padding: 8px 12px 10px; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); }
-  .adv, .sep { display: none; }   /* minimal controls on mobile: hide the advanced sliders, keep k + buttons */
+  .adv { display: none; }   /* mobile: hide only the depth slider; k + slices + wave-time + buttons stay */
   .sr input[type=range] { width: 88px; }
   button.action { padding: 9px 15px; }
   #drawerTab { padding: 20px 12px; }
@@ -201,9 +201,9 @@ button.action:hover { background: #1c1c38; color: #aaa; }
   <div class="sg"><label>k&#8322;</label><div class="sr"><input type="range" id="sk2" min="0.5" max="10" step="0.1" value="10"><span class="sv" id="vk2">10.0</span></div></div>
   <div class="sg"><label>k&#8323;</label><div class="sr"><input type="range" id="sk3" min="0.5" max="10" step="0.1" value="10"><span class="sv" id="vk3">10.0</span></div></div>
   <div class="sep"></div>
-  <div class="sg adv"><label>slices</label><div class="sr"><input type="range" id="sM" min="6" max="48" step="1" value="48"><span class="sv" id="vM">48</span></div></div>
+  <div class="sg"><label>slices</label><div class="sr"><input type="range" id="sM" min="6" max="48" step="1" value="48"><span class="sv" id="vM">48</span></div></div>
   <div class="sg adv"><label>depth</label><div class="sr"><input type="range" id="sDepth" min="1" max="7" step="1" value="7"><span class="sv" id="vDepth">7</span></div></div>
-  <div class="sg adv"><label>wave time (s)</label><div class="sr"><input type="range" id="sT" min="0.3" max="6" step="0.1" value="6"><span class="sv" id="vT">6.0</span></div></div>
+  <div class="sg"><label>wave time (s)</label><div class="sr"><input type="range" id="sT" min="0.3" max="6" step="0.1" value="6"><span class="sv" id="vT">6.0</span></div></div>
   <div class="btns">
     <button class="action wave" id="bMode" title="Toggle how a curvature change reaches the slices: all at once (global) or rippling around the ring (a travelling wave)">Wave</button>
     <button class="action" id="bDir" title="Wave direction: one-way around the ring, or counter-rotating (two fronts leave the change point in opposite directions and meet at the far side). Only affects wave mode.">&rarr; one-way</button>
