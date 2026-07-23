@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>The Torus + — kuramoto.dev</title>
+<meta name="description" content="An Apollonian gasket revolved into a wireframe torus. Change a curvature and send it around the ring as a travelling wave, or apply it everywhere at once: local coupling versus global, seen in the geometry.">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  background: #0e0e12; color: #c8c8d0; font-family: system-ui, sans-serif;
+  display: flex; flex-direction: column;
+  height: 100vh; height: 100svh;
+}
+#canvas-area { position: relative; flex: 1; min-height: 0; }
+#cvs { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+#cvs:active { cursor: grabbing; }
+
+#readout {
+  position: absolute; top: 12px; left: 14px; z-index: 4; pointer-events: none;
+  font: 11px 'Cambria Math', Georgia, serif; color: rgba(200,200,208,.5); letter-spacing: .03em; line-height: 1.6;
+}
+#readout b { color: #4fc3f7; font-weight: 600; }
+#readout .wave { color: #ffca28; }
+#hint {
+  position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); z-index: 4;
+  pointer-events: none; user-select: none; font: 10px system-ui; letter-spacing: .12em;
+  text-transform: uppercase; color: #45455a; transition: opacity .5s;
+}
+
+/* Drawer toggle tab */
+#drawerTab {
+  position: absolute; top: 50%; right: 0;
+  background: #14142a; color: #888;
+  border: 1px solid #222238; border-right: none; border-radius: 6px 0 0 6px;
+  padding: 14px 8px; cursor: pointer;
+  font: 11px system-ui; letter-spacing: .25em;
+  writing-mode: vertical-rl; transform: translateY(-50%);
+  transition: opacity .25s, color .12s, background .12s; z-index: 5; user-select: none;
+}
+#drawerTab:hover { color: #4fc3f7; background: #1c1c38; }
+body.drawer-open #drawerTab { opacity: 0; pointer-events: none; }
+
+/* Right drawer — The Math */
+#drawer {
+  position: absolute; top: 0; right: 0;
+  width: min(384px, 100vw); height: 100%;
+  background: #0e0e18; border-left: 1px solid #1a1a28;
+  transform: translateX(100%);
+  transition: transform .28s cubic-bezier(.4, 0, .2, 1);
+  display: flex; flex-direction: column; z-index: 6;
+  font-size: 12px; color: #b8b8c2;
+}
+body.drawer-open #drawer { transform: translateX(0); }
+#drawerHeader {
+  padding: 14px 16px; border-bottom: 1px solid #1a1a28;
+  display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;
+}
+#drawerHeader h2 { font-size: 11px; font-weight: 600; letter-spacing: .18em; color: #4fc3f7; text-transform: uppercase; }
+#drawerClose { background: none; border: none; color: #777; cursor: pointer; font-size: 20px; padding: 0 6px; line-height: 1; }
+#drawerClose:hover { color: #4fc3f7; }
+#drawerBody { overflow-y: auto; overflow-x: visible; padding: 16px; flex: 1; display: flex; flex-direction: column; gap: 22px; }
+#drawerBody section h3 { font-size: 9px; font-weight: 600; letter-spacing: .18em; color: #6f6f82; text-transform: uppercase; margin-bottom: 10px; }
+.eq { font-family: 'Cambria Math', 'Latin Modern Math', Georgia, serif; font-size: 13px; line-height: 1.7; color: #d8d8e0; }
+.note { font-size: 11px; color: #6a6a7a; margin-top: 8px; line-height: 1.58; }
+.note b { color: #9a9ab0; }
+.concept {
+  background: #0c1622; border: 1px solid #1e3a4a; border-left: 2px solid #4fc3f7;
+  border-radius: 4px; padding: 12px 14px; font-size: 12px; line-height: 1.62; color: #aeb6c2;
+}
+.concept b { color: #cfe2f4; }
+.wavebox {
+  background: #12100c; border: 1px solid #3a331e; border-left: 2px solid #ffca28;
+  border-radius: 4px; padding: 12px 14px; font-size: 12px; line-height: 1.62; color: #c2bcae;
+}
+.wavebox b { color: #ffca28; }
+
+/* Term tooltip */
+.term { font-style: italic; color: #4fc3f7; cursor: help; border-bottom: 1px dotted rgba(79, 195, 247, .6); position: relative; white-space: nowrap; }
+.tip {
+  display: none; position: fixed;
+  background: #16162a; border: 1px solid #2a2a3e; color: #c8c8d0;
+  padding: 8px 11px; border-radius: 4px; white-space: normal; width: 244px;
+  font-size: 11px; font-style: normal; text-align: left; line-height: 1.5;
+  z-index: 100; box-shadow: 0 6px 18px rgba(0,0,0,0.5); pointer-events: none;
+}
+.about-link {
+  display: block; text-align: center; color: #6f6f82; font-size: 11px; text-decoration: none;
+  letter-spacing: .06em; padding: 10px 0; border-top: 1px solid #1a1a28; margin-top: 4px; transition: color .15s;
+}
+.about-link:hover { color: #4fc3f7; }
+
+/* Controls */
+#controls {
+  background: #0e0e18; border-top: 1px solid #1a1a28;
+  padding: 9px 16px 11px; padding-bottom: calc(11px + env(safe-area-inset-bottom, 0px));
+  display: flex; align-items: center; gap: 13px; flex-wrap: wrap; flex-shrink: 0;
+}
+.sg { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.sg label { font-size: 10px; color: #6f6f82; letter-spacing: .06em; text-transform: uppercase; }
+.sr { display: flex; align-items: center; gap: 5px; }
+.sr input[type=range] { width: 74px; accent-color: #4fc3f7; cursor: pointer; }
+.sv { font: 11px 'Cambria Math', Georgia, serif; color: #888; width: 30px; text-align: right; }
+.sep { width: 1px; height: 30px; background: #1a1a28; }
+.btns { display: flex; gap: 8px; margin-left: auto; }
+button.action {
+  background: #14142a; color: #888; border: 1px solid #222238;
+  padding: 7px 15px; font: 12px system-ui; cursor: pointer; border-radius: 3px;
+  transition: background .12s, color .12s, border-color .12s;
+}
+button.action:hover { background: #1c1c38; color: #aaa; }
+#bMode.wave { background: #1e1708; color: #ffca28; border-color: #4a3a1e; }
+#bMode.together { background: #0c1e30; color: #4fc3f7; border-color: #1e4a6a; }
+#bDir.inert { opacity: .42; }   /* direction toggle greys out in all-at-once (no wave to steer) */
+
+/* Mobile-lite: reflow + larger tap targets (<=600px) */
+@media (max-width: 600px) {
+  #controls { gap: 9px 12px; padding: 8px 12px 10px; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); }
+  .adv, .sep { display: none; }   /* minimal controls on mobile: hide the advanced sliders, keep k + buttons */
+  .sr input[type=range] { width: 88px; }
+  button.action { padding: 9px 15px; }
+  #drawerTab { padding: 20px 12px; }
+  #drawer { width: 100vw; }
+  .tip { width: min(280px, calc(100vw - 24px)); }
+  .btns { margin-left: 0; }
+}
+</style>
+</head>
+<body>
+<div id="canvas-area">
+  <canvas id="cvs"></canvas>
+  <div id="readout"></div>
+  <div id="hint">drag to orbit &middot; scroll to zoom</div>
+
+  <button type="button" id="drawerTab" title="Show math">M A T H</button>
+  <aside id="drawer">
+    <div id="drawerHeader">
+      <h2>The Math</h2>
+      <button id="drawerClose" aria-label="Close">&times;</button>
+    </div>
+    <div id="drawerBody">
+
+      <section>
+        <div class="concept">
+          Four circles, each tangent to the other three, are locked into a single relation. Let
+          <span class="term">curvature<span class="tip"><b>Curvature k = 1 / radius.</b> A bigger k is a tighter circle. The outer wrapping circle bends the opposite way to the ones inside it, so its k is taken as negative.</span></span> k measure how tightly a circle bends. Then
+          <span class="q" style="display:block;margin-top:8px;color:#4fc3f7">(k&#8321; + k&#8322; + k&#8323; + k&#8324;)&sup2; = 2 (k&#8321;&sup2; + k&#8322;&sup2; + k&#8323;&sup2; + k&#8324;&sup2;)</span>
+          <span style="display:block;margin-top:8px">This is <span class="term">Descartes' circle theorem<span class="tip"><b>Descartes' circle theorem (1643).</b> For four mutually tangent circles the four curvatures satisfy this one equation. Given three, it fixes the fourth, so you can keep dropping a tangent circle into every gap forever.</span></span>. Given any three mutually tangent circles it fixes the fourth, so every gap can be filled with a new tangent circle, endlessly: an <b>Apollonian gasket</b>.
+        </div>
+      </section>
+
+      <section>
+        <h3>From plane to tube</h3>
+        <p class="note">
+          Take that flat gasket and treat its disk as the <b>cross-section of a tube</b>. Sweep the
+          cross-section once around a large circle and the tube closes into a <b>torus</b>. Every circle
+          in the gasket traces its own nested tube, so the whole packing becomes a wireframe torus woven
+          from gaskets: the wrapping circle becomes the torus surface, and the circles inside it become
+          the nested structure within.
+        </p>
+      </section>
+
+      <section>
+        <h3>The delay line: local vs global</h3>
+        <div class="wavebox">
+          The torus is cut into <b>slices</b> around the ring. Change a curvature and you can send that
+          change two ways.
+          <span style="display:block;margin-top:9px"><b>All at once:</b> every slice reshapes together, a
+          <span class="term">global<span class="tip"><b>Mean-field coupling.</b> Every element feels the average of all the others in the same instant, with no travel time. The opposite of a signal that has to propagate from neighbour to neighbour.</span></span> update where the whole ring feels it in the same instant.</span>
+          <span style="display:block;margin-top:9px"><b>As a wave:</b> each slice sees the change a moment later than the one before it, so the new shape
+          travels around the ring like a pulse.</span>
+          <span style="display:block;margin-top:9px">That is the difference between global mean-field coupling and <b>local</b> coupling carried neighbour
+          to neighbour, the same distinction that runs under every page here. One toggle, and you can watch it.</span>
+        </div>
+      </section>
+
+      <section>
+        <h3>Lineage</h3>
+        <p class="note">
+          The pieces are old and well named: tangent-circle problems from <b>Apollonius of Perga</b>, the
+          curvature relation from <b>Descartes</b> (1643), rediscovered by <span class="term">Frederick Soddy<span class="tip"><b>Frederick Soddy.</b> Chemist and Nobel laureate who set Descartes' theorem to verse in "The Kiss Precise" (1936) and extended it to spheres. Hence "Soddy circles."</span></span> as the verse
+          "The Kiss Precise" (1936). The fresh edge is only the framing: an Apollonian gasket revolved into
+          a torus, with a curvature change made into a travelling wave. Cite the giants; claim the
+          demonstration, not the discovery.
+        </p>
+        <p class="note" style="color:#5b6472;font-size:10.5px">
+          Apollonius of Perga, <i>Tangencies</i> (c. 200 BCE) &middot; Descartes (1643) &middot; Soddy,
+          <i>Nature</i> "The Kiss Precise" (1936).
+        </p>
+      </section>
+
+      <a class="about-link" href="/kuramoto.html">About Yoshiki Kuramoto &rarr;</a>
+
+    </div>
+  </aside>
+</div>
+
+<div id="controls">
+  <div class="sg"><label>k&#8321;</label><div class="sr"><input type="range" id="sk1" min="0.5" max="10" step="0.1" value="10"><span class="sv" id="vk1">10.0</span></div></div>
+  <div class="sg"><label>k&#8322;</label><div class="sr"><input type="range" id="sk2" min="0.5" max="10" step="0.1" value="10"><span class="sv" id="vk2">10.0</span></div></div>
+  <div class="sg"><label>k&#8323;</label><div class="sr"><input type="range" id="sk3" min="0.5" max="10" step="0.1" value="10"><span class="sv" id="vk3">10.0</span></div></div>
+  <div class="sep"></div>
+  <div class="sg adv"><label>slices</label><div class="sr"><input type="range" id="sM" min="6" max="48" step="1" value="48"><span class="sv" id="vM">48</span></div></div>
+  <div class="sg adv"><label>depth</label><div class="sr"><input type="range" id="sDepth" min="1" max="7" step="1" value="7"><span class="sv" id="vDepth">7</span></div></div>
+  <div class="sg adv"><label>wave time (s)</label><div class="sr"><input type="range" id="sT" min="0.3" max="6" step="0.1" value="6"><span class="sv" id="vT">6.0</span></div></div>
+  <div class="btns">
+    <button class="action wave" id="bMode" title="Toggle how a curvature change reaches the slices: all at once (global) or rippling around the ring (a travelling wave)">Wave</button>
+    <button class="action" id="bDir" title="Wave direction: one-way around the ring, or counter-rotating (two fronts leave the change point in opposite directions and meet at the far side). Only affects wave mode.">&rarr; one-way</button>
+    <button class="action" id="bPulse" title="Fire a single curvature pulse that travels around the ring once">Pulse</button>
+    <button class="action" id="bReset">Reset</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function () {
+'use strict';
+
+// ── Constants ──────────────────────────────────────────────────────────────
+const TAU = Math.PI * 2;
+const R_MAJ = 2.45, R_MIN = 0.98;        // torus major radius / tube (minor) radius
+const MAX_M = 48;                        // preallocated slice ceiling
+const MAX_CIRCLES = 200;                 // per-slice gasket-circle cap (biggest kept)
+const SEG = 30;                          // line segments per drawn circle
+const MIN_RADIUS_G = 0.0009;             // prune tiny gasket circles (in gasket units)
+const REBUILD_BUDGET = 8;                // max slices rebuilt per frame (bounds a fast wiggle)
+const CACHE_MAX = 180;                   // memoized gaskets (keyed by quantized k + depth)
+
+const IS_SMALL = window.matchMedia('(max-width: 600px)').matches;
+
+// Site colormap (cool cyan → warm amber)
+const STOPS = [
+  [0.00, [ 79, 195, 247]], [0.30, [122, 142, 240]], [0.55, [171,  71, 188]],
+  [0.80, [255, 123, 172]], [1.00, [255, 202,  40]],
+];
+const _rgb = [0, 0, 0];
+function colormap(t, out) {
+  t = t < 0 ? 0 : (t > 1 ? 1 : t);
+  for (let i = 0; i < STOPS.length - 1; i++) {
+    const a = STOPS[i], b = STOPS[i + 1];
+    if (t <= b[0]) {
+      const f = (t - a[0]) / (b[0] - a[0]);
+      out[0] = (a[1][0] + (b[1][0] - a[1][0]) * f) / 255;
+      out[1] = (a[1][1] + (b[1][1] - a[1][1]) * f) / 255;
+      out[2] = (a[1][2] + (b[1][2] - a[1][2]) * f) / 255;
+      return;
+    }
+  }
+  out[0] = STOPS[4][1][0] / 255; out[1] = STOPS[4][1][1] / 255; out[2] = STOPS[4][1][2] / 255;
+}
+
+// ── Gasket math (ported from self-similarity.html; parent-tracking dropped) ──
+const cAdd  = (a, b) => [a[0] + b[0], a[1] + b[1]];
+const cSub  = (a, b) => [a[0] - b[0], a[1] - b[1]];
+const cMul  = (a, b) => [a[0] * b[0] - a[1] * b[1], a[0] * b[1] + a[1] * b[0]];
+const cMulR = (a, r) => [a[0] * r, a[1] * r];
+const cDivR = (a, r) => [a[0] / r, a[1] / r];
+
+function fourthCircle(k1, k2, k3, z1, z2, z3, kPrev, zPrev) {
+  const sumK = k1 + k2 + k3;
+  const sumKZ = cAdd(cAdd(cMulR(z1, k1), cMulR(z2, k2)), cMulR(z3, k3));
+  const kNew = 2 * sumK - kPrev;
+  if (kNew === 0) return { k: 0, z: [0, 0] };
+  const zNew = cDivR(cSub(cMulR(sumKZ, 2), cMulR(zPrev, kPrev)), kNew);
+  return { k: kNew, z: zNew };
+}
+
+function initialConfiguration(k1, k2, k3) {
+  const r1 = 1 / k1, r2 = 1 / k2, r3 = 1 / k3;
+  const z1 = [0, 0];
+  const z2 = [r1 + r2, 0];
+  const d12 = r1 + r2, d13 = r1 + r3, d23 = r2 + r3;
+  let cosA = (d12 * d12 + d13 * d13 - d23 * d23) / (2 * d12 * d13);
+  cosA = Math.max(-1, Math.min(1, cosA));
+  const alpha = Math.acos(cosA);
+  const z3 = [z1[0] + d13 * Math.cos(alpha), z1[1] + d13 * Math.sin(alpha)];
+
+  const sumK = k1 + k2 + k3;
+  const disc = Math.max(k1 * k2 + k2 * k3 + k3 * k1, 0);
+  const sqrtK = Math.sqrt(disc);
+  const kPlus = sumK + 2 * sqrtK;
+  const kMinus = sumK - 2 * sqrtK;
+  const kOut = kMinus < 0 ? kMinus : kPlus;
+
+  const sumKZ = cAdd(cAdd(cMulR(z1, k1), cMulR(z2, k2)), cMulR(z3, k3));
+  const dz = cAdd(cAdd(cMulR(cMul(z1, z2), k1 * k2), cMulR(cMul(z2, z3), k2 * k3)), cMulR(cMul(z3, z1), k3 * k1));
+  const m = Math.hypot(dz[0], dz[1]);
+  const sqrtRe = Math.sqrt(Math.max((m + dz[0]) / 2, 0));
+  const sqrtIm = Math.sign(dz[1] || 1) * Math.sqrt(Math.max((m - dz[0]) / 2, 0));
+  const sqrtZ = [sqrtRe, sqrtIm];
+
+  const zPlus  = kPlus  !== 0 ? cDivR(cAdd(sumKZ, cMulR(sqrtZ, 2)), kPlus)  : [0, 0];
+  const zMinus = kMinus !== 0 ? cDivR(cSub(sumKZ, cMulR(sqrtZ, 2)), kMinus) : [0, 0];
+  const zOut = kOut === kMinus ? zMinus : zPlus;
+
+  const shift = zOut;
+  return [
+    { k: kOut, z: cSub(zOut, shift), depth: 0 },
+    { k: k1,   z: cSub(z1,   shift), depth: 0 },
+    { k: k2,   z: cSub(z2,   shift), depth: 0 },
+    { k: k3,   z: cSub(z3,   shift), depth: 0 },
+  ];
+}
+
+function recurse(c1, c2, c3, cPrev, depth, out, maxDepth) {
+  if (depth > maxDepth) return;
+  const { k: kNew, z: zNew } = fourthCircle(c1.k, c2.k, c3.k, c1.z, c2.z, c3.z, cPrev.k, cPrev.z);
+  if (kNew <= 0) return;
+  if (1 / kNew < MIN_RADIUS_G) return;
+  if (out.length >= 4000) return;
+  const c = { k: kNew, z: zNew, depth };
+  out.push(c);
+  recurse(c1, c2, c, c3, depth + 1, out, maxDepth);
+  recurse(c1, c3, c, c2, depth + 1, out, maxDepth);
+  recurse(c2, c3, c, c1, depth + 1, out, maxDepth);
+}
+
+function buildGasket(initial, maxDepth) {
+  const circles = [...initial];
+  const [cOut, c1, c2, c3] = initial;
+  recurse(c1,   c2, c3, cOut, 1, circles, maxDepth);
+  recurse(cOut, c1, c2, c3,   1, circles, maxDepth);
+  recurse(cOut, c1, c3, c2,   1, circles, maxDepth);
+  recurse(cOut, c2, c3, c1,   1, circles, maxDepth);
+  return circles;
+}
+
+function buildNormalized(k1, k2, k3, depth) {
+  let initial;
+  try { initial = initialConfiguration(k1, k2, k3); } catch (e) { return { list: [], maxDepth: 1 }; }
+  if (!isFinite(initial[0].k) || initial[0].k >= 0) return { list: [], maxDepth: 1 };
+  const circles = buildGasket(initial, depth);
+  const R = Math.abs(1 / initial[0].k), scale = R_MIN / R;
+  let list = circles.map(c => ({ cu: c.z[0] * scale, cv: c.z[1] * scale, rho: Math.abs(1 / c.k) * scale, depth: c.depth }));
+  list.sort((a, b) => b.rho - a.rho);
+  if (list.length > MAX_CIRCLES) list = list.slice(0, MAX_CIRCLES);
+  let md = 0; for (const c of list) if (c.depth > md) md = c.depth;
+  return { list, maxDepth: Math.max(md, 1) };
+}
+
+const cache = new Map();
+function getGasket(k1, k2, k3, depth) {
+  const key = k1 + ',' + k2 + ',' + k3 + '|' + depth;
+  let g = cache.get(key);
+  if (g) { cache.delete(key); cache.set(key, g); return g; }
+  g = buildNormalized(k1, k2, k3, depth);
+  cache.set(key, g);
+  if (cache.size > CACHE_MAX) cache.delete(cache.keys().next().value);
+  return g;
+}
+
+// ── three.js scene ──────────────────────────────────────────────────────────
+const cv = document.getElementById('cvs');
+const area = document.getElementById('canvas-area');
+const renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, IS_SMALL ? 1.75 : 2));
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x0e0e12, 0.045);
+const camera = new THREE.PerspectiveCamera(46, 1, 0.1, 100);
+let camDist = IS_SMALL ? 10 : 8.6;
+const rootGroup = new THREE.Group();   // panned for drawer-aware framing
+const pivot = new THREE.Group();       // yaw/pitch from drag
+scene.add(rootGroup); rootGroup.add(pivot);
+
+const VERTS_PER_SLICE = MAX_CIRCLES * SEG * 2;
+const slices = [];
+for (let m = 0; m < MAX_M; m++) {
+  const geo = new THREE.BufferGeometry();
+  const posAttr = new THREE.BufferAttribute(new Float32Array(VERTS_PER_SLICE * 3), 3);
+  const colAttr = new THREE.BufferAttribute(new Float32Array(VERTS_PER_SLICE * 3), 3);
+  posAttr.setUsage(THREE.DynamicDrawUsage); colAttr.setUsage(THREE.DynamicDrawUsage);
+  geo.setAttribute('position', posAttr);
+  geo.setAttribute('color', colAttr);
+  geo.setDrawRange(0, 0);
+  const mesh = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.82 }));
+  mesh.frustumCulled = false; mesh.visible = false;
+  pivot.add(mesh);
+  slices.push({ geo, posAttr, colAttr, mesh, builtKey: null });
+}
+
+// embed(u,v,phi) = ((R_MAJ+u)cos phi, (R_MAJ+u)sin phi, v) — standard torus tube parametrization
+function fillSlice(slice, g, phi) {
+  const pos = slice.posAttr.array, col = slice.colAttr.array;
+  const cph = Math.cos(phi), sph = Math.sin(phi);
+  let v = 0;
+  for (const c of g.list) {
+    colormap(c.depth / g.maxDepth, _rgb);
+    const cr = _rgb[0], cg = _rgb[1], cb = _rgb[2];
+    for (let s = 0; s < SEG; s++) {
+      const a0 = TAU * s / SEG, a1 = TAU * (s + 1) / SEG;
+      const u0 = c.cu + c.rho * Math.cos(a0), w0 = c.cv + c.rho * Math.sin(a0);
+      const u1 = c.cu + c.rho * Math.cos(a1), w1 = c.cv + c.rho * Math.sin(a1);
+      const rr0 = R_MAJ + u0, rr1 = R_MAJ + u1;
+      let i = v * 3;
+      pos[i] = rr0 * cph; pos[i + 1] = rr0 * sph; pos[i + 2] = w0;
+      col[i] = cr; col[i + 1] = cg; col[i + 2] = cb; v++;
+      i = v * 3;
+      pos[i] = rr1 * cph; pos[i + 1] = rr1 * sph; pos[i + 2] = w1;
+      col[i] = cr; col[i + 1] = cg; col[i + 2] = cb; v++;
+    }
+  }
+  slice.geo.setDrawRange(0, v);
+  slice.posAttr.needsUpdate = true; slice.colAttr.needsUpdate = true;
+  slice.mesh.visible = true;
+}
+
+// ── Parameters + the k delay-line ────────────────────────────────────────────
+const P = { k1: 2, k2: 2, k3: 3, depth: 5, M: 32, T: 2.5, mode: 'wave', dir: 'one-way' };
+let histT = [], histK = [];
+const PULSE_DELTA = 3;     // curvature bump height of the one-shot pulse
+const PULSE_FRAMES = 20;   // frames the spike is injected for (frame-based, so a rAF hiccup can't skip it)
+let pulseFrames = 0;       // >0 while the spike is being injected into the history
+let userActed = false;     // suppresses the one-time auto-pulse once the visitor touches anything
+function sampleK(t) {
+  if (histT.length === 0) return [P.k1, P.k2, P.k3];
+  for (let i = histT.length - 1; i >= 0; i--) if (histT[i] <= t) return histK[i];
+  return histK[0];
+}
+const q = x => Math.round(x * 10) / 10;
+
+// ── Orbit ────────────────────────────────────────────────────────────────────
+let yaw = 0.7, pitch = 0.5, dragging = false, px = 0, py = 0, idle = 0, interacted = false;
+cv.addEventListener('pointerdown', e => { dragging = true; px = e.clientX; py = e.clientY; idle = 0; markInteract(); cv.setPointerCapture(e.pointerId); });
+cv.addEventListener('pointerup', e => { dragging = false; try { cv.releasePointerCapture(e.pointerId); } catch (_) {} });
+cv.addEventListener('pointermove', e => {
+  if (!dragging) return;
+  yaw += (e.clientX - px) * 0.006; pitch += (e.clientY - py) * 0.006;
+  pitch = Math.max(-1.45, Math.min(1.45, pitch)); px = e.clientX; py = e.clientY; idle = 0;
+});
+cv.addEventListener('wheel', e => { e.preventDefault(); camDist = Math.max(4.5, Math.min(17, camDist + e.deltaY * 0.006)); markInteract(); }, { passive: false });
+function markInteract() { userActed = true; if (interacted) return; interacted = true; const h = document.getElementById('hint'); if (h) h.style.opacity = '0'; }
+
+function resize() {
+  const w = area.clientWidth, h = area.clientHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h; camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', resize);
+
+// drawer-aware pan (translate rootGroup so the torus clears the sheet on wide screens)
+let drawerOpen = false, panX = 0;
+function updatePan() {
+  const h = area.clientHeight || 1;
+  const wpp = (2 * camDist * Math.tan((camera.fov * Math.PI / 180) / 2)) / h;
+  const drawerW = Math.min(384, area.clientWidth);
+  const targetX = (drawerOpen && (area.clientWidth - drawerW) > 320) ? -(drawerW / 2) * wpp : 0;
+  panX += (targetX - panX) * 0.18;
+  if (Math.abs(targetX - panX) < 1e-4) panX = targetX;
+  rootGroup.position.set(panX, 0, 0);
+}
+
+// ── Readout ──────────────────────────────────────────────────────────────────
+const roEl = document.getElementById('readout');
+let roAccum = 0;
+function updateReadout(g) {
+  roEl.innerHTML =
+    `k = (<b>${q(P.k1).toFixed(1)}</b>, <b>${q(P.k2).toFixed(1)}</b>, <b>${q(P.k3).toFixed(1)}</b>) &middot; depth ${P.depth}<br>` +
+    `${P.M} slices &middot; ${g.list.length} circles/slice<br>` +
+    (P.mode === 'wave' ? `<span class="wave">wave</span> &middot; ${P.T.toFixed(1)}s around the ring` : `all at once (global)`);
+}
+
+// ── Main loop ────────────────────────────────────────────────────────────────
+function loop(now) {
+  requestAnimationFrame(loop);
+  const nowSec = now / 1000;
+
+  // one-shot pulse: inject a transient k-spike (on k1) for a few frames; the delay line carries it
+  // around the ring. Frame-based (not wall-time) so a rendering hiccup can't skip the whole window.
+  const pulsing = pulseFrames > 0;
+  if (pulsing) pulseFrames--;
+  const k1now = pulsing ? (P.k1 + PULSE_DELTA <= 10 ? P.k1 + PULSE_DELTA : P.k1 - PULSE_DELTA) : P.k1;
+  histT.push(nowSec); histK.push([k1now, P.k2, P.k3]);
+  const windowSec = (P.mode === 'wave' ? P.T : 0) + 0.6;
+  while (histT.length > 1 && histT[0] < nowSec - windowSec) { histT.shift(); histK.shift(); }
+
+  const tau = P.mode === 'wave' ? P.T / Math.max(P.M, 1) : 0;
+  let budget = REBUILD_BUDGET;
+  for (let m = 0; m < P.M; m++) {
+    const slice = slices[m];
+    const phi = TAU * m / P.M;
+    const lagSlots = P.dir === 'two-way' ? Math.min(m, P.M - m) : m;   // symmetric lag = counter-rotating
+    const kk = tau > 0 ? sampleK(nowSec - lagSlots * tau) : [k1now, P.k2, P.k3];
+    const q1 = q(kk[0]), q2 = q(kk[1]), q3 = q(kk[2]);
+    const wantKey = q1 + ',' + q2 + ',' + q3 + '|' + P.depth + '|' + P.M;
+    if (slice.builtKey !== wantKey && budget > 0) {
+      fillSlice(slice, getGasket(q1, q2, q3, P.depth), phi);
+      slice.builtKey = wantKey; budget--;
+    }
+  }
+  for (let m = P.M; m < MAX_M; m++) { slices[m].mesh.visible = false; slices[m].builtKey = null; }
+
+  idle += 0.016;
+  if (!dragging && idle > 1.4) yaw += 0.05 * 0.016;
+  pivot.rotation.y = yaw; pivot.rotation.x = pitch;
+  updatePan();
+  camera.position.set(0, 0, camDist); camera.lookAt(rootGroup.position.x, 0, 0);
+
+  roAccum += 0.016;
+  if (roAccum > 0.15) { roAccum = 0; updateReadout(getGasket(q(P.k1), q(P.k2), q(P.k3), P.depth)); }
+
+  renderer.render(scene, camera);
+}
+
+// verify/inspect hook (read-only): is the wave visible as spatial variation?
+window.__toy = function () {
+  const keys = [];
+  for (let m = 0; m < P.M; m++) keys.push(slices[m].builtKey);
+  const built = keys.filter(Boolean);
+  const set = new Set(built);
+  let symmetric = true;
+  for (let m = 1; m < P.M; m++) if (keys[m] !== keys[P.M - m]) { symmetric = false; break; }
+  return {
+    M: P.M, mode: P.mode, dir: P.dir, T: P.T, depth: P.depth, k: [q(P.k1), q(P.k2), q(P.k3)],
+    builtCount: built.length, distinctKeys: set.size, allSame: set.size <= 1, symmetric,
+    userActed, pulseActive: pulseFrames > 0,
+    circlesPerSlice: getGasket(q(P.k1), q(P.k2), q(P.k3), P.depth).list.length, cacheSize: cache.size,
+  };
+};
+
+// ── Controls ─────────────────────────────────────────────────────────────────
+function bindSlider(slId, vId, dec, onInput) {
+  const sl = document.getElementById(slId), vEl = document.getElementById(vId);
+  sl.addEventListener('input', () => { vEl.textContent = parseFloat(sl.value).toFixed(dec); onInput(parseFloat(sl.value)); });
+}
+bindSlider('sk1', 'vk1', 1, v => { P.k1 = v; });
+bindSlider('sk2', 'vk2', 1, v => { P.k2 = v; });
+bindSlider('sk3', 'vk3', 1, v => { P.k3 = v; });
+bindSlider('sM', 'vM', 0, v => { P.M = Math.round(v); });
+bindSlider('sDepth', 'vDepth', 0, v => { P.depth = Math.round(v); });
+bindSlider('sT', 'vT', 1, v => { P.T = v; });
+
+const bMode = document.getElementById('bMode');
+const bDir = document.getElementById('bDir');
+function updateDirInert() { bDir.classList.toggle('inert', P.mode !== 'wave'); }
+bMode.addEventListener('click', () => {
+  P.mode = P.mode === 'wave' ? 'together' : 'wave';
+  bMode.textContent = P.mode === 'wave' ? 'Wave' : 'All at once';
+  bMode.classList.toggle('wave', P.mode === 'wave');
+  bMode.classList.toggle('together', P.mode === 'together');
+  updateDirInert();
+});
+bDir.addEventListener('click', () => {
+  P.dir = P.dir === 'one-way' ? 'two-way' : 'one-way';
+  bDir.textContent = P.dir === 'one-way' ? '→ one-way' : '⇄ counter';
+});
+function firePulse() { pulseFrames = PULSE_FRAMES; }
+document.getElementById('bPulse').addEventListener('click', () => { userActed = true; firePulse(); });
+
+// landing defaults: all sliders maxed on desktop; a lean, low set on mobile (advanced sliders are hidden there too)
+function applyDefaults() {
+  if (IS_SMALL) { P.k1 = 2; P.k2 = 2; P.k3 = 3; P.M = 18; P.depth = 4; P.T = 2.5; }
+  else { P.k1 = 10; P.k2 = 10; P.k3 = 10; P.M = 48; P.depth = 7; P.T = 6; }
+  P.mode = 'wave'; P.dir = 'one-way';
+  setCtl('sk1', 'vk1', P.k1, 1); setCtl('sk2', 'vk2', P.k2, 1); setCtl('sk3', 'vk3', P.k3, 1);
+  setCtl('sM', 'vM', P.M, 0); setCtl('sDepth', 'vDepth', P.depth, 0); setCtl('sT', 'vT', P.T, 1);
+  bMode.textContent = 'Wave'; bMode.classList.add('wave'); bMode.classList.remove('together');
+  bDir.textContent = '→ one-way'; updateDirInert();
+}
+
+function setCtl(slId, vId, val, dec) { document.getElementById(slId).value = val; document.getElementById(vId).textContent = (+val).toFixed(dec); }
+document.getElementById('bReset').addEventListener('click', applyDefaults);
+
+// ── Drawer ───────────────────────────────────────────────────────────────────
+document.getElementById('drawerTab').addEventListener('click', () => { drawerOpen = true; document.body.classList.add('drawer-open'); });
+document.getElementById('drawerClose').addEventListener('click', () => { drawerOpen = false; document.body.classList.remove('drawer-open'); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && drawerOpen) { drawerOpen = false; document.body.classList.remove('drawer-open'); } });
+
+// ── Tooltips (re-parented to body so the drawer transform can't clip them) ──
+function setupTooltips() {
+  const canHover = window.matchMedia('(hover: hover)').matches;
+  let openTip = null;
+  document.querySelectorAll('.term').forEach(term => {
+    const tip = term.querySelector('.tip');
+    if (!tip) return;
+    document.body.appendChild(tip);
+    function show() {
+      if (openTip && openTip !== tip) openTip.style.display = 'none';
+      tip.style.display = 'block';
+      const tr = term.getBoundingClientRect(), tp = tip.getBoundingClientRect(), margin = 8;
+      let top = tr.top - tp.height - 8; if (top < margin) top = tr.bottom + 8;
+      let left = tr.right - tp.width; if (left < margin) left = margin;
+      if (left + tp.width > window.innerWidth - margin) left = window.innerWidth - tp.width - margin;
+      tip.style.top = top + 'px'; tip.style.left = left + 'px'; openTip = tip;
+    }
+    function hide() { tip.style.display = 'none'; if (openTip === tip) openTip = null; }
+    if (canHover) { term.addEventListener('mouseenter', show); term.addEventListener('mouseleave', hide); }
+    else { term.addEventListener('click', e => { e.stopPropagation(); tip.style.display === 'block' ? hide() : show(); }); }
+  });
+  if (!canHover) document.addEventListener('click', () => { if (openTip) { openTip.style.display = 'none'; openTip = null; } });
+}
+
+// ── Boot ─────────────────────────────────────────────────────────────────────
+applyDefaults();                                    // landing default: all-max on desktop, lean on mobile
+const controlsEl = document.getElementById('controls');
+controlsEl.addEventListener('input', () => { userActed = true; }, true);
+controlsEl.addEventListener('click', () => { userActed = true; }, true);
+resize();
+setupTooltips();
+setTimeout(() => { if (!userActed) firePulse(); }, 2500);   // gentle self-demo pulse if left untouched
+console.log('The Torus +: Apollonian gasket cross-section revolved into a wireframe torus; a curvature change is a circular delay line.');
+requestAnimationFrame(loop);
+
+})();
+</script>
+<script data-goatcounter="https://kuramoto.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>

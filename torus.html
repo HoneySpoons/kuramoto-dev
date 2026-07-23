@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>The Torus</title>
-<meta name="description" content="Two coupled angles live on a torus. Watch a winding flow fill the surface, collapse into sync under coupling, and split into a chimera: a coherent arc beside an incoherent one, on the donut. Euler in the drawer: χ = 0, not the sphere's 2.">
+<meta name="description" content="Two coupled angles live on a torus. Watch a winding flow fill the surface, collapse into sync under coupling, and split into a locking state: a coherent arc beside an incoherent one, on the donut. Euler in the drawer: χ = 0, not the sphere's 2.">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; overflow: hidden; }
@@ -45,6 +45,19 @@ body {
   font: 10px system-ui; letter-spacing: .12em; text-transform: uppercase; color: #55556a;
   transition: opacity .5s;
 }
+
+/* desktop nudge — bottom-centre toast shown when the instrument toggle is tapped on mobile
+   (the rings crowd the winding trails on a narrow screen, so we point at desktop instead) */
+#nudge {
+  position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%);
+  z-index: 6; pointer-events: none; user-select: none;
+  max-width: calc(100vw - 32px); text-align: center;
+  font: 11px system-ui; letter-spacing: .03em; color: #9a9ab0;
+  background: rgba(20, 20, 42, .92); border: 1px solid #2a2a3e; border-radius: 6px;
+  padding: 8px 14px;
+  opacity: 0; transition: opacity .2s;
+}
+#nudge.show { opacity: 1; }
 
 /* ── diagnostics (top-left): linear strip + instruments panel ── */
 #diag {
@@ -198,7 +211,7 @@ button.action.warm { background: #1e1708; color: #ffca28; border-color: #4a3a1e;
   #drawerTab { padding: 20px 12px; }
   #drawer { width: 100vw; }                      /* full-width sheet */
   .tip { width: min(280px, calc(100vw - 24px)); }
-  #caption { top: 12px; font-size: 12px; }
+  #caption { display: none; }                    /* hide top narration on mobile — reclaims the crowded top strip */
   .btns { margin-left: 0; }
 }
 </style>
@@ -209,11 +222,12 @@ button.action.warm { background: #1e1708; color: #ffca28; border-color: #4a3a1e;
 
   <div id="caption"></div>
   <div id="hint">drag to orbit &middot; scroll to zoom</div>
+  <div id="nudge"></div>
 
-  <!-- diagnostics: linear chimera strip (auto on coupling) + instruments (toggle) -->
+  <!-- diagnostics: linear locking-state strip (auto on coupling) + instruments (toggle) -->
   <div id="diag">
     <div id="stripWrap">
-      <div class="diaglbl">&theta;&#8321; phase vs index &middot; the chimera strip</div>
+      <div class="diaglbl">&theta;&#8321; phase vs index &middot; the locking-state strip</div>
       <canvas id="strip"></canvas>
     </div>
     <div id="instrWrap">
@@ -251,7 +265,7 @@ button.action.warm { background: #1e1708; color: #ffca28; border-color: #4a3a1e;
       </section>
 
       <section>
-        <h3>Coupling &amp; the chimera</h3>
+        <h3>Coupling &amp; the locking state</h3>
         <div class="eq">
           dθ<sub>d,i</sub>/dt = ω<sub>d,i</sub> + (K<sub>d</sub>/N) Σⱼ G<sub>ij</sub>·sin(θ<sub>d,j</sub> − θ<sub>d,i</sub> − β)<br>
           <span style="font-size:12px;color:#8a8a9c">G<sub>ij</sub> = 1 + A·cos( 2π(i−j)/N )</span>
@@ -260,14 +274,14 @@ button.action.warm { background: #1e1708; color: #ffca28; border-color: #4a3a1e;
           Turn on <b>K</b> and the tracers pull on each other. This is the <span class="term">Kuramoto–Sakaguchi<span class="tip"><b>Kuramoto–Sakaguchi model.</b> Phase oscillators coupled through the sine of their phase difference, with a lag β inside the sine (Sakaguchi &amp; Kuramoto, 1986). Past a critical coupling the population locks.</span></span> rule, run separately on each angle with its own strength K₁, K₂. Past a critical coupling the surface-filling spray collapses into a single travelling bundle: <b>synchronization</b>.
         </p>
         <p class="note">
-          Two extra ingredients open the middle. The kernel <b>G</b> is <span class="term">non-local<span class="tip"><b>Non-local coupling.</b> G = 1 + A·cos(Δ) makes near neighbours (in the index ring) pull harder than far ones, and far ones pull <i>against</i>. This structure is what a chimera needs; uniform all-to-all coupling can't make one in a phase-only model. The kernel is load-bearing.</span></span>, so near neighbours pull harder than far ones. And <b>β</b> is a <span class="term">phase lag<span class="tip"><b>Phase lag β.</b> A frustration term inside the sine. Chimeras live near β ≈ π/2, but the negative far-neighbour lobe of this kernel shifts the frustrated window higher, so here β can run well past π/2 (the shipped preset sits at 1.43).</span></span> that keeps agreement from ever completing. Together they let one <b>arc</b> of the population lock while another stays incoherent: a <b>chimera</b>, coherence and incoherence holding side by side on the same donut.
+          Two extra ingredients open the middle. The kernel <b>G</b> is <span class="term">non-local<span class="tip"><b>Non-local coupling.</b> G = 1 + A·cos(Δ) makes near neighbours (in the index ring) pull harder than far ones, and far ones pull <i>against</i>. This structure is what a chimera needs; uniform all-to-all coupling can't make one in a phase-only model. The kernel is load-bearing.</span></span>, so near neighbours pull harder than far ones. And <b>β</b> is a <span class="term">phase lag<span class="tip"><b>Phase lag β.</b> A frustration term inside the sine. Chimeras live near β ≈ π/2, but the negative far-neighbour lobe of this kernel shifts the frustrated window higher, so here β can run well past π/2 (the shipped preset sits at 1.43).</span></span> that keeps agreement from ever completing. Together they let one <b>arc</b> of the population lock while another stays incoherent: a <b>locking state</b>, coherence and incoherence holding side by side on the same donut.
         </p>
       </section>
 
       <section>
         <h3>Reading the picture</h3>
         <p class="note">
-          Each tracer is tinted by its <span class="term">local order Rᵢ<span class="tip"><b>Local order parameter Rᵢ.</b> How aligned an oscillator's θ₁ is with its near neighbours on the index ring. Amber = locked, cool blue = drifting. A warm arc beside a cool one is the chimera, seen directly on the surface.</span></span>: amber where a neighbourhood is locked, cool where it drifts. In a chimera a warm arc winds beside a cool one. The <b>chimera strip</b> (top-left, appears once coupling is on) lays the same thing out flat: θ₁ against oscillator index, so the coherent band and the scattered band sit next to each other. <b>Show instruments</b> adds the two order-parameter rings (loop θ₁, tube θ₂) with their mean-field arrows, and the sync bars.
+          Each tracer is tinted by its <span class="term">local order Rᵢ<span class="tip"><b>Local order parameter Rᵢ.</b> How aligned an oscillator's θ₁ is with its near neighbours on the index ring. Amber = locked, cool blue = drifting. A warm arc beside a cool one is the locking state, seen directly on the surface.</span></span>: amber where a neighbourhood is locked, cool where it drifts. In a locking state a warm arc winds beside a cool one. The <b>locking-state strip</b> (top-left, appears once coupling is on) lays the same thing out flat: θ₁ against oscillator index, so the coherent band and the scattered band sit next to each other. <b>Show instruments</b> adds the two order-parameter rings (loop θ₁, tube θ₂) with their mean-field arrows, and the sync bars.
         </p>
       </section>
 
@@ -289,14 +303,14 @@ button.action.warm { background: #1e1708; color: #ffca28; border-color: #4a3a1e;
           <span class="dim">N</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= <span class="val" id="liveN">30</span>
         </div>
         <p class="note">
-          R is the <span class="term">order parameter<span class="tip"><b>Order parameter R = |⟨e^{iθ}⟩|.</b> 0 when phases are scattered, 1 when they all agree. Computed per angle: R₁ for the loop, R₂ for the tube. In a chimera the global R sits in the middle while the local field splits into locked and loose.</span></span> for each angle: 0 scattered, 1 locked. A chimera keeps R off both ends.
+          R is the <span class="term">order parameter<span class="tip"><b>Order parameter R = |⟨e^{iθ}⟩|.</b> 0 when phases are scattered, 1 when they all agree. Computed per angle: R₁ for the loop, R₂ for the tube. In a locking state the global R sits in the middle while the local field splits into locked and loose.</span></span> for each angle: 0 scattered, 1 locked. A locking state keeps R off both ends.
         </p>
       </section>
 
       <section>
         <h3>Lineage</h3>
         <p class="note">
-          Every piece here is old and well-named: <b>irrational rotation / winding lines</b> on the torus (Kronecker, Weyl), <b>Kuramoto–Sakaguchi</b> coupled phase oscillators, and <b>chimera states</b> under non-local coupling (Kuramoto &amp; Battogtokh, 2002; Abrams &amp; Strogatz, 2004). The fresh edge is only the framing: two coupled angles, on the torus, interactive, walked from one circle up to a chimera on the surface. Cite the giants; claim the demonstration, not the discovery.
+          Every piece here is old and well-named: <b>irrational rotation / winding lines</b> on the torus (Kronecker, Weyl), <b>Kuramoto–Sakaguchi</b> coupled phase oscillators, and <b>chimera states</b> under non-local coupling (Kuramoto &amp; Battogtokh, 2002; Abrams &amp; Strogatz, 2004). The fresh edge is only the framing: two coupled angles, on the torus, interactive, walked from one circle up to a locking state on the surface. Cite the giants; claim the demonstration, not the discovery.
         </p>
         <p class="note" style="color:#5b6472;font-size:10.5px">
           Kuramoto &amp; Battogtokh, <i>Nonlin. Phenom. Complex Syst.</i> (2002) · Abrams &amp; Strogatz, <i>PRL</i> (2004) · Sakaguchi &amp; Kuramoto (1986) · Weyl equidistribution / Kronecker flow · Euler, <i>Elementa doctrinae solidorum</i> (1758).
@@ -326,7 +340,7 @@ button.action.warm { background: #1e1708; color: #ffca28; border-color: #4a3a1e;
   <div class="ctl-row ctl-row2">
     <div class="ctl-hint">Two angles, one donut &middot; <b>drag</b> to orbit &middot; <b>scroll</b> to zoom</div>
     <div class="btns">
-      <button class="action warm" id="bChimera" title="Load the persistent chimera preset: a coherent arc holding beside an incoherent one, on the torus. Turns instruments on.">Chimera</button>
+      <button class="action warm" id="bChimera" title="Load the persistent locking-state preset: a coherent arc holding beside an incoherent one, on the torus. Turns instruments on.">Locking state</button>
       <button class="action" id="bInstr" title="Show the order-parameter rings and sync bars">Show instruments</button>
       <button class="action" id="bReseed" title="Re-seed with the current start mode">Reseed</button>
       <button class="action" id="bReset" title="Restore the winding-flow defaults">Restore defaults</button>
@@ -583,7 +597,7 @@ function resize() {
 }
 window.addEventListener('resize', resize);
 
-// ── Diagnostics: chimera strip + instruments (rings + sync bars) ─────────
+// ── Diagnostics: locking-state strip + instruments (rings + sync bars) ─────────
 const strip = document.getElementById('strip'), sctx = strip.getContext('2d');
 const instr = document.getElementById('instr'), ictx = instr.getContext('2d');
 const SDPR = Math.min(window.devicePixelRatio || 1, 2);
@@ -648,12 +662,12 @@ function captionFor() {
     return `A <b>winding flow</b>. Each pair walks a line whose slope is the ratio ω₂/ω₁. <span class="cool">Rational closes into a knot, irrational fills the whole surface.</span>`;
   }
   if (isChimera()) {
-    return `A <b>chimera</b> on the torus: a <span class="cool">coherent arc</span> winding beside an incoherent one, coherence and disorder holding side by side on the same donut.`;
+    return `A <b>locking state</b> on the torus: a <span class="cool">coherent arc</span> winding beside an incoherent one, coherence and disorder holding side by side on the same donut.`;
   }
   if (R1g > 0.9) {
     return `<b>Synchronized.</b> Past the critical coupling the surface-filling spray has collapsed into a single travelling bundle.`;
   }
-  return `Coupling on. The tracers negotiate, pulled toward agreement, resisting toward their own rhythm. Add <b>locality</b> and <b>β</b> to open the chimera window.`;
+  return `Coupling on. The tracers negotiate, pulled toward agreement, resisting toward their own rhythm. Add <b>locality</b> and <b>β</b> to open the locking-state window.`;
 }
 function refreshCaption() { document.getElementById('caption').innerHTML = captionFor(); }
 
@@ -718,7 +732,7 @@ function restoreDefaults() {
   setCtl('sSpeed', 'vSpeed', 1);
   setCtl('sTrail', 'vTrail', IS_SMALL ? 320 : 400);
   build();
-  if (instrOn) document.getElementById('bInstr').click();   // instruments off (clean landing)
+  setInstr(false);                                          // instruments off (clean landing)
   if (!running) document.getElementById('bPause').click();  // resume if paused
   updateStripVis();                                          // strip hides (no coupling)
   touched = true; refreshCaption();                         // → the "winding flow" caption
@@ -727,11 +741,31 @@ document.getElementById('bReset').addEventListener('click', restoreDefaults);
 document.getElementById('bPause').addEventListener('click', function () {
   running = !running; this.classList.toggle('on', !running); this.textContent = running ? 'Pause' : 'Play';
 });
-document.getElementById('bInstr').addEventListener('click', function () {
-  instrOn = !instrOn; this.classList.toggle('on', instrOn);
-  this.textContent = instrOn ? 'Hide instruments' : 'Show instruments';
-  document.body.classList.toggle('instr-on', instrOn);
+// Instrument panel (rings + sync bars). setInstr() is the real toggle, split out so the
+// Chimera preset and Restore-defaults can drive it without going through the button's
+// mobile policy (below).
+function setInstr(on) {
+  instrOn = on;
+  const b = document.getElementById('bInstr');
+  b.classList.toggle('on', on);
+  b.textContent = on ? 'Hide instruments' : 'Show instruments';
+  document.body.classList.toggle('instr-on', on);
   updateStripVis();
+}
+// Mobile: tapping the toggle nudges toward desktop instead of revealing the rings — on a
+// narrow screen they overlap the winding trails. Re-fires each tap so the button feels live.
+let nudgeTimer = null;
+function nudgeDesktop() {
+  const n = document.getElementById('nudge');
+  n.textContent = 'Instruments are best explored on a larger screen.';
+  n.classList.add('show');
+  markInteract();   // fade the orbit hint so it can't sit under the toast (tapping a button isn't a canvas event)
+  clearTimeout(nudgeTimer);
+  nudgeTimer = setTimeout(() => n.classList.remove('show'), 4000);
+}
+document.getElementById('bInstr').addEventListener('click', function () {
+  if (IS_SMALL) { nudgeDesktop(); return; }
+  setInstr(!instrOn);
 });
 
 // set a slider's value + fire its input handler (keeps P + caption + strip in sync)
@@ -747,7 +781,7 @@ document.getElementById('bChimera').addEventListener('click', () => {
   setCtl('sSpeed', 'vSpeed', 1.7); setCtl('sK1', 'vK1', 1.0); setCtl('sK2', 'vK2', 0.4);
   setCtl('sBeta', 'vBeta', 1.43); setCtl('sLoc', 'vLoc', 0.08); setCtl('sTrail', 'vTrail', 400);
   build();
-  if (!instrOn) document.getElementById('bInstr').click();
+  if (!IS_SMALL) setInstr(true);   // instruments only on desktop; mobile reads the chimera off surface colour + the strip
   if (!running) document.getElementById('bPause').click();
   touched = true; refreshCaption();
 });
