@@ -106,8 +106,8 @@ button.on { background: #0c1e30; color: #4fc3f7; border-color: #1e4a6a; }
     <div class="sr"><input type="range" id="sm2" min=".1" max="3" step=".1" value=".5">
     <input type="text" class="sv" id="vm2" value="0.5"></div></div>
   <div class="sg"><label>Pendulums</label>
-    <div class="sr"><input type="range" id="sN" min="1" max="10" step="1" value="1">
-    <input type="text" class="sv" id="vN" value="1"></div></div>
+    <div class="sr"><input type="range" id="sN" min="1" max="10" step="1" value="10">
+    <input type="text" class="sv" id="vN" value="10"></div></div>
   <div class="sg"><label>Speed</label>
     <div class="sr"><input type="range" id="sSp" min=".1" max="2" step=".1" value=".3">
     <input type="text" class="sv" id="vSp" value="0.3"></div></div>
@@ -129,7 +129,7 @@ const BG = '#0e0e12';
 const HIT_PX = 20;
 
 let P = { L1:.5, L2:1, m1:1, m2:.5, g:9.81 };
-let N = 1;
+let N = 10;
 let base = { t1: Math.PI*.75, t2: Math.PI*.4 };
 let pends = [];
 let graphOn = false;
