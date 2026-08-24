@@ -1,0 +1,18 @@
+# kuramoto.dev
+
+> A small, interactive study of emergence, oscillation, and coupled systems — hand-built, dependency-light visualizations of the mathematics of synchronization and chaos.
+
+Built by Daniel Andresen. Vanilla HTML/JS, with three.js where 3D is needed; no build step and no tracking. Named for Yoshiki Kuramoto, whose model of spontaneous synchronization anchors the collection.
+
+## Visualizations
+- [The Torus](https://kuramoto.dev/torus.html): Two coupled angles live on a torus; a winding flow fills the surface, collapses into sync under coupling, then splits into a locking state — a coherent arc beside an incoherent one. Euler in the drawer: χ = 0, not the sphere's 2.
+- [The Torus +](https://kuramoto.dev/torus-plus.html): An extended study of the coupled-angle system on the torus, with richer coupling behavior.
+- [Synchronization](https://kuramoto.dev/synchronization.html): The Kuramoto model — a population of oscillators spontaneously falling into phase as coupling crosses its critical threshold.
+- [Double Pendulum](https://kuramoto.dev/chaos-theory.html): Sensitive dependence on initial conditions — deterministic chaos you can watch diverge from a near-identical start.
+- [Apollonian Gasket](https://kuramoto.dev/self-similarity.html): Self-similarity and the Descartes Circle Theorem, drawn as an infinitely nested packing of mutually tangent circles.
+- [Riemann Sum](https://kuramoto.dev/the-limit.html): The limit made visible — rectangles converging on the area under a curve.
+- [Position · Navigation · Timing](https://kuramoto.dev/pnt.html): Kuramoto–Sakaguchi oscillators on the sphere settling into a standing truce, rendered as a satellite constellation.
+
+## About
+- [About](https://kuramoto.dev/about.html): What the project is and why it exists.
+- [Yoshiki Kuramoto](https://kuramoto.dev/kuramoto.html): The physicist who named both ends of the rope — the canonical model of spontaneous synchronization and the canonical equation for spatiotemporal chaos.
