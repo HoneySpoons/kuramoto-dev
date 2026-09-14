@@ -1,0 +1,59 @@
+# Line endings: LF in the repository and LF in the working tree, on every machine.
+#
+# Why this file exists, rather than trusting everyone's local git config:
+#
+# On 2026-09-08, in a sibling repo in this project, nine files came back from a
+# Windows machine carrying CRLF. An 84-line change arrived as 3,716 lines of
+# diff -- a day's real work all but buried in line-ending churn, and every one of
+# those "changed" lines byte-identical apart from an invisible \r. Reviewing that
+# honestly is not possible; reviewing it dishonestly is what actually happens.
+#
+# This repo is LF-clean today, but nothing enforced it -- it was luck plus a
+# hardened local config on two machines. It now has contributors on two machines
+# and possibly a third, and a local config is exactly the thing a new clone,
+# a new machine, or a new person does not have. So the rule lives in the repo,
+# where it travels with the code and applies to whoever shows up.
+#
+# `eol=lf` is deliberate and does more than `text=auto` alone would. text=auto
+# stops CRLF getting *committed*; eol=lf also stops Windows *checking out* CRLF
+# against LF blobs, which is the other half of the same failure -- it produces a
+# whole-tree phantom diff of files that were never touched.
+
+# Default: git detects text vs binary by content, normalises text to LF in the
+# repository, and checks it out as LF everywhere.
+* text=auto eol=lf
+
+# --- Text, stated explicitly so intent survives a future rename or addition ---
+*.html  text eol=lf
+*.css   text eol=lf
+*.js    text eol=lf
+*.py    text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+*.json  text eol=lf
+*.md    text eol=lf
+*.txt   text eol=lf
+
+# SVG is XML. It looks like an asset and lives beside the images, but it is text
+# and should be normalised and diffable like any other source file.
+*.svg   text eol=lf
+
+# --- Binary: never normalise, never diff as text ---
+# Touching line endings in these corrupts them. The fonts and the logo raster
+# are the ones actually in this repo; the rest are listed so that dropping one
+# in later does not silently become a normalisation bug.
+*.woff2 binary
+*.woff  binary
+*.ttf   binary
+*.otf   binary
+*.eot   binary
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.webp  binary
+*.ico   binary
+*.pdf   binary
+*.zip   binary
+*.mp4   binary
+*.webm  binary
