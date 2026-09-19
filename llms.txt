@@ -6,10 +6,9 @@ Built by Daniel Andresen. Vanilla HTML/JS, with three.js where 3D is needed; no 
 
 ## Visualizations
 - [The Torus](https://kuramoto.dev/torus.html): Two coupled angles live on a torus; a winding flow fills the surface, collapses into sync under coupling, then splits into a locking state — a coherent arc beside an incoherent one. Euler in the drawer: χ = 0, not the sphere's 2.
-- [The Torus +](https://kuramoto.dev/torus-plus.html): An extended study of the coupled-angle system on the torus, with richer coupling behavior.
 - [Synchronization](https://kuramoto.dev/synchronization.html): The Kuramoto model — a population of oscillators spontaneously falling into phase as coupling crosses its critical threshold.
 - [Double Pendulum](https://kuramoto.dev/chaos-theory.html): Sensitive dependence on initial conditions — deterministic chaos you can watch diverge from a near-identical start.
-- [Apollonian Gasket](https://kuramoto.dev/self-similarity.html): Self-similarity and the Descartes Circle Theorem, drawn as an infinitely nested packing of mutually tangent circles.
+- [Self Similarity](https://kuramoto.dev/self-similarity.html): The Seed of Life read as a coupled-oscillator network — seven circles of equal radius, each passing through its neighbours' centres, coupled wherever they overlap, falling into phase under the Kuramoto model. The card is fixed at the seven-circle Seed; the same rule, applied again, would grow it 7 → 19 → 37.
 - [Riemann Sum](https://kuramoto.dev/the-limit.html): The limit made visible — rectangles converging on the area under a curve.
 - [Position · Navigation · Timing](https://kuramoto.dev/pnt.html): Kuramoto–Sakaguchi oscillators on the sphere settling into a standing truce, rendered as a satellite constellation.
 

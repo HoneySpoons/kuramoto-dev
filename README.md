@@ -10,11 +10,11 @@ Live at [kuramoto.dev](https://kuramoto.dev).
 
 - **[Chaos Theory](https://kuramoto.dev/chaos-theory.html)** — Double pendulum. Real-time RK4 integration; configurable pendulum count for the divergence demo. Sensitive dependence on initial conditions, made physical.
 - **[The Limit](https://kuramoto.dev/the-limit.html)** — Riemann sums approaching the definite integral. Three rules (left, midpoint, right), five functions, live convergence panel.
-- **[Self Similarity](https://kuramoto.dev/self-similarity.html)** — Apollonian gasket viewer. Descartes circle theorem, Vieta recursion, integer-curvature mode auto-detection, Soddy-swap drawer for any selected circle.
+- **[Self Similarity](https://kuramoto.dev/self-similarity.html)** — Seed of Life as a coupled-oscillator network. Seven circles of equal radius, coupled where they overlap; Kuramoto phase dynamics on the hexagonal lattice the geometry draws; stages 7 → 19 → 37 from one repeated rule. *(Replaced the Apollonian gasket viewer 2026-09-18; the original is kept at `/archive/self-similarity.html`.)*
 - **[Synchronization](https://kuramoto.dev/synchronization.html)** — The Kuramoto model of coupled phase oscillators. The order parameter as coupling crosses the critical threshold, plus an interactive **chimera mode**: under non-local coupling, part of the population locks while part stays incoherent. Reseed it and the incoherent region relocates.
 - **[Position · Navigation · Timing](https://kuramoto.dev/pnt.html)** — Kuramoto–Sakaguchi clocks on a sphere, rendered as a satellite constellation. The held middle between lockstep and scatter — a *standing truce*, not a true chimera. Includes **live in-browser sonification**: each clock sounds as it comes round, so you can hear coherence hold.
 - **[The Torus](https://kuramoto.dev/torus.html)** — Two coupled angles live on a torus. A winding flow fills the surface, collapses under coupling, and splits into a **locking state** — a coherent arc beside an incoherent one. Euler in the drawer: χ = 0, not the sphere's 2.
-- **[The Torus +](https://kuramoto.dev/torus-plus.html)** — An Apollonian gasket revolved into a torus, so a curvature change ripples around as a wave.
+*(The Torus + — an Apollonian gasket revolved into a torus — was archived 2026-09-18 along with the gasket itself; it is kept at `/archive/torus-plus.html`. A replacement built from parametric seeds is planned.)*
 
 *In progress:* **Resonance** (pulling voices out of noise with coupled oscillators) and a lineage card.
 
