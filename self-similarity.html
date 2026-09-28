@@ -46,6 +46,13 @@
   /* card-local roles (this card only; derive from --k-* when the contract lands) */
   --seed:            #ffa94d;   /* circle 0's base stroke. "the sun is the seed." equal weight, named by hue */
   --lit:             #e8e6dd;   /* agreement, drawn in the line. the print's silver */
+  /* how far circle 0's OWN lit arcs are pulled back toward --seed, so the sun keeps its name
+     at unity. 0 = pure --lit (the pre-2026-09-27 render), 1 = pure --seed. Dan's ruling
+     2026-09-27, remedy (a) — DES round-one comp §5's own escape hatch. Chosen by measurement,
+     not by eye: at r = 0.97 circle 0's circumference then means (245.4, 188.3, 123.5) — 51.3
+     from --seed against 106.9 from --lit, 97.9 % of 3,600 samples warm, 96.4 % within 60 of
+     the token. Before: (230.5, 227.6, 217.6), 0 % warm. The six peers are untouched. */
+  --seed-lit-mix:    0.68;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -59,6 +66,11 @@ body {
 #canvas-area { position: relative; flex: 1; overflow: hidden; min-height: 0; }
 canvas { display: block; }
 
+/* focus ring — one rule for every focusable. Without it everything fell back to Chromium's
+   rgb(16,16,16) 1px, i.e. near-black on near-black (AUD F4). DES's ledger ring was written
+   for the sliders Dan removed on 09-18 and never reached the buttons that shipped. */
+:focus-visible { outline: 2px solid var(--k-repair); outline-offset: 2px; }
+
 /* title — top centre, the-limit's slot; hidden on mobile like torus's caption */
 #title {
   position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
@@ -67,7 +79,7 @@ canvas { display: block; }
 }
 
 /* r-bar — synchronization.html's, verbatim */
-#rBar { position: absolute; bottom: 16px; left: 18px; display: flex; flex-direction: column; align-items: center; gap: 4px; z-index: 4; user-select: none; pointer-events: none; }
+#rBar { position: absolute; bottom: 16px; left: 18px; display: flex; flex-direction: column; align-items: center; gap: 4px; z-index: 4; user-select: none; pointer-events: auto; }   /* auto, not none: the title= is the only thing that says what the bar measures, and it sits bottom-left clear of the figure (AUD F6) */
 #rBar .lbl { font: 8px var(--k-font-machine); letter-spacing: .18em; color: #666678; text-transform: uppercase; }
 #rBar .track { width: 5px; height: 110px; background: var(--k-panel-2); border-radius: 3px; position: relative; overflow: hidden; }
 #rBar .fill { position: absolute; bottom: 0; left: 0; right: 0; height: 0%; background: linear-gradient(to top, #2c4763 0%, var(--k-repair) 40%, var(--k-cost) 100%); transition: height .08s linear; border-radius: 3px; }
@@ -144,7 +156,7 @@ button.action.on { background: #0c1e30; color: var(--k-repair); border-color: #1
 
   <button type="button" id="drawerTab" class="tab" title="Show math">M A T H</button>
 
-  <aside id="drawer" class="drawer">
+  <aside id="drawer" class="drawer" inert>   <!-- closed at load: inert keeps its focusables out of the tab order (AUD F3) -->
     <div class="dh"><h2>The Math</h2><button class="dclose" id="drawerClose" aria-label="Close">×</button></div>
     <div class="db">
       <section>
@@ -241,9 +253,13 @@ button.action.on { background: #0c1e30; color: var(--k-repair); border-color: #1
     COL.dormant = hex(tok('--k-axis-dormant', '#2c2c44'));
     COL.seed = hex(tok('--seed', '#ffa94d'));
     COL.lit = hex(tok('--lit', '#e8e6dd'));
+    /* the hue circle 0 lights its own agreement in — --lit pulled back toward --seed */
+    COL.seedLit = mix(COL.lit, COL.seed, parseFloat(tok('--seed-lit-mix', '0.68')));
   }
   function hex(h) { h = h.replace('#', ''); if (h.length === 3) h = h.split('').map(function (c) { return c + c; }).join(''); return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)]; }
   function rgba(c, a) { return 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + a + ')'; }
+  function mix(c, d, t) { var i, o = []; if (!(t > 0)) t = 0; if (t > 1) t = 1;
+    for (i = 0; i < 3; i++) o.push(Math.round(c[i] + (d[i] - c[i]) * t)); return o; }
   readTokens();
   document.addEventListener('themechange', readTokens);
 
@@ -318,12 +334,19 @@ button.action.on { background: #0c1e30; color: var(--k-repair); border-color: #1
   }
   var TOP = 44, BOT = 16, SIDE = 24;
 
+  /* one half of a lens: the 120-degree arc circle `c` draws inside its partner, centred on `ang`.
+     Stroked on its own so the two halves of a bond can carry different hues. */
+  function halfArc(c, R, ang, w, col) {
+    ctx.beginPath(); ctx.arc(c.x, c.y, R, ang - Math.PI/3, ang + Math.PI/3);
+    ctx.strokeStyle = col; ctx.lineWidth = w; ctx.stroke();
+  }
+
   function draw() {
     var span = S.rings + 1;
     var R = 0.94 * Math.min((W - 2*SIDE) / 2, (H - TOP - BOT) / 2) / span;
     var cx = W / 2, cy = TOP + (H - TOP - BOT) / 2;
     var P = S.pts.map(function (p) { return { x: cx + p.x * R, y: cy + p.y * R }; });
-    var i, b, p, q, a, ang, ph;
+    var i, j, b, p, q, a, ang, ph;
 
     ctx.fillStyle = COL.ground; ctx.fillRect(0, 0, W, H);
 
@@ -339,13 +362,26 @@ button.action.on { background: #0c1e30; color: var(--k-repair); border-color: #1
       ctx.lineWidth = 1; ctx.stroke();
     }
 
-    /* agreement — in the line: the arc each circle draws inside the other */
+    /* agreement — in the line: the arc each circle draws inside the other.
+       Remedy (a), Dan 2026-09-27: where a bond touches circle 0, the arc ON CIRCLE 0 is lit in
+       COL.seedLit rather than pure --lit, so the seed is still named when everything agrees.
+       The partner's half of the same bond stays pure --lit, so circles 1-6 are unchanged.
+       Weights and alphas are round one's: 1.4 px at a^3, 6 px glow at 0.10*(a-0.7)/0.3. */
     if (S.showLenses) {
       for (b = 0; b < S.bonds.length; b++) {
-        i = S.bonds[b][0]; p = P[i]; q = P[S.bonds[b][1]];
-        a = (1 + Math.cos(S.th[i] - S.th[S.bonds[b][1]])) / 2;
+        i = S.bonds[b][0]; j = S.bonds[b][1]; p = P[i]; q = P[j];
+        a = (1 + Math.cos(S.th[i] - S.th[j])) / 2;
         if (a < 0.05) continue;
         ang = Math.atan2(q.y - p.y, q.x - p.x);
+        if (i === 0 || j === 0) {                         /* seed bond — one stroke per half */
+          if (a > 0.7) {
+            halfArc(p, R, ang,            6, rgba(i === 0 ? COL.seedLit : COL.lit, 0.10 * (a - 0.7) / 0.3));
+            halfArc(q, R, ang + Math.PI,  6, rgba(j === 0 ? COL.seedLit : COL.lit, 0.10 * (a - 0.7) / 0.3));
+          }
+          halfArc(p, R, ang,           1.4, rgba(i === 0 ? COL.seedLit : COL.lit, a * a * a));
+          halfArc(q, R, ang + Math.PI, 1.4, rgba(j === 0 ? COL.seedLit : COL.lit, a * a * a));
+          continue;
+        }
         if (a > 0.7) {                                   /* glow */
           ctx.beginPath();
           ctx.arc(p.x, p.y, R, ang - Math.PI/3, ang + Math.PI/3);
@@ -380,9 +416,22 @@ button.action.on { background: #0c1e30; color: var(--k-repair); border-color: #1
   var pauseBtn = document.getElementById('pause');
   pauseBtn.addEventListener('click', function () { S.paused = !S.paused; pauseBtn.classList.toggle('on', S.paused); pauseBtn.textContent = S.paused ? 'Resume' : 'Pause'; });
 
-  document.getElementById('drawerTab').addEventListener('click', function () { document.body.classList.add('drawer-open'); });
-  document.getElementById('drawerClose').addEventListener('click', function () { document.body.classList.remove('drawer-open'); });
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') document.body.classList.remove('drawer-open'); });
+  /* the drawer is hidden by transform alone, so while closed its three focusables stayed in the
+     tab order; tabbing into them let the browser scroll the canvas 360 px off-screen and Esc did
+     nothing because .drawer-open had never been set (AUD F3). `inert` moves with the class, and
+     focus moves with the drawer so the keyboard path is coherent. */
+  var drawer = document.getElementById('drawer'), drawerTab = document.getElementById('drawerTab'),
+      drawerClose = document.getElementById('drawerClose');
+  function setDrawer(open) {
+    document.body.classList.toggle('drawer-open', open);
+    if (open) drawer.removeAttribute('inert'); else drawer.setAttribute('inert', '');
+    (open ? drawerClose : drawerTab).focus();
+  }
+  drawerTab.addEventListener('click', function () { setDrawer(true); });
+  drawerClose.addEventListener('click', function () { setDrawer(false); });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && document.body.classList.contains('drawer-open')) setDrawer(false);
+  });
 
   window.addEventListener('resize', resize);
   resize(); build(true); requestAnimationFrame(frame);
