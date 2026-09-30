@@ -15,6 +15,14 @@
   agreement drawn in the line; sibling chrome (torus / synchronization / pnt). Wired by CLI.
   Dan's ruling, 2026-09-18: no sliders. The card is fixed at the Seed — 7 circles, K = 1.6, σ = 0.6, speed 1,
   booting whole. The lattice generator is kept general (rings 1 / 2 / 3 → 7 / 19 / 37) for a later round.
+  REVERSED by Dan, 2026-09-30, from the local build: "The seed of life always just defaults to sync. We should
+  add back some parameterization metrics to play with." K = 1.6 against σ = 0.6 on 7 nodes is well above the
+  locking threshold, so the card could only ever show one state, and its own note promises a comparison (the
+  Seed locks at a coupling the 37-circle figure will not) that the reader had no way to see. This is that
+  later round: circles 7 / 19 / 37 as a pill, K and σ as sliders, speed still fixed at 1. Sibling chrome
+  (synchronization / torus .sg slider groups, synchronization .modepill). Defaults are unchanged — 7, 1.6,
+  0.6, seed 12345, booting whole — so the sun measurement (--seed-lit-mix 0.68, 97.94 % warm) still holds.
+  Carriers: EVA/wiki/concepts/tangency-and-overlap.md; normandy/handoffs/2026-09-30-seed-of-life-parameters.
 -->
 <style>
 /* =====================================================================
@@ -120,12 +128,31 @@ body.drawer-open #drawer { transform: translateX(0); }
 .about-link { display: block; text-align: center; color: var(--k-ink-muted); font-size: 11px; text-decoration: none; letter-spacing: .06em; padding: 10px 0; border-top: 1px solid var(--k-hairline); margin-top: 4px; transition: color .15s; }
 .about-link:hover { color: var(--k-repair); }
 
-/* controls bar — torus.html values; buttons only, centred (no sliders on this card) */
+/* controls bar — torus.html values, centred. Buttons only until 2026-09-30; now the sibling
+   slider groups and a pill row as well (Dan reversed the 09-18 no-sliders ruling). */
 #controls {
   background: var(--k-panel); border-top: 1px solid var(--k-hairline);
   padding: 7px 16px 9px; padding-bottom: calc(9px + env(safe-area-inset-bottom, 0px));
-  display: flex; align-items: center; justify-content: center; gap: 12px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; gap: 12px; flex-shrink: 0; flex-wrap: wrap;
 }
+/* slider groups — synchronization.html / torus.html's .sg / .sr / .sv / .sep, verbatim in shape,
+   tokens where this page has them. One deliberate difference: no `outline: none` on .sv:focus —
+   this page's :focus-visible ring (AUD F4) stays on every focusable, the value box included. */
+.sg { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.sg label { font-size: 10px; color: var(--k-ink-muted); letter-spacing: .07em; text-transform: uppercase; }
+.sr { display: flex; align-items: center; gap: 5px; }
+.sr input[type=range] { width: 78px; accent-color: var(--k-repair); cursor: pointer; }
+.sv { font-size: 11px; color: #888; width: 36px; text-align: right; font-family: var(--k-font-math); background: transparent; border: 1px solid transparent; padding: 1px 4px; border-radius: 2px; }
+.sv:hover { border-color: #2a2a3e; color: #aab; }
+.sv:focus { border-color: var(--k-repair); color: var(--k-repair); }
+.sep { width: 1px; height: 28px; background: var(--k-hairline); flex-shrink: 0; }
+/* circles — synchronization.html's .modepill, three-way, sitting in the bar under a .sg label
+   (on synchronization the pills float over the canvas as the regime switch; here circles is a
+   parameter beside K and σ, so it lives with them — DES's placement to confirm) */
+.pills { display: flex; gap: 6px; }
+.modepill { background: var(--k-panel-2); color: var(--k-repair); border: 1px solid #1e4a6a; padding: 3px 12px; border-radius: 999px; font: 12px var(--k-font-machine); letter-spacing: .04em; white-space: nowrap; cursor: pointer; user-select: none; transition: background .12s, color .12s, border-color .12s; }
+.modepill:hover { background: #1c2c44; }
+.modepill.active { background: var(--k-repair); color: var(--k-ground); border-color: var(--k-repair); font-weight: 600; }
 .btns { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
 button.action { background: var(--k-panel-2); color: #888; border: 1px solid var(--k-hairline-2); padding: 5px 14px; font: 12px var(--k-font-machine); cursor: pointer; border-radius: 3px; transition: background .12s, color .12s; }
 button.action:hover { background: #1c1c38; color: #aaa; }
@@ -133,7 +160,10 @@ button.action.on { background: #0c1e30; color: var(--k-repair); border-color: #1
 
 /* mobile — torus/sync breakpoints */
 @media (max-width: 600px) {
-  #controls { padding: 8px 12px 10px; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); }
+  #controls { gap: 10px 14px; padding: 8px 12px 10px; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); }
+  .sr input[type=range] { width: 110px; }   /* sync/torus mobile widths */
+  .sep { display: none; }
+  .modepill { padding: 7px 14px; }          /* ~40px tap target */
   .btns { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
   button.action { padding: 9px 14px; }
   .tab { padding: 20px 12px; }
@@ -188,8 +218,8 @@ button.action.on { background: #0c1e30; color: var(--k-repair); border-color: #1
           <span class="dim">r</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= <span class="val" id="liveR">0.00</span><br>
           <span class="dim">circles</span>&nbsp;= <span class="val" id="liveN">7</span><br>
           <span class="dim">overlaps</span> = <span class="val" id="liveE">12</span><br>
-          <span class="dim">K</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= <span class="val">1.60</span><br>
-          <span class="dim">σ</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= <span class="val">0.60</span>
+          <span class="dim">K</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= <span class="val" id="liveK">1.60</span><br>
+          <span class="dim">σ</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= <span class="val" id="liveSigma">0.60</span>
         </div>
       </section>
       <section>
@@ -229,6 +259,30 @@ button.action.on { background: #0c1e30; color: var(--k-repair); border-color: #1
 </div>
 
 <div id="controls">
+  <div class="sg">
+    <label>Circles</label>
+    <div class="pills" role="group" aria-label="Circles">
+      <button type="button" class="modepill active" data-rings="1" title="The Seed — 7 circles, one ring">7</button>
+      <button type="button" class="modepill" data-rings="2" title="19 circles, two rings">19</button>
+      <button type="button" class="modepill" data-rings="3" title="37 circles, three rings — the figure the note says will not hold at this K">37</button>
+    </div>
+  </div>
+  <div class="sep"></div>
+  <div class="sg">
+    <label>K (coupling)</label>
+    <div class="sr">
+      <input type="range" id="sK" min="0" max="3" step="0.05" value="1.6">
+      <input type="text" class="sv" id="vK" value="1.60">
+    </div>
+  </div>
+  <div class="sg">
+    <label>σ (spread)</label>
+    <div class="sr">
+      <input type="range" id="sSigma" min="0" max="1.5" step="0.05" value="0.6">
+      <input type="text" class="sv" id="vSigma" value="0.60">
+    </div>
+  </div>
+  <div class="sep"></div>
   <div class="btns">
     <button type="button" class="action" id="reseed">Reseed</button>
     <button type="button" class="action" id="scatter">Scatter phases</button>
@@ -285,7 +339,8 @@ button.action.on { background: #0c1e30; color: var(--k-repair); border-color: #1
     return out;
   }
 
-  /* ---- state: fixed at the Seed (Dan, 2026-09-18 — no sliders) ---- */
+  /* ---- state. Defaults ARE the Seed (7 / 1.6 / 0.6, the 09-18 fixed point and the sun's
+     regression fixture); since 2026-09-30 the pill and the two sliders below move them. ---- */
   var S = { rings: 1, K: 1.6, sigma: 0.6, speed: 1, showLenses: true, paused: false,
             pts: [], bonds: [], deg: [], th: [], om: [], r: 0, seed: 12345 };
 
@@ -415,6 +470,40 @@ button.action.on { background: #0c1e30; color: var(--k-repair); border-color: #1
   lensBtn.addEventListener('click', function () { S.showLenses = !S.showLenses; lensBtn.classList.toggle('on', S.showLenses); });
   var pauseBtn = document.getElementById('pause');
   pauseBtn.addEventListener('click', function () { S.paused = !S.paused; pauseBtn.classList.toggle('on', S.paused); pauseBtn.textContent = S.paused ? 'Resume' : 'Pause'; });
+
+  /* ---- parameters (Dan, 2026-09-30). bindSlider is synchronization.html's, verbatim in
+     behaviour: the range drives the value box, the value box (typed, Enter or blur) drives the
+     range, both clamp to the range's min/max. ---- */
+  function bindSlider(slId, vId, decimals, onInput) {
+    var sl = document.getElementById(slId), vEl = document.getElementById(vId);
+    function fmt(v) { return parseFloat(v).toFixed(decimals); }
+    sl.addEventListener('input', function () { vEl.value = fmt(sl.value); onInput(parseFloat(sl.value)); });
+    vEl.addEventListener('change', function () {
+      var x = parseFloat(vEl.value);
+      if (isNaN(x)) { vEl.value = fmt(sl.value); return; }
+      x = Math.max(parseFloat(sl.min), Math.min(parseFloat(sl.max), x));
+      sl.value = x; vEl.value = fmt(x); onInput(x);
+    });
+    vEl.addEventListener('keydown', function (e) { if (e.key === 'Enter') vEl.blur(); });
+    vEl.addEventListener('focus', function () { vEl.select(); });
+  }
+  var liveK = document.getElementById('liveK'), liveSigma = document.getElementById('liveSigma');
+  /* K and σ are read by step() every tick, so a slider move is live — no rebuild, phases kept. */
+  bindSlider('sK', 'vK', 2, function (v) { S.K = v; liveK.textContent = v.toFixed(2); });
+  bindSlider('sSigma', 'vSigma', 2, function (v) { S.sigma = v; liveSigma.textContent = v.toFixed(2); });
+  /* Circles rebuilds the lattice and boots it WHOLE, as the page does — so the reader watches the
+     same unity either hold (7) or come apart (37) under the same K, which is the comparison the
+     drawer's note promises. Same seed as the current figure; Reseed still draws a new one. */
+  var pills = document.querySelectorAll('.modepill');
+  pills.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var rings = parseInt(btn.dataset.rings, 10);
+      if (rings === S.rings) return;
+      S.rings = rings;
+      pills.forEach(function (b) { b.classList.toggle('active', b === btn); });
+      build(true);
+    });
+  });
 
   /* the drawer is hidden by transform alone, so while closed its three focusables stayed in the
      tab order; tabbing into them let the browser scroll the canvas 360 px off-screen and Esc did
