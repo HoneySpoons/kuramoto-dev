@@ -31,6 +31,7 @@ body {
 
 /* Order-parameter bar — bottom-left, chaos→sync (matches synchronization.html) */
 #rBar {
+  --rbar-track: 110px; /* F7: the one number the track's height AND the fill's gradient extent read */
   position: absolute;
   bottom: 16px;
   left: 18px;
@@ -52,7 +53,7 @@ body.selbar-open #rBar { transform: translateY(-116px); }
 }
 #rBar .track {
   width: 5px;
-  height: 110px;
+  height: var(--rbar-track);
   background: #14142a;
   border-radius: 3px;
   position: relative;
@@ -62,7 +63,10 @@ body.selbar-open #rBar { transform: translateY(-116px); }
   position: absolute;
   bottom: 0; left: 0; right: 0;
   height: 0%;
-  background: linear-gradient(to top, #2c4763 0%, #4fc3f7 40%, #ffca28 100%);
+  /* F7 (2026-09-30): the gradient is sized to the TRACK and anchored at its bottom, so the fill is a
+     window onto a fixed scale and the colour at the tip is the colour for that r. Painted on the fill
+     itself (height r × 100 %), the gradient rescaled with r and the tip was always the top colour. */
+  background: linear-gradient(to top, #2c4763 0%, #4fc3f7 40%, #ffca28 100%) bottom / 100% var(--rbar-track) no-repeat;
   transition: height .08s linear;
   border-radius: 3px;
 }

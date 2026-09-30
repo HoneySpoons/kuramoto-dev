@@ -79,10 +79,10 @@ canvas { display: block; }
 }
 
 /* r-bar — synchronization.html's, verbatim */
-#rBar { position: absolute; bottom: 16px; left: 18px; display: flex; flex-direction: column; align-items: center; gap: 4px; z-index: 4; user-select: none; pointer-events: auto; }   /* auto, not none: the title= is the only thing that says what the bar measures, and it sits bottom-left clear of the figure (AUD F6) */
+#rBar { --rbar-track: 110px; /* F7: the one number the track's height AND the fill's gradient extent read */ position: absolute; bottom: 16px; left: 18px; display: flex; flex-direction: column; align-items: center; gap: 4px; z-index: 4; user-select: none; pointer-events: auto; }   /* auto, not none: the title= is the only thing that says what the bar measures, and it sits bottom-left clear of the figure (AUD F6) */
 #rBar .lbl { font: 8px var(--k-font-machine); letter-spacing: .18em; color: #666678; text-transform: uppercase; }
-#rBar .track { width: 5px; height: 110px; background: var(--k-panel-2); border-radius: 3px; position: relative; overflow: hidden; }
-#rBar .fill { position: absolute; bottom: 0; left: 0; right: 0; height: 0%; background: linear-gradient(to top, #2c4763 0%, var(--k-repair) 40%, var(--k-cost) 100%); transition: height .08s linear; border-radius: 3px; }
+#rBar .track { width: 5px; height: var(--rbar-track); background: var(--k-panel-2); border-radius: 3px; position: relative; overflow: hidden; }
+#rBar .fill { position: absolute; bottom: 0; left: 0; right: 0; height: 0%; background: linear-gradient(to top, #2c4763 0%, var(--k-repair) 40%, var(--k-cost) 100%) bottom / 100% var(--rbar-track) no-repeat; /* F7: gradient sized to the track, anchored at its bottom — the fill is a window onto a fixed scale, so the tip colour IS the colour for r */ transition: height .08s linear; border-radius: 3px; }
 
 /* drawer tab + drawer — synchronization/torus values */
 .tab {
