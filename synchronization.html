@@ -958,10 +958,15 @@ function drawChimera(availW, h, topRoom) {
   ctx.fillRect(tx, tTop, trackW, trackH);
   const fh = Math.max(0, Math.min(1, orderR)) * trackH;
   if (fh > 0) {
-    const grad = ctx.createLinearGradient(0, tBot, 0, tBot - fh);
-    grad.addColorStop(0, '#2c4763');
-    grad.addColorStop(0.4, '#4fc3f7');
-    grad.addColorStop(1, '#ffca28');
+    // F7b (2026-09-30): the gradient spans the TRACK (tBot → tTop), not the fill, so the
+    // fill is a window onto a fixed scale and the colour at its tip is the colour for
+    // this r — the same rule F7 put on the DOM #rBar (whose stops these mirror: 0 / 0.4 / 1).
+    // Sized to the fill, the tip was the top colour at every r.
+    const stops = meterStops();
+    const grad = ctx.createLinearGradient(0, tBot, 0, tTop);
+    grad.addColorStop(0, stops[0]);
+    grad.addColorStop(0.4, stops[1]);
+    grad.addColorStop(1, stops[2]);
     ctx.fillStyle = grad;
     ctx.fillRect(tx, tBot - fh, trackW, fh);
   }
@@ -1102,7 +1107,23 @@ document.getElementById('bPause').addEventListener('click', function() {
 });
 
 // ── Mode toggle (regime selector) ────────────────────────────────────────
+// Meter colours for the canvas twin. Read from the site tokens when this page defines
+// them (--k-repair / --k-cost, as self-similarity.html does), else the DOM #rBar's own
+// literals — today this page is a literal page, so the fallback is what runs; the read
+// is here so that if the theme contract lands tokens on this page, both meters move
+// together. Resolved once per mode switch (setMode), not per frame: a getComputedStyle
+// per animation frame is a style read the meter does not need.
+let _meterStops = null;
+function meterStops() {
+  if (_meterStops) return _meterStops;
+  const css = getComputedStyle(document.documentElement);
+  const tok = (name, fallback) => { const v = css.getPropertyValue(name).trim(); return v || fallback; };
+  _meterStops = ['#2c4763', tok('--k-repair', '#4fc3f7'), tok('--k-cost', '#ffca28')];
+  return _meterStops;
+}
+
 function setMode(m) {
+  _meterStops = null; // re-read the tokens on every mode switch
   if (m === mode) return;
   mode = m;
   document.body.classList.remove('mode-meanfield', 'mode-chimera');
