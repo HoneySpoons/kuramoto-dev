@@ -20,9 +20,14 @@
   locking threshold, so the card could only ever show one state, and its own note promises a comparison (the
   Seed locks at a coupling the 37-circle figure will not) that the reader had no way to see. This is that
   later round: circles 7 / 19 / 37 as a pill, K and σ as sliders, speed still fixed at 1. Sibling chrome
-  (synchronization / torus .sg slider groups, synchronization .modepill). Defaults are unchanged — 7, 1.6,
-  0.6, seed 12345, booting whole — so the sun measurement (--seed-lit-mix 0.68, 97.94 % warm) still holds.
-  Carriers: EVA/wiki/concepts/tangency-and-overlap.md; normandy/handoffs/2026-09-30-seed-of-life-parameters.
+  (synchronization / torus .sg slider groups, synchronization .modepill). The 09-30 round kept the defaults
+  at 7, 1.6, 0.6, seed 12345, booting whole, so the sun measurement (--seed-lit-mix 0.68, 97.94 % warm) held.
+  Dan, 2026-10-06 ("the seeds default to sync still"): the card now BOOTS AT 37 CIRCLES — K 1.6, σ 0.6, seed
+  12345, booting whole — so the reader sees the figure come apart without touching a control; the 7-circle
+  Seed, which still locks, is one pill-click away. The sun fixture at 7 is unchanged; at 37 it reads
+  differently by design (AUD rules on it).
+  Carriers: EVA/wiki/concepts/tangency-and-overlap.md; normandy/handoffs/2026-09-30-seed-of-life-parameters;
+  normandy/handoffs/2026-10-06-seed-of-life-default-37.
 -->
 <style>
 /* =====================================================================
@@ -262,9 +267,9 @@ button.action.on { background: #0c1e30; color: var(--k-repair); border-color: #1
   <div class="sg">
     <label>Circles</label>
     <div class="pills" role="group" aria-label="Circles">
-      <button type="button" class="modepill active" data-rings="1" title="The Seed — 7 circles, one ring">7</button>
+      <button type="button" class="modepill" data-rings="1" title="The Seed — 7 circles, one ring">7</button>
       <button type="button" class="modepill" data-rings="2" title="19 circles, two rings">19</button>
-      <button type="button" class="modepill" data-rings="3" title="37 circles, three rings — the figure the note says will not hold at this K">37</button>
+      <button type="button" class="modepill active" data-rings="3" title="37 circles, three rings — the figure the note says will not hold at this K">37</button>
     </div>
   </div>
   <div class="sep"></div>
@@ -320,7 +325,7 @@ button.action.on { background: #0c1e30; color: var(--k-repair); border-color: #1
   var TAU = Math.PI * 2, SQ3 = Math.sqrt(3);
 
   /* ---- geometry: centred hexagonal lattice, unit spacing, a circle at top and bottom.
-     rings 1 / 2 / 3 → 7 / 19 / 37 circles. Kept general; this card uses rings = 1. ---- */
+     rings 1 / 2 / 3 → 7 / 19 / 37 circles. Kept general; the pill picks rings, boot is 3. ---- */
   function lattice(rings) {
     var pts = [], a, b, hd;
     for (a = -rings; a <= rings; a++) for (b = -rings; b <= rings; b++) {
@@ -339,9 +344,10 @@ button.action.on { background: #0c1e30; color: var(--k-repair); border-color: #1
     return out;
   }
 
-  /* ---- state. Defaults ARE the Seed (7 / 1.6 / 0.6, the 09-18 fixed point and the sun's
-     regression fixture); since 2026-09-30 the pill and the two sliders below move them. ---- */
-  var S = { rings: 1, K: 1.6, sigma: 0.6, speed: 1, showLenses: true, paused: false,
+  /* ---- state. Since 2026-10-06 the card boots at 37 circles (rings 3) under the Seed's K / σ
+     (1.6 / 0.6, the 09-18 fixed point and the sun's regression fixture at 7 circles); the pill and the
+     two sliders below move them, and the 7-circle Seed is pill 7. ---- */
+  var S = { rings: 3, K: 1.6, sigma: 0.6, speed: 1, showLenses: true, paused: false,
             pts: [], bonds: [], deg: [], th: [], om: [], r: 0, seed: 12345 };
 
   function mulberry(s) { return function () { s |= 0; s = (s + 0x6D2B79F5) | 0; var t = Math.imul(s ^ (s >>> 15), 1 | s); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
