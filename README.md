@@ -15,10 +15,12 @@ Live at [kuramoto.dev](https://kuramoto.dev).
 - **[Position · Navigation · Timing](https://kuramoto.dev/pnt.html)** — Kuramoto–Sakaguchi clocks on a sphere, rendered as a satellite constellation. The held middle between lockstep and scatter — a *standing truce*, not a true chimera. Includes **live in-browser sonification**: each clock sounds as it comes round, so you can hear coherence hold.
 - **[The Torus](https://kuramoto.dev/torus.html)** — Two coupled angles live on a torus. A winding flow fills the surface, collapses under coupling, and splits into a **locking state** — a coherent arc beside an incoherent one. Euler in the drawer: χ = 0, not the sphere's 2.
 *(The Torus + — an Apollonian gasket revolved into a torus — was archived 2026-09-18 along with the gasket itself; it is kept at `/archive/torus-plus.html`. A replacement built from parametric seeds is planned.)*
+- **[One Josephson Junction](https://kuramoto.dev/josephson-junction.html)** — A single junction in the **RCSJ model** (resistively and capacitively shunted junction), integrated live: two superconductor slabs with one condensate phase each, the supercurrent I₀ sin δ tunnelling across the barrier, the circuit with its three current branches, the washboard potential, the swept I–V curve (hysteretic when underdamped), and the AC Josephson effect, f = 2eV/h. Sliders for bias, the Stewart–McCumber damping β_c, temperature (Ambegaokar–Baratoff I₀(T) plus Johnson noise), and noise scale. The **`P H Y S I C S` drawer** walks ten sections, each cited to its equation in Martinis & Osborne.
 
 *In progress:* **Resonance** (pulling voices out of noise with coupled oscillators) and a lineage card.
 
-Most pages carry a `M A T H` drawer with the equations, the reasoning, and the citations.
+Most pages carry a `M A T H` drawer with the equations, the reasoning, and the citations; the
+Josephson page's is `P H Y S I C S`.
 
 ## Stack
 
@@ -41,6 +43,7 @@ Worth naming plainly:
 - **Sonifying Kuramoto** — Nolan Lem's territory (Stanford CCRMA).
 - **Winding lines / irrational rotation** — Kronecker, Weyl. **Euler characteristic** — Euler, *Elementa doctrinae solidorum* (1758).
 - **Descartes circle theorem** — Descartes (1643), Soddy's *The Kiss Precise* (1936).
+- **Josephson effect** — B. D. Josephson, *Phys. Lett.* 1, 251 (1962). **Critical current vs. temperature** — Ambegaokar & Baratoff, *PRL* 10, 486 (1963); erratum 11, 104. **RCSJ model and β_c** — Stewart, *Appl. Phys. Lett.* 12, 277 (1968); McCumber, *J. Appl. Phys.* 39, 3113 (1968). **The teaching the Josephson page follows** — Martinis & Osborne, *Superconducting Qubits and the Physics of Josephson Junctions*, Les Houches lecture notes; every numbered equation in its drawer is theirs.
 
 What I'd claim as fresh is the craft layer, not the discovery: the non-local-ring chimera as a
 hands-on toy, shipping the sonification live in-browser next to the visual, and the PNT framing.
