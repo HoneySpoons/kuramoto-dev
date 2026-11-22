@@ -1,0 +1,2658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>The Lineage</title>
+<meta name="description" content="One number line, rebuilt eleven times. Every kind of number exists because the previous kind failed at a task somebody actually needed to do. A repair record, from pebbles to the tangent.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#0a0a0f">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..600;1,6..72,200..600&family=Space+Grotesk:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  background: #0e0e12;
+  color: #c8c8d0;
+  font-family: 'Newsreader', Georgia, serif;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;   /* fallback for browsers without svh */
+  height: 100svh;  /* small viewport, keeps the control row above mobile browser chrome */
+}
+#stage { position: relative; flex: 1; overflow: hidden; min-height: 0; }
+#cv { display: block; width: 100%; height: 100%; touch-action: none; }
+
+#rung {
+  position: absolute; top: 16px; left: 16px; z-index: 4;
+  font: 500 9px 'Space Grotesk', sans-serif; letter-spacing: .22em; text-transform: uppercase;
+  color: #44445a; pointer-events: none;
+  /* long tags ellipsize before they can reach the centred beat label */
+  max-width: calc(50vw - 78px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+#rung span { color: #7a7a90; }
+#rung .tag { color: #55556a; }
+@media (max-width: 640px) { #rung .tag { display: none; } }
+@media (max-width: 520px) { #rung .nm { display: none; } }
+
+#caption {
+  position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+  width: min(720px, calc(100vw - 32px)); z-index: 4;
+  text-align: center; pointer-events: none;
+  text-shadow: 0 1px 10px rgba(14,14,18,.95);
+}
+#kind {
+  font: 600 11px 'Space Grotesk', sans-serif; letter-spacing: .26em; text-transform: uppercase;
+  color: #55556a; transition: color .3s;
+}
+#gloss {
+  font: 400 10px 'Space Grotesk', sans-serif; letter-spacing: .06em;
+  color: #6e6e87; margin-top: 3px; margin-bottom: 10px;
+}
+#body {
+  font-size: clamp(14.5px, 2.1vw, 19px); line-height: 1.62; font-weight: 300;
+  color: #c8c8d0; transition: opacity .22s; text-wrap: pretty;
+}
+#body b, #body strong { font-weight: 500; color: #e4e4ec; }
+#body .amber { color: #ffca28; font-weight: 500; }
+#body .coral { color: #ff8a80; font-weight: 500; }
+#body .cool { color: #4fc3f7; font-weight: 500; }
+#body .violet { color: #bc8cff; font-weight: 500; }
+#body .sub { font-size: .82em; line-height: 1.55; margin-top: 8px; font-weight: 300; }
+#body .sub.red { color: #ff8a80; }
+#body .sub.dim { color: #8a7a4a; }
+#cite {
+  margin-top: 8px; font-size: clamp(11px, 1.4vw, 13px); font-style: italic; font-weight: 300;
+  color: #55556a; transition: opacity .22s, color .3s;
+}
+
+/* house rule: buttons never move. The button sits at a fixed spot and its
+   result is absolutely positioned beneath it, so a long message cannot shove
+   the thing the visitor is aiming at. */
+#try {
+  position: absolute; left: 50%; bottom: 78px; transform: translateX(-50%);
+  z-index: 5; text-align: center;
+  opacity: 0; pointer-events: none; transition: opacity .25s;
+}
+#try.on { opacity: 1; pointer-events: auto; }
+#tryBtn {
+  background: #14142a; color: #c8c8d0;
+  border: 1px solid #2a2a3e; border-radius: 5px;
+  padding: 8px 18px; font: 500 12px 'Space Grotesk', sans-serif; cursor: pointer;
+  transition: background .12s, color .12s, border-color .12s;
+}
+#tryBtn:hover { background: #1c1c38; color: #4fc3f7; border-color: #33334e; }
+#tryBtn:disabled { opacity: .35; cursor: default; }
+#tryOut {
+  position: absolute; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 9px;
+  font: 400 12px 'Space Grotesk', sans-serif; color: #ff8a80;
+  width: max-content; max-width: min(68vw, 520px); text-align: center; line-height: 1.45;
+}
+
+#tryOut.soft { color: #6e6e87; }
+
+#hint {
+  position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%);
+  z-index: 3; pointer-events: none; user-select: none; text-align: center; width: max-content; max-width: 90vw;
+  font: 500 9.5px 'Space Grotesk', sans-serif; letter-spacing: .14em; text-transform: uppercase;
+  color: #3d3d50; transition: opacity .4s, color .3s;
+}
+#hint.gate { color: #ff8a80; font-size: 10.5px; letter-spacing: .16em; }
+
+#hunt {
+  position: absolute; left: 50%; bottom: 58px; transform: translateX(-50%);
+  z-index: 5; width: min(600px, calc(100vw - 24px));
+  background: rgba(14,14,24,.94); border: 1px solid #22223a; border-radius: 8px;
+  padding: 12px 14px; opacity: 0; pointer-events: none; transition: opacity .3s;
+}
+#hunt.on { opacity: 1; pointer-events: auto; }
+.hrow { display: flex; align-items: flex-end; gap: 18px; justify-content: center; flex-wrap: wrap; }
+.hcol { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.hcol .hl { font: 500 8.5px 'Space Grotesk', sans-serif; letter-spacing: .18em; text-transform: uppercase; color: #55556a; }
+.hcol .hv { font: 500 15px 'JetBrains Mono', monospace; color: #4fc3f7; }
+.hcol .hv.gold { color: #ffca28; }
+.hcol .hv.mut { color: #9a9ab0; }
+.hbar { width: 1px; height: 36px; background: #22223a; }
+#verdict { font: 400 12px 'Space Grotesk', sans-serif; color: #ff8a80; text-align: center; margin-top: 10px; min-height: 16px; }
+#proof { margin-top: 8px; padding-top: 8px; border-top: 1px solid #1a1a28; font: 400 12px 'JetBrains Mono', monospace; color: #9a9ab0; text-align: center; line-height: 1.7; min-height: 17px; }
+#proof b { color: #ff8a80; font-weight: 700; }
+#huntLog { margin-top: 6px; font: 400 10px 'JetBrains Mono', monospace; color: #4a4a60; text-align: center; min-height: 13px; }
+#nudge { margin-top: 7px; font: 400 11px 'Space Grotesk', sans-serif; color: #6a6a85; text-align: center; }
+#nudge button {
+  background: none; border: none; border-bottom: 1px solid rgba(79,195,247,.4);
+  color: #4fc3f7; cursor: pointer; font: 500 11px 'Space Grotesk', sans-serif; padding: 0 2px;
+}
+#nudge button:hover { color: #8bd8fb; }
+#nudge button:disabled { color: #3a3a52; border-bottom-color: transparent; cursor: default; }
+
+#controls {
+  background: #0d0d18;
+  border-top: 1px solid #1a1a28;
+  padding: 9px 20px;
+  padding-bottom: calc(9px + env(safe-area-inset-bottom, 0px));
+  display: flex; align-items: center; gap: 14px; flex-shrink: 0;
+}
+#beats { display: flex; gap: 4px; flex: 0 1 460px; }
+.bt { flex: 1; height: 2px; background: #1e1e30; border-radius: 1px; position: relative; transition: background .3s; }
+.bt.done { background: #2e2e48; }
+.bt i {
+  position: absolute; top: 7px; left: 0; right: 0; text-align: center;
+  font: 400 8px 'Space Grotesk', sans-serif; letter-spacing: .13em; text-transform: uppercase;
+  color: #3d3d50; font-style: normal; transition: color .3s; white-space: nowrap; overflow: hidden;
+}
+.nav { display: flex; gap: 5px; }
+button.nb {
+  background: #0e0e18; color: #6a6a85;
+  border: 1px solid #22223a; border-radius: 4px;
+  padding: 5px 13px; font: 500 11.5px 'Space Grotesk', sans-serif; cursor: pointer;
+  transition: background .12s, color .12s, border-color .12s;
+}
+button.nb:hover:not(:disabled) { background: #16162c; color: #4fc3f7; border-color: #2c2c48; }
+button.nb:disabled { opacity: .28; cursor: default; }
+.sep { width: 1px; height: 22px; background: #1a1a28; flex-shrink: 0; }
+/* Restart sits hard right, away from Back, so review and reset never share a
+   target zone. The divider that used to precede it goes with the grouping. */
+#controls > .nav:last-child { margin-left: auto; }
+#controls > .sep:nth-last-child(2) { display: none; }
+
+#drawerTab {
+  position: absolute; top: 50%; right: 0;
+  background: #14142a; color: #888;
+  border: 1px solid #222238; border-right: none; border-radius: 6px 0 0 6px;
+  padding: 14px 8px; cursor: pointer;
+  font: 400 11px 'Space Grotesk', sans-serif; letter-spacing: .25em;
+  writing-mode: vertical-rl; transform: translateY(-50%);
+  transition: opacity .25s, color .12s, background .12s; z-index: 5; user-select: none;
+}
+#drawerTab:hover { color: #4fc3f7; background: #1c1c38; }
+body.drawer-open #drawerTab { opacity: 0; pointer-events: none; }
+#drawer {
+  position: absolute; top: 0; right: 0;
+  width: min(400px, 100vw); height: 100%;
+  background: #0e0e18; border-left: 1px solid #1a1a28;
+  transform: translateX(100%);
+  transition: transform .28s cubic-bezier(.4, 0, .2, 1);
+  display: flex; flex-direction: column; z-index: 6;
+  font-size: 13px; color: #b8b8c2;
+}
+body.drawer-open #drawer { transform: translateX(0); }
+#drawerHeader {
+  padding: 14px 16px; border-bottom: 1px solid #1a1a28;
+  display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;
+}
+#drawerHeader h2 { font: 600 11px 'Space Grotesk', sans-serif; letter-spacing: .18em; color: #4fc3f7; text-transform: uppercase; }
+#drawerClose { background: none; border: none; color: #777; cursor: pointer; font-size: 20px; padding: 0 6px; line-height: 1; }
+#drawerClose:hover { color: #4fc3f7; }
+#drawerBody { overflow-y: auto; padding: 16px; flex: 1; display: flex; flex-direction: column; gap: 22px; }
+#drawerBody section h3 { font: 600 9px 'Space Grotesk', sans-serif; letter-spacing: .18em; color: #6f6f82; text-transform: uppercase; margin-bottom: 10px; }
+#drawerBody p { line-height: 1.65; margin-bottom: 9px; color: #a8a8b8; font-weight: 300; }
+#drawerBody p b { color: #ffca28; font-weight: 500; }
+#drawerBody .src { font-size: 11.5px; color: #6a6a80; line-height: 1.7; }
+#drawerBody .warn { border-left: 2px solid #ffca28; padding-left: 11px; font-size: 12px; color: #9a9ab0; line-height: 1.6; font-weight: 300; }
+
+#closing {
+  position: absolute; inset: 0; z-index: 7;
+  background: #0e0e12; overflow-y: auto;
+  opacity: 0; pointer-events: none; transition: opacity .5s;
+}
+#closing.on { opacity: 1; pointer-events: auto; }
+#closingInner { max-width: 860px; margin: 0 auto; padding: 56px 24px 80px; }
+#closing .clabel { font: 600 10px 'Space Grotesk', sans-serif; letter-spacing: .26em; text-transform: uppercase; color: #ff8a80; margin-bottom: 18px; }
+#closing h2 { font: 200 clamp(30px, 5vw, 44px)/1.1 'Newsreader', serif; letter-spacing: -.02em; color: #e4e4ec; margin-bottom: 26px; }
+#closing p { font-size: clamp(15px, 2vw, 19px); line-height: 1.62; font-weight: 300; color: #c2aeae; margin-bottom: 18px; text-wrap: pretty; }
+#closing p code { font: 400 .84em 'JetBrains Mono', monospace; font-feature-settings: 'liga' 0, 'calt' 0; }
+#closing .cy { color: #8bd8fb; } #closing .rd { color: #ff8a80; } #closing .it { font-style: italic; }
+#ledger {
+  margin: 26px 0; padding: 20px 22px; border: 1px solid #2a1618; border-left: 2px solid #ff8a80;
+  background: #120c0d; font: 400 12px/2.1 'JetBrains Mono', monospace; color: #8a7a7a;
+  overflow-x: auto; white-space: nowrap;
+}
+#ledger .lr { color: #55556a; } #ledger .lh { color: #3fb950; } #ledger .lo { color: #ff8a80; } #ledger .lw { color: #8a4a48; }
+/* at phone width the longest row ("the same hole, walked around") ran past the
+   box into a sideways scroll; one size down and it fits the 342px it has */
+@media (max-width: 520px) { #ledger { font-size: 11px; padding: 16px 14px; } }
+#closing .final { border-top: 1px solid #2a1618; padding-top: 20px; }
+#closing .outrow { margin-top: 34px; display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+#closing a.go {
+  display: inline-block; background: #14142a; border: 1px solid #2c4a5e; border-radius: 6px;
+  color: #4fc3f7; text-decoration: none; padding: 11px 22px;
+  font: 500 13px 'Space Grotesk', sans-serif; transition: background .12s, border-color .12s;
+}
+#closing a.go:hover { background: #1c2c44; border-color: #4fc3f7; }
+#closing button.again {
+  background: none; border: none; border-bottom: 1px solid rgba(122,122,144,.4);
+  color: #7a7a90; cursor: pointer; font: 400 12px 'Space Grotesk', sans-serif; padding: 0 2px;
+}
+#closing button.again:hover { color: #c8c8d0; }
+#closing .footnote {
+  margin-top: 30px; padding-top: 16px; border-top: 1px solid #1c1c26;
+  font: 400 11px 'JetBrains Mono', monospace; letter-spacing: .04em; color: #55556a;
+  user-select: text;
+}
+
+/* ── the frontispiece: the four operators are the cast, so the card opens on
+   them in motion. Two nested rotations, no JS: the matrix revolves as a group,
+   each glyph spins on its own centre, and because the glyph is a child of the
+   group its rendered angle is group + self for free. The four self-periods are
+   deliberately detuned (10.4 / 11.6 / 9.3 / 12.7s), four almost-equal
+   oscillators drifting in and out of phase. Neutral palette only: cyan, amber
+   and coral are load-bearing and stay unspent until rung 0. ── */
+#title {
+  position: absolute; inset: 0; z-index: 8; background: #0e0e12;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: clamp(26px, 5vh, 54px); cursor: pointer;
+  opacity: 1; transition: opacity .55s;
+}
+#title.off { opacity: 0; pointer-events: none; }
+#title h1 {
+  font: 200 clamp(46px, 9.2vw, 108px)/1 'Newsreader', Georgia, serif;
+  letter-spacing: -.035em; color: #e4e4ec; text-align: center;
+}
+#matrix {
+  position: relative; width: clamp(196px, 34vmin, 300px); aspect-ratio: 1;
+  animation: mrot 32s linear infinite;
+}
+#matrix i {
+  position: absolute; width: 50%; height: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font: 400 clamp(38px, 7vmin, 62px) 'JetBrains Mono', monospace;
+  font-style: normal; color: #c8c8d0;
+}
+#matrix i:nth-child(1) { top: 0; left: 0; animation: mrot 10.4s linear infinite; }
+#matrix i:nth-child(2) { top: 0; right: 0; animation: mrot 11.6s linear infinite; }
+#matrix i:nth-child(3) { bottom: 0; left: 0; animation: mrot 9.3s linear infinite; }
+#matrix i:nth-child(4) { bottom: 0; right: 0; animation: mrot 12.7s linear infinite; }
+@keyframes mrot { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+#title .enter {
+  font: 400 10px 'Space Grotesk', sans-serif; letter-spacing: .26em; text-transform: uppercase;
+  color: #55556a;
+}
+@media (prefers-reduced-motion: reduce) { #matrix, #matrix i { animation: none; } }
+</style>
+</head>
+<body>
+
+<div id="stage">
+  <canvas id="cv"></canvas>
+
+  <div id="rung">rung <span id="rn">0</span><span class="nm"> · <span id="rt">matching</span></span><span class="tag" id="rtag"> · no numbers yet</span></div>
+
+  <div id="caption">
+    <div id="kind">the world</div>
+    <div id="gloss">what you can do right now</div>
+    <div id="body"></div>
+    <div id="cite"></div>
+  </div>
+
+  <div id="try">
+    <button id="tryBtn"></button>
+    <span id="tryOut"></span>
+  </div>
+
+  <div id="hunt">
+    <div class="hrow">
+      <div class="hcol"><span class="hl">your fraction</span><span class="hv" id="hFrac">3/2</span></div>
+      <div class="hcol"><span class="hl">your value</span><span class="hv" id="hVal">1.5000000</span></div>
+      <div class="hcol"><span class="hl">target</span><span class="hv gold">1.4142136</span></div>
+      <div class="hbar"></div>
+      <div class="hcol"><span class="hl">denominators in reach</span><span class="hv mut" id="hQmax">&le; 13</span></div>
+    </div>
+    <div id="verdict"></div>
+    <div id="proof"></div>
+    <div id="huntLog">grab the blue dot on the line and slide it</div>
+    <div id="nudge">stuck? <button id="closer">try a closer one</button> &nbsp;·&nbsp; <button id="zout" disabled>zoom back out</button></div>
+  </div>
+
+  <div id="hint">one line · eleven repairs · click to walk it</div>
+
+  <div id="drawerTab">M A T H</div>
+  <div id="drawer">
+    <div id="drawerHeader"><h2>The repair record</h2><button id="drawerClose">&times;</button></div>
+    <div id="drawerBody">
+      <section>
+        <h3>The spine</h3>
+        <p>The history of mathematics is <b>a repair record</b>, not a sequence of inventions. Every kind of number exists because the previous kind failed at a specific task somebody actually needed to do.</p>
+        <p>Counting fails on absence. Whole numbers fail on debt. Integers fail on splitting a loaf three ways. Fractions fail on the diagonal of a square. Reals fail on x&sup2;&nbsp;+&nbsp;1&nbsp;=&nbsp;0. And algebra fails on <i>what is the speed at a single instant</i>, which is the break the limit was built to repair.</p>
+      </section>
+      <section>
+        <h3>The four beats</h3>
+        <p><b>The world</b>: a working tool, in your hands.<br>
+        <b>The break</b>: a task it cannot do. You try it and fail.<br>
+        <b>The repair</b>: the new idea, as a fix for what just failed you.<br>
+        <b>The cost</b>: what the repair broke or left unresolved.</p>
+        <p>Beat four is what makes this a lineage instead of a march of progress. Every cost ends in a question the rung that raised it cannot answer. Most are answered further up the ladder. One never is.</p>
+      </section>
+      <section>
+        <h3>What we simplified</h3>
+        <div class="warn">This ladder is a rational reconstruction, not history. The real sequence was tangled, non-linear, repeatedly rediscovered, and full of long dormancies. Zero arrives twice, centuries apart, for different reasons. Negatives were accepted in India roughly a thousand years before Europe. The load-bearing rungs are Babylonian, Egyptian, Indian, and from the Islamic Golden Age; the standard Greece-to-Descartes telling is false by omission. Legends are flagged as legends where they appear.</div>
+      </section>
+      <section>
+        <h3>Sources</h3>
+        <p class="src">
+          Ishango bone (c. 20,000 BCE) · Sumerian accounting tokens<br>
+          Babylonian base-60 place value; the two-wedge placeholder<br>
+          Brahmagupta, <i>Br&#257;hmasphu&#7789;asiddh&#257;nta</i>, 628 CE: zero as a number; negatives as fortunes and debts<br>
+          Rhind papyrus, ~1550 BCE: Egyptian unit fractions<br>
+          Pythagorean school, 5th century BCE: incommensurability<br>
+          al-Khw&#257;rizm&#299;, <i>al-Jabr</i>, ~820 CE: completing the square; x&sup2; + 10x = 39<br>
+          Descartes, <i>La G&eacute;om&eacute;trie</i>, 1637 · Fermat, independently<br>
+          Cardano, <i>Ars Magna</i>, 1545 · Bombelli, <i>L&rsquo;Algebra</i>, 1572<br>
+          Wantzel, 1843: casus irreducibilis<br>
+          Wessel 1797 · Argand 1806 · Gauss 1831: the complex plane<br>
+          Newton, 1665 · Leibniz, 1684 · Berkeley, <i>The Analyst</i>, 1734<br>
+          Dedekind, <i>Stetigkeit und irrationale Zahlen</i>, 1872<br>
+          IEEE 754: floating-point division by zero
+        </p>
+      </section>
+      <section>
+        <h3>Status</h3>
+        <p class="src">Every date and attribution on this card passed an external verification audit on 2026-08-12: 33 claims checked against primary and secondary sources, zero corrections. Wessel is dated by presentation (1797; published 1799), matching the card&rsquo;s inception-date convention.</p>
+      </section>
+    </div>
+  </div>
+
+  <div id="closing">
+    <div id="closingInner">
+      <div class="clabel">The repair record · composed from the damage list</div>
+      <h2>Eleven rungs, one line</h2>
+      <p>Eleven rungs, and the engine is carrying exactly one unhealed tear. It was opened at rung 2 by a man who thought he had closed it, and it is sitting at zero on the same line you have been reading all the way down. Nothing between here and there touched it.</p>
+      <p>Calculus does not repair it either. Cauchy and Weierstrass make the practice airtight by never once dividing by zero: they stop asking what the ratio <code>is</code> at the instant and say only what it <span class="it">approaches</span>. That is a route around the hole, built to a tolerance, and it holds. The hole is still there.</p>
+      <p>And it is not a historical curiosity. Every processor ever manufactured implements IEEE&nbsp;754, which sits down at this exact fork and makes both calls out loud. <code class="cy">1.0&nbsp;/&nbsp;0.0</code> returns <code class="cy">Infinity</code>, signed, so the hardware chose the two-ended line over Riemann&rsquo;s sphere. <code class="rd">0.0&nbsp;/&nbsp;0.0</code> returns <code class="rd">NaN</code>: Not a Number. It exists because 0/0 is indeterminate, and it carries a property nothing else in the machine has. <code class="rd">NaN&nbsp;!==&nbsp;NaN</code>. It is not equal to itself, because there is nothing there to be equal to.</p>
+      <div id="ledger"></div>
+      <p class="final">Every question on this ladder was answered by a rung further up, except one, and it got asked three times: once by a man counting sheep into an empty pen, once by the machinery that puts things in orbit, and once more by every processor ever manufactured. <span class="rd">That is the whole card.</span> Scroll back down the ladder and you can watch it stay open.</p>
+      <div class="outrow">
+        <a class="go" href="the-limit.html">the break this line cannot repair &rarr; The Limit</a>
+        <button class="again" id="again">walk the ladder again</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="title">
+    <h1>The Lineage</h1>
+    <div id="matrix"><i>+</i><i>&minus;</i><i>&times;</i><i>&divide;</i></div>
+    <div class="enter">click to begin</div>
+  </div>
+</div>
+
+<div id="controls">
+  <div class="nav">
+    <button class="nb" id="prev">Back</button>
+  </div>
+  <div class="sep"></div>
+  <div id="beats"></div>
+  <div class="sep"></div>
+  <div class="nav"><button class="nb" id="reset">Restart</button></div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+/* ── the ladder: locked copy. The visitor is the subject; the instruction is the
+   last clause; no beat exceeds its three sentences; no em dashes anywhere a
+   viewer reads. Rung 7 uses al-Khwarizmi's own worked example (x² + 10x = 39,
+   Dan's call 2026-08-12). Rung 8 is "The wild thought" (same call). ── */
+
+/* DES set, 2026-08-13: the two rung-8 glosses CLI stubbed now read in the same
+   grammar as the locked four. THE CHECK keeps the second person of THE WORLD
+   (the verification is the visitor's own); THE DETOUR names what the rung is
+   famous for, which is use without repair. */
+var GLOSS = {
+  world: 'what you can do right now',
+  check: 'what you can check yourself',
+  brk: "what it can't do",
+  detour: 'what got used unrepaired',
+  repair: 'what got invented',
+  cost: 'what it broke'
+};
+var KCOL = { world:'#55556a', check:'#3fb950', brk:'#ff8a80', detour:'#bc8cff', repair:'#4fc3f7', cost:'#ffca28' };
+var KNAME = { world:'the world', check:'the check', brk:'the break', detour:'the detour', repair:'the repair', cost:'the cost' };
+
+var RUNGS = [
+{ name:'matching', tag:'no numbers yet', beats:[
+  { k:'world',  t:'One pebble per sheep. You can tell at dusk whether one is missing without ever knowing the word &ldquo;seven&rdquo;.' },
+  { k:'brk',    t:'The flock grows. Matching does not scale, does not travel to the man buying them, and does not survive the night.', tryLabel:'Add a pebble', gate:'try', gmsg:'spend the pebbles first' },
+  { k:'repair', t:'<span class="cool">Tally marks.</span> A record that outlives the moment it was made.', c:'Ishango bone; Sumerian accounting tokens' },
+  { k:'cost',   t:'A mark is not a quantity. The record outlasts the night, but <b>how many</b> is that, without counting them again?' } ]},
+{ name:'numerals and place value', tag:'base sixty, the base you still keep time in', beats:[
+  { k:'world',  t:'The marks from last night stand up into a line and take names: a wedge for one, a chevron for ten. Where a sign sits now tells you what it is worth, and Babylon counts in sixties, which is why an hour still has sixty minutes in it.' },
+  { k:'brk',    t:'Count up. At sixty the count opens a second column, and the first one has nothing left to put in it. There is no sign yet for nothing, so one sixty and one look exactly the same.', gate:'count', gmsg:'let the count reach sixty' },
+  { k:'repair', t:'A mark for the empty place, holding the column open so the number can be read. The Babylonians got here first, with <span class="cool">two slanted wedges</span>.' },
+  { k:'cost',   t:'You can hold the place open now. But the wedges are punctuation, not a quantity, and they are never written at the end of a numeral. <b>What do we call this thing?</b>' } ]},
+{ name:'zero becomes a number', tag:'first permanent scar', beats:[
+  { k:'world',  t:'The wedges give way to ten signs out of India: the shapes you are still writing today, and one of them stands for nothing at all. <span class="cool">Zero stops being punctuation and becomes a numeral</span>, with a seat on the line and rules of its own.', c:'Brahmagupta, Brāhmasphuṭasiddhānta, 628 CE. The signs reach Baghdad in the 9th century and Latin Europe in the 12th, which is the only reason we call them Arabic.' },
+  { k:'brk',    t:'Arithmetic, in the new signs. Add, multiply, subtract: every answer is a number, and zero does its share of the work. Then divide it by itself.', tryLabel:'Divide zero by zero', gate:'try', gmsg:'run the last division first' },
+  { k:'repair', g:'what never got invented', t:'Nothing gets repaired here. Dividing asks a precise question: a/b is the <i>one</i> number x with b·x = a. Ask it of 1/0 and no number answers. Ask it of 0/0 and every number does.<div class="sub red">Brahmagupta answered 0. Zero does work. He was wrong that it was the only one, and nobody has repaired it since. The ladder walks around this one and keeps climbing. It is still open, under your calculator.</div><div class="sub dim">Two failures, opposite in kind: one has no solutions, the other has nothing but. The second has its own word: <span class="amber">indeterminate</span>.</div>' },
+  { k:'cost',   t:'Nothing repaired it, so we built a box to keep it in. Ask any machine you own for 0/0 and it answers <span class="amber">NaN</span>, not a number, and the value is contagious: every arithmetic that touches it hands it back. It is not equal to itself.<div class="sub dim">IEEE 754, 1985. Two failures, two boxes: 1/0 returns &infin;, 0/0 returns NaN, and the standard never calls either of them a number.</div>The same shape comes back further up this ladder. <b>How long can you use something you cannot place?</b>' } ]},
+{ name:'negative numbers', tag:'the hinge of the ladder', beats:[
+  { k:'world',  t:'Whole numbers, and every one of them is a thing you could put on a table.' },
+  { k:'brk',    t:'You owe more than you have. Work out three minus five, and walk to it on the line.', tryLabel:'Step left', gate:'walk', gmsg:'take the steps first' },
+  { k:'repair', t:'<span class="cool">Negative numbers: fortunes and debts.</span> The line keeps going in the direction you were walking.', c:'Brahmagupta again, 628 CE' },
+  { k:'cost',   t:'Nobody has ever seen minus one sheep. Positives were observed; negatives were <i>invented</i>, so that three minus five would have an answer. <b>Where would you point, to show someone minus one?</b>' } ]},
+{ name:'fractions', tag:'rhind papyrus', beats:[
+  { k:'world',  t:'Integers, running both ways from zero. Every one of them is a step you can take.' },
+  { k:'brk',    t:'Three people, one loaf. Take a step to the answer and there is no step that size.', gate:'time', gmsg:'watch the step fail' },
+  { k:'repair', t:'<span class="cool">Fractions.</span> The gaps between the steps fill in, and the line starts to look crowded.', c:'Egyptian unit fractions, Rhind papyrus, ~1550 BCE' },
+  { k:'cost',   t:'One point now answers to infinitely many names. If a number is not the name you write down, <b>what is it?</b>' } ]},
+{ name:'the diagonal', tag:'playable', beats:[
+  { k:'world',  t:'Every ratio of whole numbers has a place. Between any two of them you can always fit another. The line looks <b>full</b>.' },
+  { k:'brk',    t:'Pythagoras hands you a tool that breaks his own world. The diagonal of a unit square has a definite length. <span class="coral">Name it as a fraction.</span>', gate:'hunt', gmsg:'slide the dot. land on a fraction first' },
+  { k:'repair', t:'<span class="cool">Irrational numbers.</span> The point is real, the length is constructible, and it is not a ratio of whole numbers.', c:'Pythagorean school, 5th century BCE. The story about Hippasus drowning for it is almost certainly later invention.' },
+  { k:'cost',   t:'The line has holes you cannot see. If you cannot see them, <b>how would you ever know when the line is full?</b>', c:'Nobody could make that rigorous for 2,400 years. Dedekind, Stetigkeit und irrationale Zahlen, 1872' } ]},
+{ name:'the plane', tag:'a second axis, and it stays open for the rest of the ladder', beats:[
+  { k:'world',  t:'Every point on the line has a number and every number has a point. There is nothing left in between.' },
+  { k:'brk',    t:'Where is the ship? One number puts you somewhere along a road. It cannot put you anywhere in a field.', gate:'time', gmsg:'watch it miss the road' },
+  { k:'repair', t:'A second line, crossed at zero. Every place becomes a pair of numbers, every curve becomes an equation, and geometry turns into <span class="cool">something you can calculate</span>.', c:'Descartes, La Géométrie, 1637' },
+  { k:'cost',   t:'You can add two places: go across, then up. Multiplying them gives you nothing that means anything. <b>What would it be, to multiply two places together?</b>' } ]},
+{ name:'completing the square', tag:'the name is literal', beats:[
+  { k:'world',  t:'Anything with one unknown, taken one step at a time, falls out. Undo what was done to it and the answer is standing there.' },
+  { k:'brk',    t:'A square and ten of its own sides make thirty-nine. There is no step to take, because the unknown is on both sides of itself.', gate:'time', gmsg:'let the method ask first' },
+  { k:'repair', t:'Cut the ten sides into two strips of five and lay them along two edges. The figure is a square with one corner missing. <span class="cool">Add the corner to both sides and it closes.</span>', c:'al-Khwārizmī, al-Jabr, ~820 CE. His own worked example, and the book’s title is where the word algebra comes from.' },
+  { k:'cost',   t:'The method never asks permission. Hand it x² + 1 = 0 and it hands back a square with area minus one. Every square anyone has ever drawn has positive area. <b>How long is that one&rsquo;s side?</b>' } ]},
+{ name:'the wild thought', tag:'the rung with no repair', beats:[
+  { k:'world',  t:'A method for every quadratic, and since 1545 for cubics too. Turn the handle and the answer comes out.' },
+  { k:'check',  t:'Before the formula gets a chance: try 4, by hand. Four cubed is sixty-four, and fifteen fours and four more is sixty-four. <span class="cool">The answer is 4, and it is yours.</span>' },
+  { k:'brk',    t:'On rung 7 you could always decline: a square with area minus one, so there is no such square, so no answer. That exit is shut here. The only road the formula knows passes through <span class="coral">the square root of minus one hundred and twenty-one</span>.', gate:'time', gmsg:'let it hit the root first' },
+  { k:'detour', t:'Nothing gets repaired. Use it and do not ask. This is the one rung where the ladder does not repair the break, it walks around it and keeps going.', c:'Cardano called it as subtle as it is useless, 1545. Bombelli called following it a wild thought, followed it anyway, 1572.' },
+  { k:'cost',   t:'Two hundred and fifty years of calculating with something nobody could point at, and it never once gave a wrong answer. All three answers are real, and Wantzel proved in 1843 that no route between them stays on the line. It is not a quirk of the method; it is the only way through. <b>What is it?</b>' } ]},
+{ name:'the quarter turn', tag:'rung 3 planted this · rung 6 built the room', beats:[
+  { k:'world',  t:'You can compute with it and you cannot place it. Every point on the line is already spoken for.' },
+  { k:'brk',    t:'So put it down somewhere. There is no gap left on the line to put it in.', gate:'time', gmsg:'let it look for a seat' },
+  { k:'repair', t:'<span class="violet">Off the line.</span> Rung 3 left this here: multiplying by minus one is a half turn, and the thing that makes a half turn when you do it twice is a quarter turn. So it is not a quantity, it is a rotation, standing at ninety degrees.', c:'Wessel 1797, Argand 1806, Gauss 1831. Rung 6 built the room a hundred and sixty years before anyone moved in.' },
+  { k:'cost',   t:'Rung 6&rsquo;s bill is paid: places multiply now. Every equation algebra can write has all of its answers in here, and nothing more needs adding. But everything in this room is standing still. <b>What do you do when the quantity you care about is moving?</b>' } ]},
+{ name:'the tangent', tag:'where rung 2 comes back', beats:[
+  { k:'world',  t:'A closed plane, numbers that turn, every equation answerable. And a curve, which is only an equation you can look at.' },
+  { k:'brk',    t:'How fast is it going right now? Not across the hour. At the instant. Speed is distance over time, and at an instant you have gone <b>no distance in no time</b>.', gate:'time', gmsg:'watch the ratio collapse' },
+  { k:'repair', t:'Take two points on the curve and the line through them, then slide them together. <span class="cool">The slope settles on a number before the points ever arrive.</span>', c:'Newton, 1665. Leibniz, 1684.' },
+  { k:'cost',   t:'At the end of the slide the ratio reads 0/0, and rung 2 showed that permits every answer. This one settles on 2. Not because the form says so, it says nothing, but because of the path taken to reach it.<div class="sub red">Newton divided by a quantity and then set it to zero, which is having it both ways. Berkeley, 1734: ghosts of departed quantities.</div>' } ]}
+];
+
+/* rung 9 speaks in the detour's colour: its repair arrives from rung 8's road.
+   Rung 2 speaks in the BREAK's colour: the beat where a repair belongs comes and
+   goes and nothing is invented, so the rail above the word is red. */
+var REPAIR_COL_OVERRIDE = { 2:'#ff8a80', 9:'#bc8cff' };
+
+/* the damage ledger definition: what each rung's cost leaves in engine state.
+   Entries are APPENDED as the visitor's forward pass reaches each cost beat;
+   the closing screen is composed from the stored list, not from this table. */
+var LEDGER_DEF = [
+  { rung:0,  q:'a mark is not a quantity',    healed:'1'  },
+  { rung:1,  q:'the empty place has no name', healed:'2'  },
+  { rung:2,  q:'0 / 0',                       healed:null },
+  { rung:3,  q:'where do you point at −1',    healed:'9'  },
+  { rung:4,  q:'one point, many names',       healed:'5'  },
+  { rung:5,  q:'holes you cannot see',        healed:'6'  },
+  { rung:6,  q:'multiplying two places',      healed:'9'  },
+  { rung:7,  q:'a square with area −1',       healed:'9'  },
+  { rung:8,  q:'what is it',                  healed:'9'  },
+  { rung:9,  q:'nothing here moves',          healed:'10' },
+  { rung:10, q:'0 / 0',                       healed:'same' }
+];
+
+/* timed break gates: the failure must land before a click can leave it */
+var GATE_MS = { 4:2200, 6:2400, 7:2800, 8:3400, 9:2600, 10:3600 };
+
+/* ── nav state ── */
+var r = 0, b = 0, closingOn = false;
+/* the frontispiece is the opening frame of the same click-to-advance sequence:
+   one click enters rung 0, Back from rung 0 returns here, and it is the one
+   screen with no break to fail at */
+var titleOn = true;
+var gatePassed = {};          // rung -> true once its break has been engaged and left
+var ledger = [];              // damage entries in the order the visitor incurred them
+var ledgerSeen = {};          // rung -> true once its cost beat has been reached
+var tearOpen = false;         // rung 2's tear, engine state from the moment it lands
+
+/* per-rung interaction state */
+var try0Done = false, try2Done = false;
+var walkPresses = 0, walkTarget = 3, walkAnim = 3, walkDone = false, walkDoneAt = -1e9;
+var arithDot = 1, try2At = -1e9;
+var countDone = false;
+/* rung 2's failed repair is walked in three clicks: the first failure, the
+   second, then the two of them on the same line at once */
+var divStep = 0;
+var huntTries = 0, huntP = 3, huntQ = 2, huntBest = null, huntBestP = null, huntBestQ = null;
+
+function beatsIn(rung) { return rung === 8 ? 5 : 4; }
+function breakBeat(rung) { return rung === 8 ? 2 : 1; }
+function costBeat(rung) { return rung === 8 ? 4 : 3; }
+/* where a rung's permanent damage lands. Normally the cost beat. Rung 2 is the
+   exception: its scar IS the repair that never came, so it lands on beat 2 and
+   its cost beat is free to hand the next rung its question. */
+function scarBeat(rung) { return rung === 2 ? 2 : costBeat(rung); }
+
+/* ── DOM ── */
+var cv = document.getElementById('cv');
+var elKind = document.getElementById('kind'), elGloss = document.getElementById('gloss');
+var elBody = document.getElementById('body'), elCite = document.getElementById('cite');
+var elRn = document.getElementById('rn'), elRt = document.getElementById('rt'), elRtag = document.getElementById('rtag');
+var elTry = document.getElementById('try'), elTryBtn = document.getElementById('tryBtn'), elTryOut = document.getElementById('tryOut');
+var elHunt = document.getElementById('hunt'), elHint = document.getElementById('hint');
+var elBeats = document.getElementById('beats');
+var elPrev = document.getElementById('prev'), elReset = document.getElementById('reset');
+var elClosing = document.getElementById('closing'), elLedger = document.getElementById('ledger');
+var elTitle = document.getElementById('title');
+
+var hintTimer = null, hintBase = 'one line · eleven repairs · click to walk it';function flashGate(msg) {
+  elHint.textContent = msg;
+  elHint.classList.add('gate');
+  if (hintTimer) clearTimeout(hintTimer);
+  hintTimer = setTimeout(function () {
+    elHint.classList.remove('gate');
+    setHintBase();
+  }, 2400);
+}
+function setHintBase() {
+  elHint.textContent = (r === 0 && b === 0) ? hintBase
+    : (r === 10 && b === 3) ? 'one more click · the repair record'
+    : 'click anywhere to continue';
+}
+
+function gateSatisfied() {
+  var beat = RUNGS[r].beats[b];
+  if (!beat.gate || gatePassed[r]) return true;
+  switch (beat.gate) {
+    case 'try':  return r === 0 ? try0Done : try2Done;
+    case 'walk': return walkDone;
+    case 'count': return countDone;
+    case 'hunt': return huntTries > 0;
+    case 'time': return (performance.now() - phaseTime) > (GATE_MS[r] || 2400);
+  }
+  return true;
+}
+
+function recordCostIfDue() {
+  if (b === scarBeat(r) && !ledgerSeen[r]) {
+    ledgerSeen[r] = true;
+    ledger.push(LEDGER_DEF[r]);
+    if (r === 2) tearOpen = true;
+  }
+}
+
+function advance() {
+  if (titleOn) { closeTitle(); return; }
+  if (closingOn) return;
+  if (b === breakBeat(r) && !gateSatisfied()) { flashGate(RUNGS[r].beats[b].gmsg || 'engage the failure first'); return; }
+  if (b === breakBeat(r)) gatePassed[r] = true;
+  // sub-steps inside the failed repair: same card, different canvas, so the copy
+  // is left alone. Re-rendering it here would blink the paragraph on every click.
+  if (r === 2 && b === 2 && divStep < 2) { divStep++; phaseTime = performance.now(); return; }
+  if (b < beatsIn(r) - 1) { b++; }
+  else if (r < 10) { r++; b = 0; }
+  else { openClosing(); return; }
+  divStep = 0;
+  recordCostIfDue();
+  render();
+}
+
+function goBack() {
+  if (titleOn) return;
+  if (closingOn) { closeClosing(); return; }
+  if (b > 0) { b--; }
+  else if (r > 0) { r--; b = beatsIn(r) - 1; }
+  else { openTitle(); return; }
+  // stepping back into the failed repair shows the assembled pair, not the replay
+  divStep = (r === 2 && b === 2) ? 2 : 0;
+  render();
+}
+
+function openTitle() {
+  titleOn = true;
+  elTitle.classList.remove('off');
+  elPrev.disabled = true;
+}
+
+function closeTitle() {
+  titleOn = false;
+  elTitle.classList.add('off');
+  phaseTime = performance.now();   // rung 0 starts its clock on entry, not on load
+  render();
+}
+
+function restart() {
+  closingOn = false;
+  elClosing.classList.remove('on');
+  r = 0; b = 0;
+  gatePassed = {}; ledger = []; ledgerSeen = {}; tearOpen = false;
+  try0Done = false; try2Done = false; try2At = -1e9; arithDot = 1;
+  pebClicks = 0; missAt = -1e9;
+  walkPresses = 0; walkTarget = 3; walkAnim = 3; walkDone = false; walkDoneAt = -1e9;
+  countDone = false;
+  divStep = 0;
+  huntTries = 0; huntP = 3; huntQ = 2; huntBest = null; huntBestP = null; huntBestQ = null;
+  v5 = null; z5 = null;
+  document.getElementById('hFrac').textContent = '3/2';
+  document.getElementById('hVal').textContent = '1.5000000';
+  document.getElementById('verdict').textContent = '';
+  document.getElementById('proof').textContent = '';
+  document.getElementById('huntLog').textContent = 'grab the blue dot on the line and slide it';
+  openTitle();
+  render();
+}
+
+function openClosing() {
+  closingOn = true;
+  /* composed in full from the stored damage list: the payoff for keeping
+     costs as engine state while their display stayed beat-scoped */
+  var html = '';
+  ledger.forEach(function (d) {
+    var state = d.healed === null ? '<span class="lo">· open</span>'
+      : d.healed === 'same' ? '<span class="lw">· the same hole, walked around</span>'
+      : '<span class="lh">· healed ' + d.healed + '</span>';
+    var rc = (d.healed === null || d.healed === 'same') ? 'lo' : 'lr';
+    html += '<span class="' + rc + '">rung ' + d.rung + '</span> ' + d.q + ' ' + state + '<br>';
+  });
+  elLedger.innerHTML = html;
+  elClosing.classList.add('on');
+}
+
+function closeClosing() {
+  closingOn = false;
+  elClosing.classList.remove('on');
+  render();
+}
+
+function render() {
+  var R = RUNGS[r], B = R.beats[b];
+  elRn.textContent = r;
+  elRt.textContent = R.name;
+  elRtag.textContent = ' · ' + R.tag;
+
+  var col = B.k === 'repair' && REPAIR_COL_OVERRIDE[r] ? REPAIR_COL_OVERRIDE[r] : KCOL[B.k];
+  elKind.textContent = KNAME[B.k];
+  elKind.style.color = col;
+  elGloss.textContent = B.g || GLOSS[B.k];
+  elBody.style.opacity = 0; elCite.style.opacity = 0;
+  setTimeout(function () {
+    elBody.innerHTML = B.t;
+    elCite.textContent = B.c || '';
+    elBody.style.opacity = 1; elCite.style.opacity = 1;
+  }, 150);
+
+  elBeats.innerHTML = '';
+  for (var i = 0; i < beatsIn(r); i++) {
+    var d = document.createElement('div');
+    d.className = 'bt' + (i < b ? ' done' : '');
+    if (i === b) d.style.background = col;
+    var ic = document.createElement('i');
+    ic.textContent = KNAME[RUNGS[r].beats[i].k].replace('the ', '');
+    if (i === b) ic.style.color = '#8a8aa0';
+    d.appendChild(ic);
+    elBeats.appendChild(d);
+  }
+
+  if (r === 2 && b === 1) arithDot = (try2Done && gatePassed[2]) ? 0 : 1;
+  elTryOut.textContent = '';
+  elTryOut.className = '';
+  if (B.tryLabel && !gatePassed[r]) {
+    elTry.classList.add('on');
+    elTryBtn.disabled = false;
+    elTryBtn.textContent = B.tryLabel;
+    // returning to rung 0's break after the supply ran out finds the button spent,
+    // not reloaded: the pebbles do not come back
+    if (r === 0 && try0Done) { elTryBtn.textContent = 'You ran out of pebbles'; elTryBtn.disabled = true; }
+    if (r === 3 && !walkDone) { walkPresses = 0; walkTarget = 3; walkAnim = 3; }
+  } else {
+    elTry.classList.remove('on');
+  }
+
+  elHunt.classList.toggle('on', r === 5 && b === 1);
+  // Back is review-only, and the frontispiece is now the first frame: rung 0
+  // beat 0 can still step back to it, so only the title itself is a dead end.
+  elPrev.disabled = titleOn;
+  elHint.classList.remove('gate');
+  setHintBase();
+  markPhase();
+}
+
+/* try buttons: the attempt is the visitor's, not narrated */
+elTryBtn.addEventListener('click', function (e) {
+  e.stopPropagation();
+  if (r === 0) {
+    if (BASE + pebClicks < PEBS) {
+      pebClicks++;
+      var down = BASE + pebClicks, lft = PEBS - down;
+      elTryOut.className = 'soft';
+      elTryOut.textContent = lft === 0
+        ? 'ten matched, and one sheep still to go.'
+        : down + ' matched \u00b7 ' + lft + (lft === 1 ? ' pebble left' : ' pebbles left');
+    } else {
+      try0Done = true;
+      missAt = performance.now();
+      elTryOut.className = '';
+      elTryOut.textContent = 'the eleventh sheep has no pebble, and nothing here remembers it.';
+      elTryBtn.textContent = 'You ran out of pebbles';
+      elTryBtn.disabled = true;
+    }
+  } else if (r === 2) {
+    try2Done = true;
+    try2At = performance.now();   /* the fourth row runs on its own clock */
+    elTryOut.textContent = 'the row will not close.';
+    elTryBtn.disabled = true;
+  } else if (r === 3) {
+    walkPresses++;
+    if (walkPresses <= 3) {
+      walkTarget = 3 - walkPresses;
+      elTryOut.textContent = walkPresses + ' of 5 steps' + (walkPresses === 3 ? ' · you are standing on the last mark' : '');
+    } else {
+      walkDone = true;
+      walkDoneAt = performance.now();
+      walkTarget = 0;
+      elTryOut.textContent = 'the line ends. the subtraction cannot finish.';
+      elTryBtn.disabled = true;
+    }
+  }
+});
+
+/* ═══════════════ the engine: one renderer, two coordinates ═══════════════
+   Ported from the DES ladder walk (2026-08-12). One drawRung(rung, beat) plus
+   exactly one declared exception, rung 5, whose view is driven by the
+   visitor's own input. The six invariants from the DES pass hold here:
+   1. no beat renders its own repair before THE REPAIR (all gains via gained)
+   2. a gain persists; its representation may retire only by supersession
+   3. the canvas may not contradict or pre-empt the card's copy
+   4. every mark belongs to a band; owners never choose their own offset
+   5. exactly one damage drawer, storing line coordinates, never pixels
+   6. (single canvas here, but the draw stays inside a try/catch regardless) */
+
+var phaseKey = '', phaseTime = performance.now();
+
+/* the card's rendered height, so the canvas top band can yield to it instead
+   of printing through it (user test 2026-08-12, finding A). Cached: layout is
+   only re-read four times a second. */
+var elCaption = document.getElementById('caption');
+var capBV = 140, capBT = -1e9;
+function capBottom() {
+  var t = performance.now();
+  if (t - capBT > 250) { capBT = t; capBV = elCaption.offsetTop + elCaption.offsetHeight + 6; }
+  return capBV;
+}
+
+function markPhase() {
+  var key = r + ':' + b;
+  if (phaseKey !== key) { phaseKey = key; phaseTime = performance.now(); }
+}
+
+var zoomN = {}, v5 = null, z5 = null, map5 = null, drag5 = 0, suppress5 = 0, dragX0 = 0, qmAt = 0, told = false;
+var countN = null;
+/* rung 0: seven sheep matched at dusk, then four more arrive and the bag holds
+   only three more pebbles. The supply is finite and the visitor spends it one
+   click at a time, so the failure is something they run into, not something
+   they are told. */
+var SHEEP = 11, PEBS = 10, BASE = 7;
+var pebClicks = 0, missAt = -1e9, rowNA = null;
+
+function clamp(v, a, c) { return v < a ? a : v > c ? c : v; }
+function expoOut(u) { return u >= 1 ? 1 : 1 - Math.pow(2, -9 * u); }
+function inOutCubic(u) { return u < .5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2; }
+function outQuint(u) { return 1 - Math.pow(1 - u, 5); }
+function mix(h1, h2, k) {
+  var p = function (h) { return [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)]; };
+  var a = p(h1), c = p(h2);
+  return 'rgb(' + a.map(function (v, i) { return Math.round(v + (c[i] - v) * k); }).join(',') + ')';
+}
+
+function fit(c) {
+  if (!c.clientWidth) return null;
+  var dpr = Math.min(2, window.devicePixelRatio || 1);
+  var w = c.clientWidth, h = c.clientHeight;
+  if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) { c.width = Math.round(w * dpr); c.height = Math.round(h * dpr); }
+  var g = c.getContext('2d');
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.clearRect(0, 0, w, h);
+  return { g: g, w: w, h: h };
+}
+
+/* THE INVARIANT, and the only one this structure can silently violate:
+   a repair is GAINED, permanently, on its own rung's repair beat. It is never
+   re-gated afterwards. Write every repair flag through gained(). Only BREAK
+   and COST flags may be beat-exclusive; they are moments, not gains. */
+function gained(R, rr, bb) { return rr > R || (rr === R && bb >= 2); }
+
+/* Every mark above or below the line belongs to exactly one band. Owners never
+   choose their own offset. Add a band to the table rather than nudging a number. */
+var BAND = {
+  caption: -70,   // what the beat is asking you to do
+  verdict: -50,   // the x, anything that says "this failed"
+  actor: -32,     // the walker, the guess dot: the thing the visitor moves
+  tag: -16,       // labels attached to a point on the line
+  ticks: 27,      // numerals under the line
+  note: 52,       // the rung's own caption
+  damage: 72      // the scar layer, always lowest, never shared
+};
+
+/* ── Babylonian numerals ──────────────────────────────────────────────────
+   Rung 1 counts in the numerals it actually happened in: a wedge for one, a
+   chevron for ten, wedges grouped in rows of three, chevrons to the left of
+   the ones. Zero cannot appear here because the system has no sign for it,
+   which is the rung's whole argument. Our digits arrive on rung 2, where zero
+   is named and can be written. Values 1 to 59. */
+function wedge(g, x, y, s, col) {
+  g.fillStyle = col;
+  g.beginPath();
+  g.moveTo(x - s * .30, y - s);
+  g.lineTo(x + s * .30, y - s);
+  g.lineTo(x, y - s * .34);
+  g.closePath(); g.fill();
+  g.strokeStyle = col; g.lineWidth = Math.max(.9, s * .13);
+  g.beginPath(); g.moveTo(x, y - s * .40); g.lineTo(x, y + s * .30); g.stroke();
+}
+function chevron(g, x, y, s, col) {
+  g.strokeStyle = col; g.lineWidth = Math.max(1, s * .17); g.lineCap = 'round';
+  g.beginPath();
+  g.moveTo(x + s * .42, y - s * .82);
+  g.lineTo(x - s * .42, y - s * .18);
+  g.lineTo(x + s * .42, y + s * .44);
+  g.stroke();
+}
+/* draws n centred on cx, sitting on baseline cy. s is the glyph size. */
+function babyl(g, n, cx, cy, s, col) {
+  var tens = Math.floor(n / 10), ones = n % 10;
+  var colW = s * .80, rowH = s * .95;
+  var tCols = tens ? Math.min(3, tens) : 0, oCols = ones ? Math.min(3, ones) : 0;
+  var tW = tCols * colW, oW = oCols * colW;
+  var gp = (tens && ones) ? s * .45 : 0;
+  var x0 = cx - (tW + gp + oW) / 2;
+  var put = function (count, bx, isTen) {
+    var rows = Math.ceil(count / 3);
+    for (var i = 0; i < count; i++) {
+      var row = Math.floor(i / 3), cIdx = i % 3;
+      var inRow = Math.min(3, count - row * 3);
+      var rowW = inRow * colW;
+      var gx = bx + (Math.min(3, count) * colW - rowW) / 2 + cIdx * colW + colW / 2;
+      var gy = cy - (rows - 1 - row) * rowH;
+      if (isTen) chevron(g, gx, gy, s, col); else wedge(g, gx, gy, s, col);
+    }
+  };
+  if (tens) put(tens, x0, true);
+  if (ones) put(ones, x0 + tW + gp, false);
+}
+
+function stateFor(rr, bb) {
+  var G = function (R) { return gained(R, rr, bb) ? 1 : 0; };
+  // the window's high end, one number per rung. From rung 6 on the low end is
+  // its negative (see loV), so zero is the middle of the line by construction
+  // and cannot drift when a window is retuned.
+  // Rung 7 is 13: its break beat lays a strip ten long beside a square of
+  // side 3, at the line's own scale (Dan, 2026-11-17).
+  var HI = rr === 0 ? 7 : rr === 10 ? 2 : rr === 7 ? 13 : (rr === 6 || rr === 9) ? 4 : (rr === 4 || rr >= 7) ? 5 : 8;
+  return {
+    // moments
+    pebbles: rr === 0 && bb <= 2 ? 1 : 0,
+    flock: rr === 0 && bb >= 1 ? 1 : 0,
+    recount: rr === 0 && bb === 3 ? 1 : 0,
+    morph: rr === 1 && bb === 0 ? 1 : 0,
+    count: rr === 1 && bb === 1 ? 1 : 0,
+    // rung 2's numerals arrive Babylonian and leave modern: one beat, one morph
+    numMorph: rr === 2 && bb === 0 ? 1 : 0,
+    arith: rr === 2 && bb === 1 ? 1 : 0,
+    // rung 2's cost is the one we are still paying: the box we keep the break in
+    nanFlow: rr === 2 && bb === 3 ? 1 : 0,
+    stepWalk: rr === 3 && bb === 1 ? 1 : 0,
+    // the sign rule belongs to the repair that invented the signs, not to the
+    // cost. Brahmagupta states it in 628; nobody proves it until the 1830s.
+    hiddenRepair: rr === 3 && bb === 2 ? 1 : 0,
+    halfTurn: rr === 3 && bb === 2 ? 1 : 0,
+    // rung 3's cost, in the currency rung 0 started with: a pebble per thing
+    pebbles3: rr === 3 && bb === 3 ? 1 : 0,
+    loaf: rr === 4 && bb === 1 ? 1 : 0,
+    sameName: rr === 4 && bb === 3 ? 1 : 0,
+    // rung 4's repair is a camera move: the gaps are only visible from close up.
+    // A parameter on the shared mapping, not a fork, so the one-renderer rule holds.
+    zoom01: rr === 4 && bb >= 2 ? 1 : 0,
+    // rung 2's failed repair, argued instead of asserted: division is the
+    // inverse of multiplication, so a/b is the UNIQUE x with b·x = a. 1/0 fails
+    // on existence, 0/0 fails on uniqueness. Nothing on this beat is gained.
+    divTest: rr === 2 && bb === 2 ? 1 : 0,
+    // zero is marked but nameless: rung 1's break, and rung 1 is where it stays
+    zeroGap: rr === 1 && bb >= 1 ? 1 : 0,
+    // gains
+    // supersession, the one legal way a gain stops being drawn: rung 1 does not
+    // take the tallies away, it gives them names. The ticks on every later rung
+    // ARE these marks, so the gain persists while this representation retires.
+    tallies: G(0) && rr === 0 ? 1 : 0,
+    line: rr >= 1 ? 1 : 0,
+    numerals: rr >= 1 ? 1 : 0,
+    zeroMark: G(1),
+    // the one gain that does NOT arrive on a repair beat, and the exception is
+    // historical: zero comes in already a number, as one of the ten signs the
+    // world beat imports. Rung 2 repairs nothing; see divTest.
+    zeroPoint: rr >= 2 ? 1 : 0,
+    lo: G(3) ? -5 : 0,
+    // rung 7 is the one rung that does not draw them (Dan, 2026-11-11): its
+    // line carries a figure, an origin dot and an answer dot, and nothing else
+    fractions: G(4) && rr !== 7 ? 1 : 0,
+    hi: HI,
+    // rungs 6 and up frame a window rather than growing one: fixed ends, centred.
+    // Rung 10's window is narrow because the curve has to fit above the line at
+    // the SAME unit the line uses, or the slope on screen is not the slope.
+    // Rung 8's window reaches 5 each way because its cost beat puts all three
+    // real roots of x³ = 15x + 4 on the line: 4, and the lowest is −2 − √3 ≈ −3.73.
+    // A graph view lands symmetric (Dan, 2026-11-10): x ∈ [−HI, HI].
+    // The stated exception is rung 7 (Dan, 2026-11-17: "one sided and
+    // bigger/to scale"): everything on it is a length or an area, so its
+    // window is x ∈ [0, 13] and the room a negative half would take goes to
+    // drawing the figure at the line's own scale.
+    loV: rr === 7 ? 0 : rr >= 6 ? -HI : null,
+    // the plane is a GAIN at rung 6, so the second axis stays open for 7, 8, 9, 10.
+    // Rung 9 does not build the room, it moves into it.
+    plane: G(6),
+    // only rung 9's axis is imaginary. Rung 10 plots y = x², a real function,
+    // and measuring its heights against an axis marked i contradicts its own label.
+    axisI: rr === 9 && bb >= 2 ? 1 : 0,
+    ship: rr === 6 && bb === 1 ? 1 : 0,
+    plot: rr === 6 && bb === 2 ? 1 : 0,
+    pairAdd: rr === 6 && bb === 3 ? 1 : 0,
+    homeless: rr === 9 && bb === 1 ? 1 : 0,
+    turn: rr === 9 && bb === 2 ? 1 : 0,
+    closed: rr === 9 && bb === 3 ? 1 : 0,
+    cubic: rr === 8 ? 1 : 0
+  };
+}
+
+/* the one damage drawer. Damage is ENGINE STATE that outlives its rung, stored
+   in line coordinates, never pixels, so it survives zoom and the plane's lift.
+   Display is beat-scoped (Dan, 8/7): a scar lands at full weight on the cost
+   beat that makes it, then stops being drawn. State persists; display does not. */
+function damageList() {
+  return tearOpen ? [{ rung: 2, kind: 'tear', at: 0, label: '0 / 0' }] : [];
+}
+function drawDamage(g, X, Y, now, mode) {
+  var show = mode === 'all'
+    ? function () { return true; }
+    : function (d) { return (d.rung === r || r === 10) && b === scarBeat(r); };
+  damageList().filter(show).forEach(function (d) {
+    if (d.kind !== 'tear') return;
+    var x = X(d.at); if (x < -60 || x > 4000) return;
+    var br = .72 + .28 * (0.5 + 0.5 * Math.sin(now / 1150));
+    g.save(); g.globalAlpha = br;
+    var gr = g.createRadialGradient(x, Y, 0, x, Y, 38);
+    gr.addColorStop(0, 'rgba(255,138,128,.22)'); gr.addColorStop(1, 'rgba(255,138,128,0)');
+    g.fillStyle = gr; g.beginPath(); g.arc(x, Y, 38, 0, 6.284); g.fill();
+    g.strokeStyle = '#ff8a80'; g.lineWidth = 1.7; g.lineCap = 'round';
+    [[-2, -14, 3, 11], [1, -8, -4, 7], [-1, 6, 4, -11]].forEach(function (f) {
+      g.globalAlpha = br * .5;
+      g.beginPath(); g.moveTo(x + f[0], Y + f[1] * .5); g.lineTo(x + f[2], Y + f[3] * .8); g.stroke();
+    });
+    g.globalAlpha = br; g.lineWidth = 2.3;
+    g.beginPath(); g.moveTo(x - 1, Y - 12); g.lineTo(x + 2, Y + 12); g.stroke();
+    g.restore();
+    g.fillStyle = '#ff8a80'; g.font = '9px "JetBrains Mono", monospace'; g.textAlign = 'center';
+    g.globalAlpha = .85; g.fillText(d.label, x, Y + BAND.damage); g.globalAlpha = 1;
+  });
+}
+
+/* house rule (rungs 0-4 rework, carried to every rung 2026-10-02): a string
+   never prints through a line and never past the stage. A ground-colour stroke
+   sits behind it, the canvas form of the caption's text-shadow, and a string
+   wider than the stage (less the drawer tab) shrinks to fit instead of clipping. */
+function knock(g, w, str, x, y) {
+  var f = g.font, mw = g.measureText(str).width, maxW = w - 68;
+  if (mw > maxW) g.font = f.replace(/([\d.]+)px/, function (_, px) { return Math.max(8, px * maxW / mw).toFixed(1) + 'px'; });
+  g.save(); g.lineJoin = 'round'; g.lineWidth = 4; g.strokeStyle = '#0e0e12';
+  g.strokeText(str, x, y); g.restore();
+  g.fillText(str, x, y);
+  g.font = f;
+}
+
+var c7 = { key: '', v: 0 };
+function cap7() {
+  var key = elCaption.offsetWidth + '|' + (document.fonts ? document.fonts.status : '');
+  if (c7.key === key) return c7.v;
+  var kb = elBody.innerHTML, kc = elCite.textContent, kg = elGloss.textContent, tall = 0;
+  RUNGS[7].beats.forEach(function (B) {
+    elBody.innerHTML = B.t; elCite.textContent = B.c || ''; elGloss.textContent = B.g || GLOSS[B.k];
+    tall = Math.max(tall, elCaption.offsetTop + elCaption.offsetHeight + 6);
+  });
+  elBody.innerHTML = kb; elCite.textContent = kc; elGloss.textContent = kg;
+  c7 = { key: key, v: tall };
+  return tall;
+}
+
+function drawRung(now) {
+  var F = fit(cv); if (!F) return;
+  var g = F.g, w = F.w, h = F.h;
+  var age = now - phaseTime;
+  var st = stateFor(r, b), B = BAND;
+  var cls = RUNGS[r].beats[b].k;
+  var ease = cls === 'brk' ? outQuint(clamp(age / 300, 0, 1))
+    : cls === 'cost' ? inOutCubic(clamp(age / 900, 0, 1))
+    : expoOut(clamp(age / 620, 0, 1));
+
+  // sixty is arrived at, never announced: it accelerates through the fifties
+  // and settles on the last few, so the empty place is a discovery
+  countN = st.count
+    ? Math.min(60, 1 + Math.round(inOutCubic(clamp((age - 400) / 4600, 0, 1)) * 59))
+    : null;
+  if (st.count && countN === 60) countDone = true;
+  var gapOn = st.zeroGap && (!st.count || countN === 60);
+  // rung 2's world beat: the wedges hand over to our digits, left to right, and
+  // the placeholder becomes a 0 that can sit on the line like any other number.
+  var mZ = st.numMorph ? clamp((age - 1900) / 620, 0, 1) : 1;
+  var numM = st.numMorph
+    ? function (v) { return clamp((age - 500 - v * 90) / 520, 0, 1); }
+    : function () { return 1; };
+  // rung 2's cost: the NaN front, in line coordinates. Everything it has passed
+  // is no longer a number, which is the whole of what the standard promises.
+  var nanFront = st.nanFlow ? (st.hi + 1.4) * inOutCubic(clamp((age - 1800) / 2400, 0, 1)) : -1;
+
+  // The baseline sits at .58 for every rung whose drawing lives ON the line.
+  // Rung 7 is the exception: its figure is eight units tall and stands above
+  // the line, so the line drops to .74 to buy headroom, and further (never past
+  // the h - 128 floor the other rungs use) when eight units at the wanted size
+  // need it. u7 is the unit rung 7 draws EVERYTHING in, line and figure:
+  // the largest that puts 0..13 across the stage (32 px each side for the
+  // vertical axis's numerals and the line's ends) and 8.4 units between the
+  // rung's tallest card and the line, capped at the 62 px the other rungs use.
+  var u7 = 0;
+  if (r === 7) {
+    u7 = Math.min(62, (w - 64) / 13);
+    var Y7 = clamp(cap7() + 12 + 8.4 * u7, h * .74, h - 128);
+    u7 = Math.max(8, Math.min(u7, (Y7 - cap7() - 12) / 8.4));
+  }
+  var Y = r === 7 ? Y7 : h * .58;
+  // the baseline yields downward when the card above needs the room; each
+  // rung declares how much headroom its top band actually uses
+  if (r !== 7) {
+    var need = r === 8 ? 220 : (r === 2 && b === 1) ? 200 : (r === 3 && b === 2) ? 205 : r === 10 ? 165 : (r === 3 && b === 3) ? 120 : (r === 9 && b >= 2) ? 165 : (r === 6 && b === 3) ? 165 : (r === 2 && b === 3) ? 150 : (r === 2 && b === 2) ? 118 : 90;
+    Y = Math.max(Y, Math.min(capBottom() + need, h - 128));
+  }
+  var left = st.loV != null ? st.loV : (st.lo === 0 ? 0 : -5 * ease);
+  // rung 3's repair opens the left side, and the right side gives back the same
+  // distance in the same easing, so zero glides into the middle of the window
+  // instead of sitting at its edge. Everything below reads the eased extent.
+  var hiTo = (r === 3 && b >= 2) ? 5 : st.hi;
+  var hiE = st.hi + (hiTo - st.hi) * ease;
+  var unitBase = r === 7 ? u7 : Math.min(62, (w - 120) / (hiE - left + 1));
+  // house rule: the line is always centred on the stage. It never sits anchored
+  // to the left edge. When a click widens the window (negatives arriving at
+  // rung 3), `left` eases and the whole line GLIDES into its new centre.
+  var oxBase = w / 2 - ((left + hiE) / 2) * unitBase;
+  var tz = st.zoom01 ? 1 : 0;
+  if (zoomN[r] == null) zoomN[r] = tz;
+  zoomN[r] += (tz - zoomN[r]) * (1 - Math.pow(.04, 1 / 60));
+  var z = inOutCubic(clamp(zoomN[r], 0, 1));
+  var unit = unitBase + ((w - 220) - unitBase) * z;
+  var ox = oxBase + (110 - oxBase) * z;
+  var X = function (v) { return ox + v * unit; };
+
+  // rung 0 has no line yet, so it gets its own three rows: sheep, pebbles, marks.
+  if (st.pebbles || st.tallies || st.recount) {
+    // same house rule for the pre-line rows: sheep, pebbles and marks are centred
+    // on the stage, not packed from the left. The pitch is fixed so a sheep and
+    // its pebble stay in the same column; only the CENTRE moves, and it moves by
+    // easing on the fractional arrival count, so four new sheep slide the row
+    // outward rather than snapping it.
+    var N = SHEEP, pitch = (w - 184) / (N - 1);
+    // the world holds seven sheep, matched. The break brings four more, so the
+    // row grows to eleven columns and its centre eases across.
+    var rowT = (r === 0 && b === 0) ? BASE : SHEEP;
+    if (rowNA == null) rowNA = rowT;
+    rowNA += (rowT - rowNA) * (1 - Math.pow(.04, 1 / 60));
+    var SX = function (i) { return w / 2 + (i - (rowNA - 1) / 2) * pitch; };
+    var ROW = { sheep: Y - 52, pebble: Y - 14, tally: Y + 26 };
+    var p0 = clamp(age / 1200, 0, 1);
+    var STEP = 200;   // ms per item: the count is slow enough to be counted
+    var placed = BASE + pebClicks;
+
+    if (st.pebbles) {
+      // beat 0 counts itself in: seven sheep arrive one at a time, then the
+      // pebbles chase them, one per sheep. The break beat brings four more sheep
+      // and hands the bag to the visitor.
+      var firstBeat = (b === 0);
+      var sheepN = firstBeat ? clamp(Math.floor(age / STEP), 0, BASE)
+        : (b === 1 ? BASE + Math.floor(4 * clamp(age / 900, 0, 1)) : SHEEP);
+      var pebN = firstBeat ? clamp(Math.floor((age - BASE * STEP - 400) / STEP), 0, BASE)
+        : (b === 1 ? placed : PEBS);
+
+      for (var i = 0; i < sheepN; i++) {
+        g.strokeStyle = '#4a4a60'; g.lineWidth = 1.5;
+        g.globalAlpha = i >= BASE ? clamp(p0 * 2.6 - (i - BASE) * .5, 0, 1) * .85 : .85;
+        g.beginPath(); g.arc(SX(i), ROW.sheep, 7.5, 0, 6.284); g.stroke(); g.globalAlpha = 1;
+      }
+
+      // the failed match, visible: only the click that discovers it draws
+      // anything. Up to then the eleventh sheep is just a sheep with no pebble yet.
+      if (try0Done) {
+        var fl = clamp((performance.now() - missAt) / 900, 0, 1);
+        g.setLineDash([2, 3]);
+        g.strokeStyle = fl < 1 ? '#ff8a80' : '#5a2f33';
+        g.lineWidth = fl < 1 ? 2 : 1.3;
+        g.globalAlpha = fl < 1 ? .35 + .65 * Math.abs(Math.cos(fl * 9.4)) : 1;
+        g.beginPath(); g.arc(SX(PEBS), ROW.pebble, fl < 1 ? 6 + 5 * (1 - fl) : 6, 0, 6.284); g.stroke();
+        g.setLineDash([]); g.globalAlpha = 1;
+      }
+
+      for (var i2 = 0; i2 < pebN; i2++) {
+        g.fillStyle = '#8a8a9e'; g.globalAlpha = .9;
+        g.beginPath(); g.arc(SX(i2), ROW.pebble, 6, 0, 6.284); g.fill(); g.globalAlpha = 1;
+      }
+    }
+
+    // the marks draw slowly, and keep going under the sheep that had no pebble
+    if (st.tallies || st.recount) {
+      var drawn = st.recount ? N : clamp(age / (N * STEP), 0, 1) * N;
+      for (var i3 = 0; i3 < N; i3++) {
+        var a = clamp(drawn - i3, 0, 1); if (a <= 0) continue;
+        var px = SX(i3), fifth = (i3 % 5) === 4;
+        g.strokeStyle = '#8bd8fb';
+        g.globalAlpha = a; g.lineWidth = 2; g.lineCap = 'round';
+        g.beginPath();
+        if (fifth) { g.moveTo(px - 15, ROW.tally + 13); g.lineTo(px + 5, ROW.tally - 13); }
+        else { g.moveTo(px, ROW.tally - 13); g.lineTo(px, ROW.tally + 13); }
+        g.stroke(); g.globalAlpha = 1;
+      }
+    }
+
+    // the cost, shown rather than stated: the marks are all still there and you
+    // still have to walk them one at a time to answer "how many"
+    if (st.recount) {
+      var period = 3400, walkP = (age % period) / period;
+      var idx = Math.min(N - 1, Math.floor(walkP * N * 1.25));
+      for (var i4 = 0; i4 <= idx; i4++) {
+        g.strokeStyle = '#ffca28'; g.globalAlpha = .95; g.lineWidth = 2.4;
+        var px2 = SX(i4), fifth2 = (i4 % 5) === 4;
+        g.beginPath();
+        if (fifth2) { g.moveTo(px2 - 15, ROW.tally + 13); g.lineTo(px2 + 5, ROW.tally - 13); }
+        else { g.moveTo(px2, ROW.tally - 13); g.lineTo(px2, ROW.tally + 13); }
+        g.stroke(); g.globalAlpha = 1;
+      }
+      g.fillStyle = '#ffca28'; g.font = '13px "JetBrains Mono", monospace'; g.textAlign = 'center';
+      g.fillText(String(idx + 1), SX(idx), ROW.tally - 26);
+      g.fillStyle = '#7a6a3a'; g.font = '10px "JetBrains Mono", monospace';
+      g.fillText('how many? count them again', w / 2, Y + B.note + 22);
+    } else {
+      // rung 0's caption sits a step lower than the shared note band: the three
+      // rows already reach down to the tallies, and the line needs the air
+      g.font = '10px "JetBrains Mono", monospace'; g.textAlign = 'center';
+      if (st.tallies) {
+        g.fillStyle = '#55556a';
+        g.fillText('a mark for every sheep, pebbles or no pebbles', w / 2, Y + B.note + 22);
+      } else if (st.flock) {
+        var lf = PEBS - placed;
+        g.fillStyle = try0Done ? '#ff8a80' : '#55556a';
+        knock(g, w, try0Done ? 'eleven sheep, ten pebbles, and no way to write down the difference'
+          : lf === 0 ? 'ten matched, and one sheep still to go'
+          : 'four more sheep, and ' + (lf === 3 ? 'three' : lf === 2 ? 'two' : 'one') + ' pebble' + (lf === 1 ? '' : 's') + ' left in the bag',
+          w / 2, Y + B.note + 22);
+      } else {
+        g.fillStyle = '#55556a';
+        g.fillText('one pebble for each', w / 2, Y + B.note + 22);
+      }
+    }
+  }
+
+  if (st.line) {
+    g.strokeStyle = '#3a3a52'; g.lineWidth = 1.8; g.lineCap = 'round';
+    // rung 10 splits at zero too: not a second tear, the same one reopening
+    var tear = damageList().find(function (d) { return d.kind === 'tear' && b === costBeat(r) && (d.rung === r || r === 10); });
+    var tw = tear ? 8 + 2.5 * (0.5 + 0.5 * Math.sin(now / 1150)) : 0;
+    if (tear) {
+      g.beginPath(); g.moveTo(X(left) - 14, Y); g.lineTo(X(tear.at) - tw, Y); g.stroke();
+      g.beginPath(); g.moveTo(X(tear.at) + tw, Y); g.lineTo(X(hiE) + 14, Y); g.stroke();
+    } else if (!st.count) {
+      // on the count beat the sixty-mark ruler below IS the axis. Stroking the
+      // 0..8 line under it put two axes on one baseline with two origins.
+      g.beginPath(); g.moveTo(X(left) - 14, Y); g.lineTo(X(hiE) + 14, Y); g.stroke();
+    }
+
+    for (var v = st.count ? 1 : Math.ceil(left); v <= (st.count ? 0 : st.hi); v++) {
+      var x = X(v); if (x < 16 || x > w - 16) continue;
+      var av = v > hiE ? clamp(hiE - v + 1, 0, 1)
+        : v >= 0 ? 1 : clamp(ease * 5 - Math.abs(v) + .7, 0, 1);
+      if (av < .02) continue;
+      var isZero = v === 0;
+      g.globalAlpha = av;
+      if (isZero && gapOn && !st.zeroMark && !st.zeroPoint) {
+        g.setLineDash([3, 3]); g.strokeStyle = '#ff8a80'; g.lineWidth = 1.4;
+        g.beginPath(); g.moveTo(x, Y - 11); g.lineTo(x, Y + 11); g.stroke();
+        g.setLineDash([]);
+      } else {
+        g.strokeStyle = isZero && st.zeroPoint ? mix('#31314a', '#4fc3f7', mZ) : '#31314a';
+        g.lineWidth = isZero ? 1.8 : 1.2;
+        // rung 7's figure stands on the positive half of the line: its ticks
+        // keep only the half below the line while the figure is up
+        g.beginPath(); g.moveTo(x, Y - (r === 7 && b >= 1 && v > 0 ? 0 : 9)); g.lineTo(x, Y + 9); g.stroke();
+      }
+      // zero has no name yet on rung 1: an empty place must look empty
+      var nameless = isZero && !st.zeroPoint;
+      if (st.numerals && !nameless) {
+        // 0 = written in wedges, 1 = written in our digits; rung 1 is all wedges
+        var mv = st.numMorph ? (isZero ? mZ : numM(v)) : (r === 1 ? 0 : 1);
+        if (v > 0 && (r === 1 || mv < 1)) {
+          // rung 1 speaks Babylonian: no zero exists to write, by construction
+          g.globalAlpha = av * (1 - mv);
+          babyl(g, v, x, Y + B.ticks + 4, 8.5, '#5a5a72');
+          g.globalAlpha = av;
+        }
+        if (r !== 1 && mv > 0) {
+          g.globalAlpha = av * mv;
+          if (v > 0 && v <= nanFront) {
+            g.fillStyle = '#8a4a48'; g.font = '9px "JetBrains Mono", monospace'; g.textAlign = 'center';
+            g.fillText('NaN', x, Y + B.ticks);
+          } else {
+            g.fillStyle = isZero ? '#4fc3f7' : '#5a5a72';
+            g.font = '11px "JetBrains Mono", monospace'; g.textAlign = 'center';
+            g.fillText(String(v), x, Y + B.ticks);
+          }
+          g.globalAlpha = av;
+        }
+      }
+      g.globalAlpha = 1;
+    }
+
+    // the Babylonian placeholder: two small slanted wedges. Not a number, and
+    // never written at the end of a numeral.
+    // They are pressed, not drawn: each wedge strokes upward from where the
+    // stylus enters the clay, one after the other, the way a scribe would cut
+    // them. The label waits until both marks have landed.
+    if (st.zeroMark && (!st.zeroPoint || st.numMorph)) {
+      var fresh = r === 1 && b === 2, asking = r === 1 && b === 3;
+      var gone = st.numMorph ? mZ : 0;
+      g.strokeStyle = '#8bd8fb'; g.lineCap = 'round';
+      [-3, 3].forEach(function (dx, i) {
+        var p = fresh ? clamp((age - (220 + i * 300)) / 360, 0, 1) : 1;
+        if (!p) return;
+        var e = inOutCubic(p), sh = 1 - gone;
+        g.globalAlpha = ease * clamp(p * 2.6, 0, 1) * (1 - gone);
+        g.lineWidth = 2 + (1 - e) * 1.6;
+        g.beginPath();
+        g.moveTo(X(0) + (dx - 3) * sh, Y + 6 * sh);
+        g.lineTo(X(0) + (dx - 3 + 6 * e) * sh, Y + (6 - 12 * e) * sh);
+        g.stroke();
+      });
+      if (!st.numMorph) {
+        g.globalAlpha = ease * (fresh ? clamp((age - 980) / 420, 0, 1) : 1);
+        g.fillStyle = asking ? '#ffca28' : '#4a7d96'; g.font = '9px "JetBrains Mono", monospace'; g.textAlign = 'center';
+        g.fillText(asking ? 'what do we call this thing?' : 'a mark for the empty place', clamp(X(0), 82, w - 82), Y + B.tag);
+      }
+      g.globalAlpha = 1; g.lineWidth = 1;
+    }
+    if (st.zeroPoint && mZ > 0) {
+      g.globalAlpha = mZ;
+      g.fillStyle = '#4fc3f7';
+      g.beginPath(); g.arc(X(0), Y, 5.5 * (.55 + .45 * inOutCubic(mZ)), 0, 6.284); g.fill();
+      g.globalAlpha = 1;
+    }
+    if (st.numMorph) {
+      g.textAlign = 'center'; g.font = '10px "JetBrains Mono", monospace';
+      g.globalAlpha = clamp((age - 700) / 500, 0, 1);
+      g.fillStyle = '#4a7d96';
+      g.fillText('ten signs out of india · one of them for nothing at all', w / 2, Y + B.note);
+      g.globalAlpha = 1;
+    }
+
+    // rung 2's cost: the box we keep the break in. Four rows of what a machine
+    // actually answers, and the value spreads from zero along the line, taking
+    // the name "number" off everything it touches.
+    if (st.nanFlow) {
+      var nRy = Math.max(Y - 116, capBottom() + 16);
+      g.font = '15px "JetBrains Mono", monospace';
+      var nSeg = function (parts, ry2, al) {
+        var tot = 0, i2, ws = [];
+        for (i2 = 0; i2 < parts.length; i2++) { ws[i2] = g.measureText(parts[i2][0]).width; tot += ws[i2]; }
+        var sx3 = w / 2 - tot / 2;
+        g.textAlign = 'left';
+        for (i2 = 0; i2 < parts.length; i2++) {
+          g.globalAlpha = al(i2);
+          g.fillStyle = parts[i2][1];
+          g.fillText(parts[i2][0], sx3, ry2);
+          sx3 += ws[i2];
+        }
+        g.globalAlpha = 1; g.textAlign = 'center';
+      };
+      var nA = clamp((age - 250) / 400, 0, 1), nB = clamp((age - 900) / 400, 0, 1);
+      nSeg([['1 / 0 → ', '#6a6a85'], ['∞', '#8a6a2a'], ['      0 / 0 → ', '#6a6a85'], ['NaN', '#ff8a80']],
+        nRy, function (i2) { return i2 < 2 ? nA : nB; });
+      var nC = clamp((age - 4300) / 500, 0, 1);
+      if (nC > 0) {
+        nSeg([['NaN == NaN → ', '#6a6a85'], ['false', '#ff8a80']], nRy + 27, function () { return nC; });
+      }
+      // the source: not the scar itself, which belongs to the repair beat, but
+      // the box the standard puts in its place
+      g.globalAlpha = clamp((age - 900) / 600, 0, 1) * (.55 + .35 * (.5 + .5 * Math.sin(now / 520)));
+      g.strokeStyle = '#ff8a80'; g.lineWidth = 1.4;
+      g.beginPath(); g.arc(X(0), Y, 11, 0, 6.284); g.stroke();
+      g.globalAlpha = 1;
+      if (nanFront > 0) {
+        var nfx = X(Math.min(nanFront, st.hi + .4));
+        g.strokeStyle = '#ff8a80'; g.lineWidth = 4; g.lineCap = 'round'; g.globalAlpha = .16;
+        g.beginPath(); g.moveTo(X(0), Y); g.lineTo(nfx, Y); g.stroke(); g.globalAlpha = 1;
+        g.fillStyle = '#ff8a80';
+        g.beginPath(); g.arc(nfx, Y, 4.6, 0, 6.284); g.fill();
+        g.font = '10px "JetBrains Mono", monospace'; g.textAlign = 'center';
+        g.fillText('NaN', nfx, Y + B.tag);
+        if (nanFront > st.hi) {
+          g.globalAlpha = clamp((nanFront - st.hi) / 1.2, 0, 1);
+          g.fillStyle = '#8a4a48'; g.font = '9px "Space Grotesk", sans-serif';
+          g.fillText('EVERY ARITHMETIC THAT TOUCHES IT RETURNS IT', w / 2, Y + B.note);
+          g.globalAlpha = 1;
+        }
+      }
+    }
+
+    // rung 2's break: four operations in the new signs. The first three close on
+    // a number and the dot lands on each answer; zero earns its keep in row
+    // three and takes the system apart in row four, which the visitor runs.
+    if (st.arith) {
+      var AR = [['1 + 1 =', '2', '#8bd8fb', 2], ['2 × 3 =', '6', '#8bd8fb', 6], ['6 − 6 =', '0', '#4fc3f7', 0], ['0 / 0 =', '?', '#ff8a80', 0]];
+      var aRy = Math.max(Y - 178, capBottom() + 14), aDot = 1;
+      // row 4 cannot precede row 3 on either clock: the zero it divides has to
+      // have been produced by the subtraction first. On a revisit the first
+      // three rows are already history, so they stand rather than replay.
+      var aFast = try2Done && gatePassed[2];
+      var aT4 = aFast ? 0 : Math.max(try2At, phaseTime + 2810);
+      if (!try2Done) {
+        var aReady = age > 2810;
+        if (elTryBtn.disabled === aReady) elTryBtn.disabled = !aReady;
+      }
+      g.font = '16px "JetBrains Mono", monospace';
+      for (var aI = 0; aI < 4; aI++) {
+        var aLast = aI === 3, aT = 250 + aI * 1000;
+        var aP = aLast ? (try2Done ? clamp((now - aT4) / 380, 0, 1) : 0)
+          : aFast ? 1 : clamp((age - aT) / 400, 0, 1);
+        if (aP <= 0) continue;
+        var aN = aLast ? clamp((now - aT4 - 500) / 380, 0, 1)
+          : aFast ? 1 : clamp((age - aT - 560) / 380, 0, 1);
+        if (!aLast && aN > .5) aDot = AR[aI][3];
+        var aB0 = g.measureText(AR[aI][0]).width, aB1 = g.measureText(AR[aI][1]).width;
+        var aSx = w / 2 - (aB0 + 8 + aB1) / 2, aY0 = aRy + aI * 28;
+        g.textAlign = 'left';
+        g.globalAlpha = aP * (aLast ? 1 : .9);
+        g.fillStyle = aLast ? '#9a6a68' : '#7a7a92';
+        g.fillText(AR[aI][0], aSx, aY0);
+        if (aN > 0) {
+          g.globalAlpha = aLast ? aN * (.5 + .5 * (.5 + .5 * Math.sin(now / 300))) : aN;
+          g.fillStyle = AR[aI][2];
+          g.fillText(AR[aI][1], aSx + aB0 + 8, aY0);
+        }
+        g.globalAlpha = 1;
+      }
+      g.textAlign = 'center';
+      arithDot += (aDot - arithDot) * .1;
+      g.fillStyle = try2Done ? '#ff8a80' : '#8bd8fb';
+      g.beginPath(); g.arc(X(arithDot), Y + B.actor, 5, 0, 6.284); g.fill();
+      if (try2Done) {
+        g.globalAlpha = .45 + .55 * (.5 + .5 * Math.sin(now / 420));
+        g.strokeStyle = '#ff8a80'; g.lineWidth = 1.5;
+        g.beginPath(); g.arc(X(0), Y, 13, 0, 6.284); g.stroke();
+        g.globalAlpha = 1;
+      }
+    }
+
+    // rung 3's walker is the visitor's: it moves when they press, and the two
+    // steps the line cannot take continue as a ghost, past where the marks stop
+    if (st.stepWalk) {
+      walkAnim += (walkTarget - walkAnim) * 0.15;
+      var wx = X(Math.max(0, walkAnim));
+      g.fillStyle = walkDone ? '#ff8a80' : '#ffca28';
+      g.beginPath(); g.arc(wx, Y + B.actor, 5.5, 0, 6.284); g.fill();
+      g.fillStyle = '#6a6a85'; g.font = '10px "JetBrains Mono", monospace'; g.textAlign = 'center';
+      g.fillText('3 − 5 = ?', clamp(X(0), 54, w - 54), Y + B.caption);
+      if (walkDone) {
+        var gp = clamp((now - walkDoneAt) / 1500, 0, 1);
+        var gx = X(-2 * inOutCubic(gp));
+        g.globalAlpha = .6 * (1 - gp * .5);
+        g.strokeStyle = '#ffca28'; g.lineWidth = 1.2; g.setLineDash([3, 4]);
+        g.beginPath(); g.moveTo(X(0), Y + B.actor); g.lineTo(gx, Y + B.actor); g.stroke();
+        g.setLineDash([]);
+        g.fillStyle = '#ffca28';
+        g.beginPath(); g.arc(gx, Y + B.actor, 4.2, 0, 6.284); g.fill();
+        g.globalAlpha = 1;
+        if (gp > .7) {
+          g.fillStyle = '#8a6a2a'; g.font = '9px "Space Grotesk", sans-serif';
+          g.fillText('TWO STEPS PAST THE END OF THE LINE', w / 2, Y + B.note);
+        }
+      }
+    }
+
+    // the marks do not vanish and get replaced: they stand up into the line's
+    // ticks and take names. Same objects, one rung later.
+    if (st.morph) {
+      var m = inOutCubic(clamp((age - 200) / 1400, 0, 1));
+      for (var v2 = 1; v2 <= st.hi; v2++) {
+        var x2 = X(v2), fifth3 = (v2 % 5) === 0;
+        var half = 26 - 17 * m;
+        g.strokeStyle = mix('#8bd8fb', '#31314a', m);
+        g.lineWidth = 2 - .8 * m; g.lineCap = 'round';
+        var lean = fifth3 ? (1 - m) * 10 : 0;
+        g.beginPath(); g.moveTo(x2 - lean, Y - half); g.lineTo(x2 + lean * .3, Y + half); g.stroke();
+      }
+      g.globalAlpha = m; g.fillStyle = '#55556a';
+      g.font = '10px "JetBrains Mono", monospace'; g.textAlign = 'center';
+      g.fillText('the marks stand up, and take names', w / 2, Y + B.note);
+      g.globalAlpha = 1;
+    }
+
+    // count upward until a place has nothing to put in it. Base sixty, because
+    // that is the base this actually happened in, and the base the reader still
+    // counts time in.
+    if (st.count) {
+      var n = countN, done = n === 60;
+      var SX2 = function (v) { return 74 + (v / 60) * (w - 148); };
+      g.strokeStyle = '#22223a'; g.lineWidth = 1.6; g.lineCap = 'round';
+      g.beginPath(); g.moveTo(SX2(0), Y); g.lineTo(SX2(60), Y); g.stroke();
+      for (var v3 = 1; v3 <= 60; v3++) {
+        var x3 = SX2(v3), major = v3 % 10 === 0, lit = v3 <= n;
+        g.strokeStyle = lit ? (major ? '#5a5a72' : '#3a3a52') : '#1e1e30';
+        g.lineWidth = major ? 1.5 : 1;
+        g.beginPath(); g.moveTo(x3, Y - (major ? 9 : 5)); g.lineTo(x3, Y + (major ? 9 : 5)); g.stroke();
+        // sixty gets no numeral: writing it needs the very mark this rung lacks
+        if (major && v3 < 60) {
+          babyl(g, v3, x3, Y + B.ticks + 4, 8, lit ? '#5a5a72' : '#26263a');
+        }
+      }
+      g.fillStyle = done ? '#ff8a80' : '#8bd8fb';
+      g.beginPath(); g.arc(SX2(n), Y + B.actor, 5, 0, 6.284); g.fill();
+      if (done) {
+        g.strokeStyle = '#ff8a80'; g.lineWidth = 1.3; g.setLineDash([2, 3]);
+        g.beginPath(); g.arc(SX2(60), Y, 11, 0, 6.284); g.stroke(); g.setLineDash([]);
+      }
+
+      // the sexagesimal register: the sixties column and the column beside it.
+      // Before sixty the sixties column is not written at all, and it gets no
+      // placeholder dot: a mark for the empty place IS the next beat's repair.
+      // The columns are unruled: position alone separates them, which is what
+      // place value actually is. Only the empty column gets drawn, dashed, at
+      // sixty, so the one framed thing on screen is the missing sign.
+      var cx = w / 2, cy = Y + B.caption - 4;
+      var CW = 104, CH = 46, half = 4;
+      var lx = cx - half - CW / 2, rx = cx + half + CW / 2;
+      var sixties = Math.floor(n / 60), units = n % 60;
+      if (sixties) babyl(g, sixties, lx, cy, 12, '#c8c8d0');
+      if (done) {
+        g.strokeStyle = '#ff8a80'; g.lineWidth = 1.4; g.setLineDash([3, 3]);
+        g.strokeRect(cx + half + 7, cy - CH + 13, CW - 14, CH - 14); g.setLineDash([]);
+      } else if (units) {
+        babyl(g, units, rx, cy, 12, '#c8c8d0');
+      }
+      g.font = '9px "JetBrains Mono", monospace'; g.textAlign = 'center'; g.fillStyle = '#33334a';
+      g.fillText('sixties', lx, cy + 20); g.fillText('ones', rx, cy + 20);
+
+      g.textAlign = 'center';
+      g.fillStyle = done ? '#ff8a80' : '#55556a';
+      g.font = '10px "JetBrains Mono", monospace';
+      g.fillText(done ? 'sixty. one sixty, and no sign for the empty column' : 'counting up', w / 2, Y + B.note);
+    }
+
+    // Two sweeps of the same line, asking the same question twice. The first
+    // finds nothing, the second finds everything. Same line, opposite failures,
+    // and neither one needs a limit to see.
+    if (st.divTest) {
+      // three clicks, not one timeline: the first failure, then the second, then
+      // the pair on the same line at once
+      var dS = divStep, both = dS === 2;
+      var a1 = dS === 0 ? clamp(age / 2900, 0, 1) : 1;
+      var a2 = dS === 1 ? clamp(age / 3600, 0, 1) : 1;
+      var upY = both ? Y - 19 : Y, dnY = Y;
+      var lblX = Math.min(X(st.hi) + 18, w - 52);
+      g.textAlign = 'center';
+      g.font = '15px "JetBrains Mono", monospace';
+      if (both) {
+        g.fillStyle = '#7a7a92'; g.font = '13px "JetBrains Mono", monospace';
+        knock(g, w, 'one line, one question asked twice, two opposite failures', w / 2, Math.max(Y - 104, capBottom() + 14));
+        g.font = '9px "Space Grotesk", sans-serif';
+        g.fillStyle = '#8a4a48'; g.fillText('NO ANSWER EXISTS  ·  UNDEFINED BY EMPTINESS', w / 2, Y - 76);
+        g.fillStyle = '#8a6a2a'; g.fillText('EVERY ANSWER DOES  ·  INDETERMINATE', w / 2, Y - 60);
+      } else {
+        g.fillStyle = dS === 0 ? '#ff8a80' : '#ffca28';
+        g.fillText(dS === 0 ? '1 / 0   ·   which x has  0 · x = 1 ?' : '0 / 0   ·   which x has  0 · x = 0 ?', w / 2, Math.max(Y - 102, capBottom() + 14));
+      }
+
+      if (dS !== 1) {
+        var probe = a1 * st.hi;
+        for (var v4 = 0; v4 <= Math.floor(probe + 1e-6); v4++) {
+          var x4 = X(v4);
+          g.strokeStyle = '#5a2f33'; g.lineWidth = 1.5; g.globalAlpha = .95;
+          g.beginPath();
+          g.moveTo(x4 - 6, upY - 6); g.lineTo(x4 + 6, upY + 6);
+          g.moveTo(x4 + 6, upY - 6); g.lineTo(x4 - 6, upY + 6);
+          g.stroke(); g.globalAlpha = 1;
+        }
+        if (both) {
+          g.textAlign = 'left'; g.fillStyle = '#9a6a68'; g.font = '11px "JetBrains Mono", monospace';
+          g.fillText('1 / 0', lblX, upY + 4); g.textAlign = 'center';
+        } else {
+          g.fillStyle = '#ff8a80';
+          g.beginPath(); g.arc(X(probe), upY, 5.5, 0, 6.284); g.fill();
+          g.font = '10px "JetBrains Mono", monospace';
+          g.fillStyle = '#6a4a4c';
+          g.fillText('0 times anything is 0, so it can never be 1', w / 2, Y + B.caption);
+          if (a1 > .97) {
+            g.fillStyle = '#ff8a80'; g.font = '11px "JetBrains Mono", monospace';
+            g.fillText('nothing on the line works. no answer exists.', w / 2, Y + B.note);
+            g.fillStyle = '#8a4a48'; g.font = '9px "Space Grotesk", sans-serif';
+            g.fillText('UNDEFINED BY EMPTINESS', w / 2, Y + B.note + 17);
+          }
+        }
+      }
+      if (dS !== 0) {
+        var probe2 = a2 * st.hi;
+        g.strokeStyle = '#ffca28'; g.lineWidth = both ? 4 : 5; g.lineCap = 'round'; g.globalAlpha = .42;
+        g.beginPath(); g.moveTo(X(0), dnY); g.lineTo(X(probe2), dnY); g.stroke(); g.globalAlpha = 1;
+        for (var v5i = 0; v5i <= Math.floor(probe2 + 1e-6); v5i++) {
+          g.fillStyle = '#ffca28';
+          g.beginPath(); g.arc(X(v5i), dnY, 4.4, 0, 6.284); g.fill();
+        }
+        if (both) {
+          g.textAlign = 'left'; g.fillStyle = '#8a6a2a'; g.font = '11px "JetBrains Mono", monospace';
+          g.fillText('0 / 0', lblX, dnY + 4); g.textAlign = 'center';
+        } else {
+          g.fillStyle = '#ffca28';
+          g.beginPath(); g.arc(X(probe2), dnY, 6, 0, 6.284); g.fill();
+          g.font = '10px "JetBrains Mono", monospace'; g.fillStyle = '#7a6a3a';
+          g.fillText('0 times anything is 0, so every one of them is an answer', w / 2, Y + B.caption);
+          if (a2 > .97) {
+            g.fillStyle = '#ffca28'; g.font = '11px "JetBrains Mono", monospace';
+            g.fillText('every number works. all of them. equally.', w / 2, Y + B.note);
+            g.fillStyle = '#8a6a2a'; g.font = '9px "Space Grotesk", sans-serif';
+            g.fillText('UNDEFINED BY OVER-SUPPLY  ·  THE WORD FOR THIS ONE IS INDETERMINATE', w / 2, Y + B.note + 17);
+          }
+        }
+      }
+    }
+
+    // the loaf cuts and the line does not. The break is that difference, drawn:
+    // the bread divides into three by hand, and the only step the line owns
+    // steps clean over where the answer has to be.
+    if (st.loaf) {
+      var cxl = X(1), lyc = Math.max(Y - 52, capBottom() + 34), lr = 13;
+      var pl = clamp(age / 600, 0, 1);
+      g.globalAlpha = pl * .95; g.strokeStyle = '#ff8a80'; g.lineWidth = 1.6;
+      g.beginPath(); g.arc(cxl, lyc, lr, 0, 6.284); g.stroke();
+      // two cuts, arriving one after the other: the thing itself has thirds
+      var pc = clamp((age - 700) / 900, 0, 1);
+      g.lineWidth = 1.1;
+      [-Math.PI / 2, Math.PI / 6, Math.PI * 5 / 6].forEach(function (a, i) {
+        var ca = clamp(pc * 3.2 - i * 1, 0, 1);
+        if (ca <= 0) return;
+        g.globalAlpha = ca * .8;
+        g.beginPath(); g.moveTo(cxl, lyc); g.lineTo(cxl + lr * Math.cos(a) * ca, lyc + lr * Math.sin(a) * ca); g.stroke();
+      });
+      g.globalAlpha = 1;
+
+      // where the answer has to be
+      var xt = X(1 / 3), pt = clamp((age - 1700) / 600, 0, 1);
+      if (pt > 0) {
+        g.globalAlpha = pt * .35; g.strokeStyle = '#ff8a80'; g.lineWidth = 1; g.setLineDash([3, 4]);
+        g.beginPath(); g.moveTo(cxl, lyc + lr + 4); g.lineTo(xt, Y - 12); g.stroke(); g.setLineDash([]);
+        g.globalAlpha = pt; g.lineWidth = 1.4;
+        g.beginPath(); g.moveTo(xt, Y - 9); g.lineTo(xt, Y + 9); g.stroke();
+        g.fillStyle = '#ff8a80'; g.font = '11px "JetBrains Mono", monospace'; g.textAlign = 'center';
+        g.fillText('1/3', xt, Y - 34);
+        g.globalAlpha = 1;
+      }
+
+      // the only step there is: zero to one, straight over the target
+      var ps = clamp((age - 2500) / 1100, 0, 1);
+      if (ps > 0) {
+        var te = inOutCubic(ps), x0 = X(0), sx = x0 + (cxl - x0) * te;
+        var arcH = Math.min(34, Math.max(16, (cxl - x0) * .3));
+        g.strokeStyle = '#8bd8fb'; g.lineWidth = 1.3; g.globalAlpha = .85;
+        g.beginPath();
+        g.moveTo(x0, Y);
+        g.quadraticCurveTo(x0 + (sx - x0) / 2, Y - arcH * 2, sx, Y);
+        g.stroke();
+        g.fillStyle = '#8bd8fb';
+        g.beginPath(); g.arc(sx, Y, 4.2, 0, 6.284); g.fill();
+        g.globalAlpha = 1;
+      }
+
+      var pn = clamp((age - 3700) / 600, 0, 1);
+      g.fillStyle = '#ff8a80'; g.font = '10px "JetBrains Mono", monospace'; g.textAlign = 'center';
+      g.globalAlpha = clamp(age / 700, 0, 1) * (1 - pn);
+      g.fillText('three people · one loaf', w / 2, Y + B.note);
+      g.globalAlpha = pn;
+      g.fillText('the loaf cuts · the line does not · no step is that size', w / 2, Y + B.note);
+      g.globalAlpha = 1;
+    }
+    if (st.fractions) {
+      var pf = clamp(age / 900, 0, 1);
+      var set = [[1, 5], [1, 4], [1, 3], [2, 5], [1, 2], [3, 5], [2, 3], [3, 4], [4, 5]];
+      if (z > .02) {
+        // close up, the gaps are named and sit where they actually are
+        set.forEach(function (fr, i) {
+          // on the cost beat every point keeps its own name, on one row, at full
+          // strength: the stack above it is a list of that name's aliases
+          var xf = X(fr[0] / fr[1]); if (xf < 20 || xf > w - 20) return;
+          g.globalAlpha = clamp(pf * 2.4 - i * .12, 0, 1) * z;
+          g.strokeStyle = '#4fc3f7'; g.lineWidth = 1.3;
+          g.beginPath(); g.moveTo(xf, Y - 7); g.lineTo(xf, Y + 7); g.stroke();
+          g.fillStyle = '#4fc3f7';
+          g.beginPath(); g.arc(xf, Y, 3.2, 0, 6.284); g.fill();
+          g.fillStyle = st.sameName ? '#8bd8fb' : '#4a90b8';
+          g.font = '11px "JetBrains Mono", monospace'; g.textAlign = 'center';
+          g.fillText(fr[0] + '/' + fr[1], xf, Y + (!st.sameName && i % 2 ? 44 : 27));
+          g.globalAlpha = 1;
+        });
+      } else {
+        for (var v6 = Math.ceil(left); v6 < st.hi; v6++) {
+          set.forEach(function (fr, i) {
+            var xf2 = X(v6 + fr[0] / fr[1]); if (xf2 < 20 || xf2 > w - 20) return;
+            g.fillStyle = '#4fc3f7'; g.globalAlpha = clamp(pf * 2.4 - i * .12, 0, 1) * .62 * (1 - z);
+            g.beginPath(); g.arc(xf2, Y, 1.9, 0, 6.284); g.fill(); g.globalAlpha = 1;
+          });
+        }
+      }
+    }
+    // rung 4's cost: every point the repair added answers to more than one name.
+    // Each fraction carries a stack of its own aliases, as many as its
+    // denominator, so the crowding is the NAMES and not new points.
+    if (st.sameName) {
+      var ps = clamp((age - 300) / 900, 0, 1);
+      var NSET = [[1, 5], [1, 4], [1, 3], [2, 5], [1, 2], [3, 5], [2, 3], [3, 4], [4, 5]];
+      g.textAlign = 'center';
+      NSET.forEach(function (fr, i) {
+        var nx = X(fr[0] / fr[1]); if (nx < 22 || nx > w - 22) return;
+        for (var k = 2; k <= fr[1] + 1; k++) {
+          var ki = k - 2;
+          var na = clamp((age - 400 - ki * 260 - i * 40) / 420, 0, 1);
+          if (na <= 0) continue;
+          var nstr = fr[0] * k + '/' + fr[1] * k;
+          g.globalAlpha = na * (.9 - ki * .1) * z;
+          g.fillStyle = '#ffca28';
+          // long aliases step down a size, and alternate columns sit half a row
+          // off, so neighbouring stacks never touch on a narrow stage
+          g.font = (nstr.length > 4 ? 9 : 10) + 'px "JetBrains Mono", monospace';
+          g.fillText(nstr, nx, Y - 20 - ki * 15 - (i % 2 ? 7 : 0));
+        }
+        g.globalAlpha = 1;
+        g.fillStyle = '#ffca28';
+        g.beginPath(); g.arc(nx, Y, 3.6, 0, 6.284); g.fill();
+      });
+      g.fillStyle = '#7a6a3a'; g.font = '10px "JetBrains Mono", monospace';
+      g.globalAlpha = ps; g.fillText('one point, infinitely many names', w / 2, Y + B.note); g.globalAlpha = 1;
+    }
+
+    // rung 3's repair does more than it says out loud: inventing the signs
+    // invents their arithmetic, and the distributive law decides what a debt
+    // times a debt is. Stated as a rule in 628, argued for over a thousand
+    // years, only proved once algebra was made formal in the 1830s.
+    if (st.hiddenRepair && w >= 760) {
+      var hrL = ['(−1) × 0 = 0', '(−1) × (1 + (−1)) = 0', '−1 + (−1)(−1) = 0', '(−1)(−1) = 1'];
+      var hrY = Math.max(Y - 176, capBottom() + 20);
+      g.textAlign = 'left';
+      g.globalAlpha = clamp((age - 150) / 500, 0, 1);
+      g.font = '11px "Space Grotesk", sans-serif'; g.fillStyle = '#4a7d96';
+      g.fillText('THE HIDDEN REPAIR', 30, hrY);
+      g.globalAlpha = 1;
+      g.font = '13px "JetBrains Mono", monospace';
+      for (var hrI = 0; hrI < 4; hrI++) {
+        var hrA = clamp((age - 500 - hrI * 750) / 500, 0, 1);
+        if (hrA <= 0) continue;
+        g.globalAlpha = hrA;
+        g.fillStyle = hrI === 3 ? '#4fc3f7' : '#8a8a9e';
+        g.fillText(hrL[hrI], 30, hrY + 26 + hrI * 22);
+      }
+      var hrN = clamp((age - 3700) / 700, 0, 1);
+      if (hrN > 0) {
+        g.globalAlpha = hrN; g.font = '10px "JetBrains Mono", monospace'; g.fillStyle = '#6a6a85';
+        g.fillText('any other answer costs the distributive law', 30, hrY + 116);
+        g.font = '9px "Space Grotesk", sans-serif'; g.fillStyle = '#55556a';
+        g.fillText('A RULE IN 628  ·  NOT PROVED UNTIL THE 1830s', 30, hrY + 132);
+      }
+      var hrP = clamp((age - 4400) / 700, 0, 1);
+      if (hrP > 0) {
+        g.globalAlpha = hrP; g.font = '11px "JetBrains Mono", monospace'; g.fillStyle = '#bc8cff';
+        g.fillText('plant it here · rung 9 collects it', 30, hrY + 152);
+      }
+      g.globalAlpha = 1; g.textAlign = 'center';
+    }
+
+    // the rotation the repair quietly hands you: multiplying by minus one is a
+    // half turn. Nothing here needs it yet, which is why rung 9 gets the note.
+    if (st.halfTurn) {
+      var ah = clamp((age - 2400) / 1300, 0, 1);
+      var th = inOutCubic(ah);
+      var cxh = X(0), rx = 3 * unit, ry = Math.min(rx, Math.max(46, Y - 180));
+      g.strokeStyle = '#33334a'; g.lineWidth = 1; g.setLineDash([3, 4]);
+      g.beginPath(); g.ellipse(cxh, Y, rx, ry, 0, 0, -Math.PI * th, true); g.stroke();
+      g.setLineDash([]);
+      [0, 1].forEach(function (i) {
+        if (i === 1 && ah < .02) return;
+        var ang = i ? -Math.PI * th : 0;
+        var phx = cxh + rx * Math.cos(ang), phy = Y + ry * Math.sin(ang);
+        g.fillStyle = i ? '#ff8a80' : '#8bd8fb';
+        g.beginPath(); g.arc(phx, phy, 4.5, 0, 6.284); g.fill();
+      });
+      g.fillStyle = '#7a6a3a'; g.font = '10px "JetBrains Mono", monospace'; g.textAlign = 'center';
+      g.globalAlpha = clamp((age - 2400) / 700, 0, 1);
+      g.fillText('× (−1) is a half turn: +3 swings through zero to −3', w / 2, Y + B.note);
+      g.globalAlpha = 1;
+    }
+
+    // rung 3's cost, priced in rung 0's currency. Right of zero every count is
+    // stones you could hand someone. Left of zero the same count is drawn and
+    // cannot be filled, which is why this rung was argued about for centuries.
+    if (st.pebbles3) {
+      var PGAP = 9.5, PB = Y + B.tag - 8;
+      for (var pv = -5; pv <= 5; pv++) {
+        if (!pv) continue;
+        var negp = pv < 0, n3 = Math.abs(pv), px3 = X(pv);
+        if (px3 < 16 || px3 > w - 16) continue;
+        for (var pi = 0; pi < n3; pi++) {
+          var pa3 = clamp((age - (negp ? 1600 : 260) - (n3 - 1) * 150 - pi * 80) / 340, 0, 1);
+          if (pa3 <= 0) continue;
+          var pyy = PB - pi * PGAP;
+          g.globalAlpha = pa3;
+          if (negp) {
+            g.strokeStyle = '#ffca28'; g.lineWidth = 1.2; g.setLineDash([2, 2.4]);
+            g.beginPath(); g.arc(px3, pyy, 3.6, 0, 6.284); g.stroke(); g.setLineDash([]);
+          } else {
+            g.fillStyle = '#7a8a9e';
+            g.beginPath(); g.arc(px3, pyy, 3.6, 0, 6.284); g.fill();
+          }
+          g.globalAlpha = 1;
+        }
+      }
+      g.textAlign = 'center'; g.font = '9px "Space Grotesk", sans-serif';
+      g.globalAlpha = clamp((age - 1500) / 600, 0, 1);
+      g.fillStyle = '#55667a'; g.fillText('ONE STONE PER SHEEP', X(3), Y + B.caption);
+      g.globalAlpha = clamp((age - 3100) / 600, 0, 1);
+      g.fillStyle = '#8a6a2a'; g.fillText('NOTHING TO PICK UP', X(-3), Y + B.caption);
+      g.globalAlpha = clamp((age - 3700) / 700, 0, 1);
+      g.fillStyle = '#7a6a3a'; g.font = '10px "JetBrains Mono", monospace';
+      g.fillText('observed on the right · invented on the left', w / 2, Y + B.note);
+      g.globalAlpha = 1;
+    }
+
+    if (r >= 6) drawLate(g, w, h, st, age, X, unit, Y, B, now);
+
+    // one owner for damage, on every rung, always drawn last.
+    // Rung 10 is the only caller that asks for the whole list: it arrives back
+    // at rung 2's hole, so the scar has to be that same object, not a picture.
+    drawDamage(g, X, Y, now, r === 10 && b === 3 ? 'all' : null);
+  }
+}
+
+function gcd(a, c) { while (c) { var t = a % c; a = c; c = t; } return a; }
+
+/* Rungs 6 to 10 draw into the same coordinates as everything above them.
+   The only thing they add is a vertical extent, which is a parameter on the
+   mapping (unit is shared, so a rotation here is a real rotation), not a fork. */
+function drawLate(g, w, h, st, age, X, unit, Y, B, now) {
+  var V = function (y) { return Y - y * unit; };
+  var ax = X(0);
+
+  /* house rules carried forward from the rungs 0-4 rework (2026-10-02):
+     1. text never prints through a line. Every string this renderer draws gets
+        a ground-colour knockout behind it, the canvas form of the caption's
+        text-shadow. A string wider than the stage shrinks to fit, never clips.
+     2. a note wraps at the stage width instead of running off both edges.
+     3. on the plane rungs the note sits under the axis foot, in its own band,
+        instead of across the -1 tick; on rung 10's cost it clears the scar. */
+  var T = function (str, x, y) { knock(g, w, str, x, y); };
+  var fitF = function (px, str, maxW) {
+    g.font = px + 'px "JetBrains Mono", monospace';
+    while (px > 8 && g.measureText(str).width > maxW) { px -= .5; g.font = px + 'px "JetBrains Mono", monospace'; }
+  };
+  // a note in the current fill and font, wrapped to the stage; returns the
+  // baseline of its last line so a second line can follow it
+  var noteAt = function (str, y) {
+    var words = str.split(' '), lines = [], cur = '';
+    words.forEach(function (wd) {
+      var t = cur ? cur + ' ' + wd : wd;
+      if (cur && g.measureText(t).width > w - 28) { lines.push(cur); cur = wd; } else cur = t;
+    });
+    if (cur) lines.push(cur);
+    g.textAlign = 'center';
+    lines.forEach(function (l, i) { T(l, w / 2, y + i * 15); });
+    return y + (lines.length - 1) * 15;
+  };
+
+  var L = st.plane ? inOutCubic(clamp(r === 6 && b === 2 ? (age - 200) / 1300 : 1, 0, 1)) : 0;
+  var live = r === 6 && b >= 2;
+  // a plane lands symmetric: y ∈ [−b, b], the same reach above and below the
+  // line, so the origin is the middle of the vertical axis as well as the
+  // horizontal one. Two stated exceptions: rung 7, whose figure is lengths
+  // and areas, is one-sided both ways (Dan, 2026-11-17) and has no foot at
+  // all; and rung 10 keeps a short foot, because y = x² is never negative and
+  // the foot band belongs to the scar.
+  var planeSym = st.plane && r !== 7 && r !== 10;
+  var up = st.plane ? Math.min(2.3 * unit * L, Y - capBottom() - 10) : 0;
+  var dn = st.plane ? Math.min((planeSym ? 2.3 : 1.25) * unit * L, h - Y - 30) : 0;
+  // rung 8's equations are centred on the same vertical the axis now stands
+  // on, and the lowest of them, D = −121 on the demand beat, has its baseline
+  // 84px above the line. The axis stops 8px under that baseline, both ways,
+  // rather than run its tip and ticks into the arithmetic. (Round 2, AUD F2:
+  // 92 was measured to that glyph's top, not its foot, and reached into it.)
+  if (planeSym) up = dn = Math.min(up, dn, r === 8 ? 76 : 1e9);
+  // rung 7: the axis stands from the line to 8.4, the same on every beat. The
+  // unit was sized so that this clears the rung's tallest card by 12px.
+  if (r === 7) { up = 8.4 * unit; dn = 0; }
+  // rung 10's cost shows the scar in the damage band; the axis stops above it
+  if (r === 10 && b === 3) dn = Math.min(dn, B.damage - 18);
+  var NY = Y + Math.max(B.note, st.plane ? dn + 16 : 0, (r === 10 && b === 3) ? B.damage + 20 : 0, (r === 9 && b === 3) ? 1.7 * unit + 22 : 0);
+
+  if (st.plane) {
+    // the axis announces itself: it arrives bright and settles into furniture
+    var settle = (r === 6 && b === 2) ? clamp((age - 1900) / 1400, 0, 1) : 1;
+    g.strokeStyle = live ? mix('#4fc3f7', '#3a3a52', settle) : '#2c2c44'; g.lineWidth = live && settle < 1 ? 2 : 1.6; g.lineCap = 'round';
+    if (settle < 1) {
+      var glow = g.createRadialGradient(ax, Y, 0, ax, Y, 46);
+      glow.addColorStop(0, 'rgba(79,195,247,' + ((1 - settle) * .28).toFixed(3) + ')'); glow.addColorStop(1, 'rgba(79,195,247,0)');
+      g.fillStyle = glow; g.beginPath(); g.arc(ax, Y, 46, 0, 6.284); g.fill();
+    }
+    g.beginPath(); g.moveTo(ax, Y - up); g.lineTo(ax, Y + dn); g.stroke();
+    for (var k = -2; k <= 2; k++) {
+      if (!k) continue;
+      var yy = V(k * L); if (yy < Y - up + 4 || yy > Y + dn - 4) continue;
+      // at narrow widths the unit shrinks until -1 lands on the numerals row
+      if (k === -1 && Math.abs(yy - (Y + B.ticks)) < 14) continue;
+      // rung 7's figure stands over the axis: the plane persists (it is a gain),
+      // but its tick furniture yields the space rather than printing through
+      if (r === 7 || (r === 8 && b === 4 && unit < 40)) continue;
+      g.strokeStyle = '#31314a'; g.lineWidth = 1.2;
+      g.beginPath(); g.moveTo(ax - 6, yy); g.lineTo(ax + 6, yy); g.stroke();
+      g.globalAlpha = L; g.fillStyle = st.axisI ? '#bc8cff' : '#5a5a72';
+      g.font = '11px "JetBrains Mono", monospace'; g.textAlign = 'right';
+      T(st.axisI ? (k === 1 ? 'i' : k === -1 ? '−i' : (k < 0 ? '−' + (-k) : k) + 'i') : String(k), ax - 11, yy + 4);
+      g.globalAlpha = 1;
+    }
+    // rung 7's vertical axis is marked in the line's own unit, 1 to 8, so the
+    // figure's height reads against it the way its width reads against the
+    // line. The marks are the outer half only: the figure owns the inside.
+    if (r === 7) {
+      for (var k7 = 1; k7 <= 8; k7++) {
+        g.strokeStyle = '#31314a'; g.lineWidth = 1.2;
+        g.beginPath(); g.moveTo(ax - 6, V(k7)); g.lineTo(ax, V(k7)); g.stroke();
+        g.fillStyle = '#5a5a72'; g.font = '11px "JetBrains Mono", monospace'; g.textAlign = 'right';
+        T(String(k7), ax - 11, V(k7) + 4);
+      }
+    }
+    g.textAlign = 'center';
+  }
+
+  if (st.ship) {
+    var p = clamp((age - 200) / 1000, 0, 1);
+    var tx = X(2.2), ty = V(1.5);
+    g.globalAlpha = p;
+    g.fillStyle = '#ff8a80'; g.beginPath(); g.arc(tx, ty, 5.5, 0, 6.284); g.fill();
+    g.globalAlpha = p * .35; g.strokeStyle = '#ff8a80'; g.lineWidth = 1; g.setLineDash([3, 4]);
+    g.beginPath(); g.moveTo(tx, ty); g.lineTo(tx, Y); g.stroke(); g.setLineDash([]);
+    g.globalAlpha = 1;
+    var sw = (age % 3200) / 3200, sway = Math.sin(sw * 6.284);
+    g.fillStyle = '#8bd8fb'; g.beginPath(); g.arc(X(1.2 + sway), Y + B.actor, 5, 0, 6.284); g.fill();
+    g.fillStyle = '#ff8a80'; g.font = '10px "JetBrains Mono", monospace'; g.textAlign = 'center';
+    noteAt('you can only slide along the road, and it is not on the road', NY);
+  }
+
+  if (st.plot) {
+    var p2 = clamp((age - 1200) / 900, 0, 1);
+    var tx2 = X(2.2), ty2 = V(1.5);
+    g.globalAlpha = p2 * .55; g.strokeStyle = '#4fc3f7'; g.lineWidth = 1; g.setLineDash([3, 4]);
+    g.beginPath(); g.moveTo(ax, ty2); g.lineTo(tx2, ty2); g.moveTo(tx2, Y); g.lineTo(tx2, ty2); g.stroke();
+    g.setLineDash([]); g.globalAlpha = p2;
+    g.fillStyle = '#4fc3f7'; g.beginPath(); g.arc(tx2, ty2, 5.5, 0, 6.284); g.fill();
+    g.font = '13px "JetBrains Mono", monospace'; g.textAlign = 'left';
+    T('(2.2, 1.5)', tx2 + 13, ty2 - 9);
+    g.globalAlpha = 1;
+    g.fillStyle = '#55556a'; g.font = '10px "JetBrains Mono", monospace'; g.textAlign = 'center';
+    noteAt('two numbers, and every place has a name', NY);
+  }
+
+  if (st.pairAdd) {
+    var A = [1.5, 1.0], D = [0.9, 0.7];
+    var p3 = inOutCubic(clamp((age - 300) / 1400, 0, 1));
+    var tip = [A[0] + D[0] * p3, A[1] + D[1] * p3];
+    g.strokeStyle = '#4fc3f7'; g.lineWidth = 2; g.lineCap = 'round'; g.globalAlpha = .9;
+    g.beginPath(); g.moveTo(ax, Y); g.lineTo(X(A[0]), V(A[1])); g.stroke();
+    g.beginPath(); g.moveTo(X(A[0]), V(A[1])); g.lineTo(X(tip[0]), V(tip[1])); g.stroke();
+    g.globalAlpha = 1;
+    g.fillStyle = '#4fc3f7'; g.beginPath(); g.arc(X(tip[0]), V(tip[1]), 5, 0, 6.284); g.fill();
+    g.fillStyle = '#4a90b8'; g.font = '11px "JetBrains Mono", monospace'; g.textAlign = 'left';
+    var lx6 = X(tip[0]) + 12;
+    if (lx6 + g.measureText('add: across, then up').width > w - 40) { g.textAlign = 'right'; lx6 = X(tip[0]) - 12; }
+    T('add: across, then up', lx6, V(tip[1]) - 8);
+    g.fillStyle = '#ffca28'; g.font = '13px "JetBrains Mono", monospace'; g.textAlign = 'center';
+    T('(a, b) × (c, d) = ?', ax, Y - up - 12);
+    g.font = '10px "JetBrains Mono", monospace';
+    noteAt('adding two places is obvious. multiplying them is not even a question yet', NY);
+  }
+
+  // rung 7: the figure IS the proof, and it is drawn to scale, in the same
+  // transform as the axes it stands on (Dan, 2026-11-17; until then it kept a
+  // scale of its own and x was drawn as 2). The handoff to the line can be
+  // read as well as reckoned: the square's side ends on 3, the completed
+  // square's on 8. Beat 2 performs the cut: one strip of ten splits and half of
+  // it walks round to the top edge, which is the move the rung is named after.
+  // The numbers are al-Khwarizmi's own: x² + 10x = 39, completing with 25.
+  if (r === 7) {
+    // The figure is drawn ON the axes: its corner is the axes' origin and it
+    // stands in the first quadrant, on the line, the way a square of side x has
+    // to. One frame, FX / FY, whose (0, 0) is X(0), Y and whose unit is the
+    // line's unit: FX is X and FY is V. S is x, which is 3; K is the five.
+    var ds = unit;
+    var S = 3, K = 5;
+    var FX = function (u) { return ax + u * ds; }, FY = function (u) { return Y - u * ds; };
+    var bx = FX(0), by = FY(0);
+    var box = function (x0, yb, wq, hq) { g.beginPath(); g.rect(x0, yb - hq, wq, hq); };
+    g.textAlign = 'center';
+    if (b === 0) {
+      g.fillStyle = '#55556a'; g.font = '15px "JetBrains Mono", monospace';
+      T('2x + 6 = 16', w / 2, Y - 62);
+      g.font = '10px "JetBrains Mono", monospace';
+      noteAt('undo the six, undo the two, and x = 5 is standing there', NY);
+      g.fillStyle = '#8bd8fb'; g.beginPath(); g.arc(X(5), Y, 5, 0, 6.284); g.fill();
+    }
+    if (b === 1 || b === 2) {
+      var p4 = expoOut(clamp(age / 850, 0, 1));
+      var strip = expoOut(clamp((age - 700) / 900, 0, 1));
+      var cut = b === 2 ? clamp((age - 300) / 500, 0, 1) : 0;
+      var mv = b === 2 ? inOutCubic(clamp((age - 950) / 1250, 0, 1)) : 0;
+      var cor = b === 2 ? expoOut(clamp((age - 2500) / 900, 0, 1)) : 0;
+      var sq = b === 1 ? S * ds * p4 : S * ds;
+
+      g.fillStyle = 'rgba(79,195,247,.10)'; box(bx, by, sq, sq); g.fill();
+      g.strokeStyle = '#3f7f9c'; g.lineWidth = 2; box(bx, by, sq, sq); g.stroke();
+      if (b === 2 || p4 > .6) {
+        g.fillStyle = '#4a90b8'; g.font = '16px "JetBrains Mono", monospace';
+        T('x²', bx + S * ds / 2, by - S * ds / 2 + 6);
+      }
+
+      // beat 1: the ten sides arrive as ONE strip, ten long, and the figure is
+      // plainly not a square. That is the problem the next beat solves.
+      if (b === 1 && strip > .01) {
+        g.globalAlpha = strip;
+        g.fillStyle = 'rgba(139,216,251,.07)'; g.strokeStyle = '#2f6076'; g.lineWidth = 1.6;
+        box(bx + S * ds, by, 2 * K * ds, S * ds); g.fill(); g.stroke();
+        g.fillStyle = '#4a90b8'; g.font = '14px "JetBrains Mono", monospace';
+        T('10x', bx + S * ds + K * ds, by - S * ds / 2 + 5);
+        g.globalAlpha = 1;
+      }
+
+      if (b === 2) {
+        g.fillStyle = 'rgba(139,216,251,.07)'; g.strokeStyle = '#2f6076'; g.lineWidth = 1.6;
+        box(bx + S * ds, by, K * ds, S * ds); g.fill(); g.stroke();
+        g.fillStyle = '#4a90b8'; g.font = '13px "JetBrains Mono", monospace';
+        T('5x', bx + S * ds + K * ds / 2, by - S * ds / 2 + 4);
+
+        // the half that walks: one rect, lerped and turned a quarter, so the
+        // visitor sees the SAME ten sides land on the second edge
+        var c0 = [bx + S * ds + 1.5 * K * ds, by - S * ds / 2];
+        var c1 = [bx + S * ds / 2, by - S * ds - K * ds / 2];
+        var cxw = c0[0] + (c1[0] - c0[0]) * mv, cyw = c0[1] + (c1[1] - c0[1]) * mv;
+        g.save();
+        g.translate(cxw, cyw); g.rotate(-Math.PI / 2 * mv);
+        g.fillStyle = 'rgba(139,216,251,.07)'; g.strokeStyle = mv > .02 && mv < .98 ? '#4fc3f7' : '#2f6076';
+        g.lineWidth = 1.6;
+        g.beginPath(); g.rect(-K * ds / 2, -S * ds / 2, K * ds, S * ds); g.fill(); g.stroke();
+        g.restore();
+        g.fillStyle = '#4a90b8'; g.font = '13px "JetBrains Mono", monospace';
+        T('5x', cxw, cyw + 4);
+
+        if (cut > .01 && mv < .02) {
+          g.globalAlpha = cut; g.strokeStyle = '#ffca28'; g.lineWidth = 1.4; g.setLineDash([4, 4]);
+          g.beginPath(); g.moveTo(bx + S * ds + K * ds, by); g.lineTo(bx + S * ds + K * ds, by - S * ds); g.stroke();
+          g.setLineDash([]); g.globalAlpha = 1;
+        }
+      }
+
+      if (cor > .01) {
+        g.globalAlpha = cor;
+        g.fillStyle = 'rgba(255,202,40,.13)'; g.strokeStyle = '#ffca28'; g.lineWidth = 1.8;
+        box(bx + S * ds, by - S * ds, K * ds, K * ds); g.fill(); g.stroke();
+        g.fillStyle = '#ffca28'; g.font = '14px "JetBrains Mono", monospace';
+        T('25', bx + S * ds + K * ds / 2, by - S * ds - K * ds / 2 + 5);
+        g.globalAlpha = 1;
+      }
+
+      g.font = '15px "JetBrains Mono", monospace';
+      if (b === 1) {
+        g.fillStyle = '#ff8a80';
+        var n7a = noteAt('x² + 10x = 39', NY);
+        g.font = '10px "JetBrains Mono", monospace';
+        noteAt('a square and ten of its own sides. no square, and nothing to undo.', n7a + 17);
+      } else {
+        g.fillStyle = cor > .5 ? '#ffca28' : '#4a90b8';
+        var n7b = noteAt(cor > .5 ? '(x + 5)² = 39 + 25 = 64'
+          : mv > .5 ? 'two edges covered, and one corner missing'
+          : 'cut the ten in half and lay them along two edges', NY);
+        if (cor > .9) {
+          g.font = '10px "JetBrains Mono", monospace'; g.fillStyle = '#55556a';
+          noteAt('side 8, so x + 5 = 8, so x = 3', n7b + 17);
+          g.fillStyle = '#8bd8fb'; g.beginPath(); g.arc(X(3), Y, 5.5, 0, 6.284); g.fill();
+          g.font = '12px "JetBrains Mono", monospace';
+          g.textAlign = 'left'; T('x = 3', X(3) + 11, Y - 10); g.textAlign = 'center';
+        }
+      }
+    }
+    // beat 3: the method hands back a square in the SAME slot and at the SAME
+    // size as the x² it just solved for, and this one cannot be drawn.
+    if (b === 3) {
+      var p5 = clamp((age - 200) / 1000, 0, 1);
+      g.globalAlpha = p5;
+      g.fillStyle = 'rgba(255,138,128,.06)'; box(bx, by, S * ds, S * ds); g.fill();
+      g.strokeStyle = '#ff8a80'; g.lineWidth = 2; g.setLineDash([6, 5]);
+      box(bx, by, S * ds, S * ds); g.stroke(); g.setLineDash([]);
+      // the labels fit the square they name (it is 3 units on a side, and the
+      // unit is capped), instead of printing past its edges
+      g.fillStyle = '#ff8a80';
+      if (S * ds >= 48) {
+        fitF(18, 'area −1', S * ds - 20);
+        T('area −1', bx + S * ds / 2, by - S * ds / 2 + 4);
+        fitF(13, 'side = ?', S * ds - 20);
+        T('side = ?', bx + S * ds / 2, by - S * ds / 2 + 24);
+      } else {
+        g.textAlign = 'left';
+        g.font = '13px "JetBrains Mono", monospace'; T('area −1', FX(S) + 10, Y - 24);
+        g.font = '11px "JetBrains Mono", monospace'; T('side = ?', FX(S) + 10, Y - 9);
+        g.textAlign = 'center';
+      }
+      g.globalAlpha = 1;
+      g.fillStyle = '#7a6a3a'; g.font = '10px "JetBrains Mono", monospace';
+      noteAt('x² + 1 = 0 · the method asks for this square and does not care that you cannot draw it', NY);
+    }
+  }
+
+  // rung 8: the case that makes the impossible number undeniable. The beat
+  // order IS the argument: the answer is verified BY HAND (the check) before
+  // the formula ever runs, so the visitor already believes the destination
+  // when the detour goes through √−121. The plane is drawn but the detour
+  // never lands in it: naming that point is rung 9's whole job.
+  if (st.cubic) {
+    g.textAlign = 'center';
+    var R1 = Y - 170, R2 = Y - 140, R3 = Y - 110;
+    var note = function (s, col, dy) {
+      g.fillStyle = col; g.font = '10px "JetBrains Mono", monospace'; g.textAlign = 'center';
+      return noteAt(s, NY + (dy || 0));
+    };
+
+    // the detour beat owns the top band: its title replaces the equation there.
+    // On the cost beat the header is decoration; it yields rather than print
+    // through a long card when the baseline has hit its floor
+    if (b !== 3 && (b === 0 || Y - 206 > capBottom() + 10)) {
+      g.fillStyle = b === 0 ? '#9a9ab0' : '#55556a';
+      g.font = (b === 0 ? '22px' : '13px') + ' "JetBrains Mono", monospace';
+      T('x³ = 15x + 4', w / 2, b === 0 ? Y - 200 : Y - 206);
+    }
+
+    if (b === 0) note('one unknown, cubed. somewhere on this line is the number that solves it.', '#55556a');
+
+    // the check: no formula, no detour, nothing to take on faith
+    if (b === 1) {
+      var Lx = w / 2 - 108, Rx = w / 2 + 108;
+      var a1 = clamp((age - 400) / 500, 0, 1);
+      var a2 = clamp((age - 1600) / 500, 0, 1);
+      var a3 = clamp((age - 2900) / 500, 0, 1);
+      g.font = '16px "JetBrains Mono", monospace'; g.fillStyle = '#8bd8fb';
+      g.globalAlpha = a1; T('4³ = 64', Lx, R1);
+      g.globalAlpha = a2; T('15 × 4 + 4 = 64', Rx, R1);
+      g.globalAlpha = 1;
+      if (a3 > 0) {
+        g.save(); g.globalAlpha = a3;
+        g.strokeStyle = '#2f6b3d'; g.lineWidth = 1;
+        g.beginPath(); g.moveTo(Lx, R1 + 11); g.lineTo(Lx, R2 - 6); g.lineTo(Rx, R2 - 6); g.lineTo(Rx, R1 + 11); g.stroke();
+        g.fillStyle = '#3fb950'; g.font = '18px "JetBrains Mono", monospace';
+        T('64 = 64', w / 2, R3 - 2);
+        g.restore();
+        g.fillStyle = '#8bd8fb'; g.beginPath(); g.arc(X(4), Y, 6.5, 0, 6.284); g.fill();
+        g.font = '12px "JetBrains Mono", monospace'; T('x = 4', X(4), Y + B.tag);
+      }
+      note(a3 > .9 ? 'no formula used. the answer is 4, and you just checked it yourself.'
+        : 'try 4. this one you can do in your head.', a3 > .9 ? '#3fb950' : '#55556a');
+    }
+
+    // the demand. The method is blind: it does not know the answer is 4,
+    // and what it asks for under the root is negative.
+    if (b === 2) {
+      var b1a = clamp((age - 300) / 500, 0, 1);
+      var b2a = clamp((age - 1500) / 500, 0, 1);
+      var b3a = clamp((age - 2800) / 500, 0, 1);
+      g.globalAlpha = b1a; g.fillStyle = '#6e6e87'; g.font = '12px "JetBrains Mono", monospace';
+      T('the only method anyone had:   x = ∛(q/2 + √D) + ∛(q/2 − √D)', w / 2, R1);
+      g.globalAlpha = b2a; g.fillStyle = '#9a9ab0'; g.font = '15px "JetBrains Mono", monospace';
+      T('p = 15,  q = 4        D = 2² − 5³ = 4 − 125', w / 2, R2 + 6);
+      g.globalAlpha = b3a; g.fillStyle = '#ff8a80'; g.font = '22px "JetBrains Mono", monospace';
+      T('D = −121', w / 2, R3 + 26);
+      g.globalAlpha = 1;
+      note(b3a > .9 ? 'and now it wants the square root of that.'
+        : 'the method does not know the answer is 4. run it anyway.', b3a > .9 ? '#ff8a80' : '#55556a');
+    }
+
+    // the detour, and Bombelli's wild thought: guess the cube roots have the
+    // form 2 ± i, and the imaginary halves cancel on the way home.
+    if (b === 3) {
+      var p0b = [X(0.4), Y], p3b = [X(4), Y];
+      var c1b = [X(1.1), Y - 3.4 * unit], c2b = [X(3.6), Y - 3.4 * unit];
+      var bez = function (t) {
+        var u = 1 - t, aa = u * u * u, bq = 3 * u * u * t, cq = 3 * u * t * t, dd = t * t * t;
+        return [aa * p0b[0] + bq * c1b[0] + cq * c2b[0] + dd * p3b[0], aa * p0b[1] + bq * c1b[1] + cq * c2b[1] + dd * p3b[1]];
+      };
+      var grd = g.createLinearGradient(0, Y - 2.1 * unit, 0, Y);
+      grd.addColorStop(0, 'rgba(188,140,255,0)'); grd.addColorStop(1, 'rgba(188,140,255,.85)');
+      g.strokeStyle = grd; g.lineWidth = 2; g.setLineDash([6, 5]);
+      g.beginPath(); g.moveTo(p0b[0], p0b[1]);
+      g.bezierCurveTo(c1b[0], c1b[1], c2b[0], c2b[1], p3b[0], p3b[1]);
+      g.stroke(); g.setLineDash([]);
+
+      var tb = clamp(((age - 300) % 2600) / (2600 * .82), 0, 1);
+      var pt = bez(tb);
+      if (pt[1] > 60) { g.fillStyle = '#bc8cff'; g.beginPath(); g.arc(pt[0], pt[1], 5, 0, 6.284); g.fill(); }
+
+      g.fillStyle = '#8a6ab8'; g.font = '13px "JetBrains Mono", monospace';
+      T('through √−121', w / 2, Y - 206);
+      g.fillStyle = '#55556a'; g.font = '9px "Space Grotesk", sans-serif';
+      T('OFF THE EDGE OF EVERYTHING WITH A NAME', w / 2, Y - 190);
+      g.fillStyle = '#6e6e87'; g.font = '13px "JetBrains Mono", monospace';
+      T('∛(2 + 11i) + ∛(2 − 11i)  =  (2 + i) + (2 − i)  =  4', w / 2, R1);
+
+      g.fillStyle = '#8bd8fb'; g.beginPath(); g.arc(X(4), Y, 6.5, 0, 6.284); g.fill();
+      // the detour lands on this dot from above, so the label stands to its right
+      g.font = '12px "JetBrains Mono", monospace'; g.textAlign = 'left';
+      T('x = 4', X(4) + 11, Y - 10); g.textAlign = 'center';
+      note('no repair on this rung. use it, arrive, and do not ask what you drove through.', '#bc8cff');
+    }
+
+    // casus irreducibilis. Nothing imaginary in the question, nothing
+    // imaginary in any of the three answers, and provably no route between
+    // them that stays on the line. Road surface, not a result.
+    if (b === 4) {
+      var roots = [[4, '4'], [-2 + Math.sqrt(3), '−2 + √3'], [-2 - Math.sqrt(3), '−2 − √3']];
+      var c4 = clamp((age - 400) / 1100, 0, 1);
+      g.fillStyle = '#6e6e87'; g.font = '13px "JetBrains Mono", monospace';
+      T('x³ − 15x − 4  =  (x − 4)(x² + 4x + 1)', w / 2, R1);
+      roots.forEach(function (rt, i) {
+        var ar = clamp(c4 * 3.4 - i * 1.1, 0, 1);
+        if (ar <= .01) return;
+        g.globalAlpha = ar; g.fillStyle = '#8bd8fb';
+        g.beginPath(); g.arc(X(rt[0]), Y, 6, 0, 6.284); g.fill();
+        g.font = '12px "JetBrains Mono", monospace';
+        T(rt[1], X(rt[0]), Y + B.tag);
+        g.globalAlpha = 1;
+      });
+      if (c4 > .92) {
+        g.fillStyle = '#ffca28'; g.font = '14px "JetBrains Mono", monospace';
+        T('all three answers are real', w / 2, R3 + 10);
+      }
+      var n8 = note('nothing imaginary in the question. nothing imaginary in the answers.', '#ffca28');
+      g.fillStyle = '#8a6a2a'; g.font = '9px "Space Grotesk", sans-serif';
+      noteAt('AND NO ROAD BETWEEN THEM THAT STAYS ON THE LINE · CASUS IRREDUCIBILIS, WANTZEL 1843', n8 + 17);
+    }
+  }
+
+  if (st.homeless) {
+    var ph = (age % 2600) / 2600;
+    var hx = X(-2.4 + 4.8 * ph);
+    var bounce = Math.abs(Math.sin(ph * 6.284 * 5)) * 16;
+    g.fillStyle = '#bc8cff'; g.font = '16px "JetBrains Mono", monospace'; g.textAlign = 'center';
+    T('√−1', hx, Y - 26 - bounce);
+    g.strokeStyle = '#bc8cff'; g.globalAlpha = .35; g.lineWidth = 1;
+    g.beginPath(); g.moveTo(hx, Y - 18 - bounce); g.lineTo(hx, Y - 9); g.stroke(); g.globalAlpha = 1;
+    g.fillStyle = '#ff8a80'; g.font = '10px "JetBrains Mono", monospace';
+    noteAt('every seat on the line is taken', NY);
+  }
+
+  if (st.turn) {
+    var tt = clamp((age - 500) / 2600, 0, 1);
+    var ang = Math.PI * inOutCubic(tt);
+    var R = unit;
+    g.strokeStyle = '#33334a'; g.lineWidth = 1; g.setLineDash([3, 4]);
+    g.beginPath(); g.arc(ax, Y, R, 0, -ang, true); g.stroke(); g.setLineDash([]);
+    g.fillStyle = '#3a3a52'; g.beginPath(); g.arc(X(1), Y, 4, 0, 6.284); g.fill();
+    var pxr = ax + R * Math.cos(-ang), pyr = Y + R * Math.sin(-ang);
+    g.strokeStyle = '#bc8cff'; g.lineWidth = 1.6; g.globalAlpha = .7;
+    g.beginPath(); g.moveTo(ax, Y); g.lineTo(pxr, pyr); g.stroke(); g.globalAlpha = 1;
+    g.fillStyle = '#bc8cff'; g.beginPath(); g.arc(pxr, pyr, 6, 0, 6.284); g.fill();
+    if (ang >= Math.PI / 2 - .02) {
+      // the axis tick already reads i; a second i beside the dot said it twice
+      g.fillStyle = '#bc8cff'; g.beginPath(); g.arc(ax, V(1), 5, 0, 6.284); g.fill();
+    }
+    if (ang >= Math.PI - .02) {
+      g.fillStyle = '#ff8a80'; g.beginPath(); g.arc(X(-1), Y, 5, 0, 6.284); g.fill();
+    }
+    g.textAlign = 'center'; g.font = '12px "JetBrains Mono", monospace'; g.fillStyle = '#8a6ab8';
+    T(ang < Math.PI / 2 - .02 ? '× i' : ang < Math.PI - .02 ? '× i again' : '× i twice = × (−1)', w / 2, Y - up - 12);
+    g.font = '10px "JetBrains Mono", monospace'; g.fillStyle = '#55556a';
+    noteAt('rung 3 said × (−1) is a half turn. this is the thing you do twice to get one.', NY);
+  }
+
+  if (st.closed) {
+    var pc = clamp((age - 300) / 1600, 0, 1);
+    var roots2 = [[1.25, 0], [-0.6, 1.1], [-0.6, -1.1], [0.4, 1.7], [0.4, -1.7], [-1.5, 0.45], [-1.5, -0.45]];
+    roots2.forEach(function (rt, i) {
+      var ac = clamp(pc * 3 - i * .3, 0, 1); if (ac <= 0) return;
+      var yy2 = V(rt[1]); if (yy2 < 60 || yy2 > h - 28) return;
+      g.globalAlpha = ac;
+      g.fillStyle = Math.abs(rt[1]) < .01 ? '#8bd8fb' : '#bc8cff';
+      g.beginPath(); g.arc(X(rt[0]), yy2, 4.6, 0, 6.284); g.fill();
+      g.globalAlpha = 1;
+    });
+    g.fillStyle = '#8a6ab8'; g.font = '11px "JetBrains Mono", monospace'; g.textAlign = 'center';
+    T('every polynomial, all of its roots, all of them in here', w / 2, Y - up - 12);
+    g.fillStyle = '#7a6a3a'; g.font = '10px "JetBrains Mono", monospace';
+    noteAt('the room is finished. and nothing in it is moving.', NY);
+  }
+
+  // rung 10: the curve is the equation you can look at, so the same unit does
+  // both axes and the slope on screen is the slope in the numbers
+  if (r === 10) {
+    var f = function (x) { return x * x; }, RY = Math.max(Y - 150, capBottom() + 14);
+    g.strokeStyle = '#3f7f9c'; g.lineWidth = 2.2; g.lineCap = 'round';
+    g.beginPath();
+    var started = false;
+    for (var xc = -1.62; xc <= 1.62; xc += 0.02) {
+      var yy3 = V(f(xc)); if (yy3 < capBottom() + 6 || (b >= 2 && yy3 < RY + 12)) { started = false; continue; }
+      if (started) g.lineTo(X(xc), yy3); else { g.moveTo(X(xc), yy3); started = true; }
+    }
+    g.stroke();
+    g.fillStyle = '#3f7f9c'; g.font = '11px "JetBrains Mono", monospace'; g.textAlign = 'left';
+    T('y = x²', X(1.3) + 8, V(f(1.3)) + 4);
+    g.textAlign = 'center';
+
+    var at = 1, ptx = X(at), pty = V(f(at));
+    if (b === 0) {
+      g.fillStyle = '#55556a'; g.font = '10px "JetBrains Mono", monospace';
+      noteAt('a curve is an equation you can look at', NY);
+    }
+    if (b === 1) {
+      var t1 = (age % 3400) / 3400, xm = -1.5 + 3 * t1;
+      g.fillStyle = '#ff8a80'; g.beginPath(); g.arc(X(xm), V(f(xm)), 5.5, 0, 6.284); g.fill();
+      var sl = 2 * xm;
+      g.strokeStyle = '#ff8a80'; g.globalAlpha = .5; g.lineWidth = 1.4;
+      g.beginPath(); g.moveTo(X(xm - .45), V(f(xm) - sl * .45)); g.lineTo(X(xm + .45), V(f(xm) + sl * .45)); g.stroke();
+      g.globalAlpha = 1;
+      g.fillStyle = '#ff8a80'; g.font = '10px "JetBrains Mono", monospace';
+      noteAt('how fast, right now? not across the hour. at the instant.', NY);
+    }
+    if (b === 2 || b === 3) {
+      var shrink = b === 3 ? 1 : clamp((age - 400) / 3200, 0, 1);
+      var d = b === 3 ? 0 : 1.05 * Math.pow(0.006, inOutCubic(shrink));
+      var x2c = at + d, y1c = f(at), y2c = f(x2c);
+      var slope = d === 0 ? 2 : (y2c - y1c) / d;
+      var ex = 0.62;
+      g.strokeStyle = b === 3 ? '#ffca28' : '#8bd8fb'; g.lineWidth = 2;
+      g.beginPath();
+      g.moveTo(X(at - ex), V(y1c - slope * ex)); g.lineTo(X(at + ex), V(y1c + slope * ex));
+      g.stroke();
+      g.fillStyle = '#4fc3f7'; g.beginPath(); g.arc(ptx, pty, 5, 0, 6.284); g.fill();
+      if (d > 0.004) {
+        g.fillStyle = '#4fc3f7'; g.beginPath(); g.arc(X(x2c), V(y2c), 5, 0, 6.284); g.fill();
+        g.strokeStyle = '#2f6076'; g.lineWidth = 1; g.setLineDash([3, 3]);
+        g.beginPath(); g.moveTo(ptx, pty); g.lineTo(X(x2c), pty); g.lineTo(X(x2c), V(y2c)); g.stroke();
+        g.setLineDash([]);
+      }
+      g.font = '13px "JetBrains Mono", monospace'; g.textAlign = 'center';
+      if (b === 2) {
+        g.fillStyle = '#8bd8fb';
+        T('Δy / Δx = ' + (y2c - y1c).toFixed(6) + ' / ' + d.toFixed(6) + ' = ' + slope.toFixed(5), w / 2, RY);
+        g.font = '10px "JetBrains Mono", monospace'; g.fillStyle = '#55556a';
+        noteAt('the slope settles on 2 long before the two points arrive', NY);
+      } else {
+        var fl = .55 + .45 * (0.5 + 0.5 * Math.sin(now / 620));
+        g.globalAlpha = fl; g.fillStyle = '#ff8a80';
+        T('Δy / Δx = 0 / 0', w / 2, RY); g.globalAlpha = 1;
+        g.font = '10px "JetBrains Mono", monospace'; g.fillStyle = '#ffca28';
+        noteAt('the form permits every answer. the path picks this one.', NY);
+        // the damage band is busy on this beat (the whole list is up), so the
+        // closing line takes the canvas foot instead, the way rung 5's does
+        g.fillStyle = '#8a4a48'; g.font = '9px "Space Grotesk", sans-serif';
+        T('RUNG 2 OPENED THIS. CALCULUS IS BUILT ALONG ITS EDGE, NOT ACROSS IT.', w / 2, h - 36);
+      }
+    }
+  }
+}
+
+/* ── rung 5 is the only rung with its own renderer, because it is the only
+      rung where the visitor's own input drives the view ── */
+/* The zoom's floor, chosen and not left to the float: denominators stop at Q5.
+   Every p² and 2q² is then an exact integer (below 2⁵³), the closest fraction in
+   reach is 1607521/1136689, about 2.7e-13 away, and the deepest view is 1.6e-12
+   either side of √2, where one step of a double is under 0.1 px on a 1440 stage.
+   Deeper than that the ticks and the dot would start to land on the wrong pixel. */
+var Q5 = 2000000, HW5 = 1.5e-12, FLOOR5 = 2e-12;
+// the distance to √2 from the integers alone: |p² − 2q²| / (q (p + q√2)). No
+// subtraction of two nearly equal numbers, so it is good at every depth.
+function err5(p, q) { return Math.abs(p * p - 2 * q * q) / (q * (p + q * Math.SQRT2)); }
+// the view deepens to six times the fraction's distance, and never widens:
+// called on a release and on the button, never while a finger is on the line
+function deepen5() {
+  var e = err5(huntP, huntQ);
+  if (e < 0.02) z5 = Math.min(z5 === null ? 1 : z5, Math.max(e * 6, HW5));
+}
+// leading digits of p/q that are also √2's, by long division (exact: the
+// remainder stays below 10 × Q5)
+function agree5(p, q) {
+  var S = '14142135623730950', n = 0, rem = p, d;
+  for (; n < S.length; n++) {
+    d = Math.floor(rem / q); if (String(d) !== S.charAt(n)) break;
+    rem = (rem - d * q) * 10;
+  }
+  return n;
+}
+// the two lines the canvas shows above a zoomed line: how deep, and the floor
+function depth5() {
+  if (z5 === null) return null;
+  var mag = String(Math.round(Number((2.4 / z5).toPrecision(2)))).replace(/\B(?=(\d{3})+$)/g, ',');
+  var n = agree5(huntP, huntQ);
+  return ['×' + mag + '   ·   ' + n + (n === 1 ? ' digit matches' : ' digits match') + ' the target',
+    z5 <= FLOOR5 ? 'this screen counts no finer. the gap is still open.' : null];
+}
+
+function setPQ(p, q) {
+  p = Math.max(1, Math.min(4 * Q5, p | 0)); q = Math.max(1, Math.min(Q5, q | 0));
+  var f = p / q, err = err5(p, q);
+  var pp = p * p, qq = 2 * q * q, gap = pp - qq;
+  var verdict = gap === 0 ? 'impossible, and you cannot get here'
+    : err < 1e-7 ? 'closer than the display can show. still not equal.'
+    : 'not it. off by ' + (err >= 0.001 ? err.toFixed(4) : err.toFixed(7)).replace(/0+$/, '').replace(/\.$/, '');
+  var proof = p + '² = ' + pp + '   ·   2 × ' + q + '² = ' + qq + '   ·   off by <b>' + (gap > 0 ? '+' : '') + gap + '</b>';
+  var better = huntBest === null || err < huntBest;
+  huntP = p; huntQ = q;
+  if (better) { huntBest = err; huntBestP = p; huntBestQ = q; }
+  huntTries++;
+  document.getElementById('hFrac').textContent = p + '/' + q;
+  document.getElementById('hVal').textContent = f.toFixed(7);
+  document.getElementById('verdict').textContent = verdict;
+  document.getElementById('proof').innerHTML = proof;
+  document.getElementById('huntLog').textContent =
+    'fractions landed on: ' + huntTries + '   ·   closest so far: ' + huntBestP + '/' + huntBestQ;
+}
+
+// The dot does not slide continuously: it lands on the closest fraction whose
+// denominator is within reach, because a value you cannot name is not an
+// answer. Reach comes from the zoom, so getting closer buys finer denominators.
+function qMaxFor() { return Math.max(12, Math.min(Q5, Math.round(30 / Math.max(v5 ? v5.hw : 2.4, 1e-9)))); }
+
+function bestRat(x, qMax) {
+  var p0 = 0, q0 = 1, p1 = 1, q1 = 0, a = x;
+  var bp = Math.max(1, Math.round(x)), bq = 1;
+  var keep = function (p, q) {
+    if (q < 1 || q > qMax || p < 1) return;
+    if (Math.abs(p / q - x) < Math.abs(bp / bq - x) - 1e-15) { bp = p; bq = q; }
+  };
+  for (var i = 0; i < 40; i++) {
+    var ai = Math.floor(a);
+    var p2 = ai * p1 + p0, q2 = ai * q1 + q0;
+    if (q2 > qMax) {
+      if (q1 > 0) { var kk = Math.floor((qMax - q0) / q1); if (kk > 0) keep(kk * p1 + p0, kk * q1 + q0); }
+      break;
+    }
+    p0 = p1; q0 = q1; p1 = p2; q1 = q2;
+    keep(p1, q1);
+    var fr = a - ai;
+    if (fr < 1e-12) break;
+    a = 1 / fr;
+  }
+  return [bp, bq];
+}
+
+function dragTo(x) {
+  if (!map5 || !v5) return;
+  // the drag ends where the view ends (AUD F5): the dot is never taken to a
+  // place the renderer will not draw it while the readout goes on showing it
+  var v = clamp(map5.inv(x), Math.max(0.05, v5.cx - v5.hw), v5.cx + v5.hw);
+  var rr = bestRat(v, qMaxFor());
+  // near the floor the fractions in reach are few, and the nearest one to the
+  // finger can lie outside the view. Then the dot stays where it is.
+  if (Math.abs(rr[0] / rr[1] - v5.cx) > v5.hw * 1.02) return;
+  if (rr[0] !== huntP || rr[1] !== huntQ) setPQ(rr[0], rr[1]);
+}
+// the next closer one, from the convergents' own recurrence (p, q) → (p + 2q,
+// p + q), so the button has no last page to wrap around from. At the floor
+// there is no closer one in reach and the button changes nothing.
+function nextConvergent() {
+  var e = err5(huntP, huntQ), p = 3, q = 2, t;
+  while (q <= Q5 && !(err5(p, q) < e * (1 - 1e-9))) { t = p + 2 * q; q = p + q; p = t; }
+  if (q > Q5) return;
+  setPQ(p, q); deepen5();
+}
+
+var hm5 = { key: '', h: 0 };
+function huntMax5() {
+  var key = elHunt.offsetWidth + '|' + (document.fonts ? document.fonts.status : '');
+  if (hm5.key === key) return hm5.h;
+  var ids = ['hFrac', 'verdict', 'proof', 'huntLog'];
+  var keep = ids.map(function (id) { return document.getElementById(id).innerHTML; });
+  var tall = ['2828427/1999999', 'closer than the display can show. still not equal.',
+    '2828427² = 8888888888888   ·   2 × 1999999² = 8888888888888   ·   off by <b>+888888</b>',
+    'fractions landed on: 8888   ·   closest so far: 2828427/1999999'];
+  ids.forEach(function (id, i) { document.getElementById(id).innerHTML = tall[i]; });
+  hm5 = { key: key, h: elHunt.offsetHeight || 150 };
+  ids.forEach(function (id, i) { document.getElementById(id).innerHTML = keep[i]; });
+  return hm5.h;
+}
+
+function drawRung5(now) {
+  var F = fit(cv); if (!F) return;
+  var g = F.g, w = F.w, h = F.h;
+  var age = now - phaseTime;
+  var R2 = Math.SQRT2, capB = capBottom();
+  // three claims on the vertical, settled in priority order: the card gets its
+  // height, then the panel gets the drag lane, then the square takes what is left
+  var Y = Math.max(h * .55, Math.min(capB + 160, h - 120));
+  if (b === 1) Y = Math.min(Y, Math.max(h - 58 - huntMax5() - 26, capB + 60));
+  var avail = Math.max(80, Y - capB - 14);
+
+  // the view zooms only because the visitor got closer; the zoom waits for the
+  // release, because moving the ground under a finger that is still on it
+  // makes the dot run away from the visitor
+  // (round 3) the depth is held: a press no longer sends the view back out.
+  // The ground still does not move under a finger, because the view is frozen
+  // for as long as the finger is down and deepens on the release.
+  var zoom = (b === 1 && z5 !== null);
+  var tcx = b === 3 ? 1.45 : zoom ? R2 : 1.45;
+  var thw = b === 3 ? 2.4 : zoom ? z5 : 2.4;
+  // the square is one unit on a side by definition, so when headroom shrinks
+  // the mapping widens instead of the square lying about its size
+  if (!zoom && b !== 3) thw = Math.max(thw, (w / 2 - 70) / avail);
+  if (!v5) v5 = { cx: 1.45, hw: 2.4 };
+  var k = 1 - Math.pow(.02, 1 / 60);
+  if (!(b === 1 && drag5)) {
+    v5.cx += (tcx - v5.cx) * k; v5.hw += (thw - v5.hw) * k;
+    // an eased float stalls a few steps short of its target; deep in the zoom
+    // that is a visible fraction of the view, so the centre is put on it
+    if (Math.abs(tcx - v5.cx) < v5.hw * 1e-4) v5.cx = tcx;
+  }
+  var X = function (v) { return w / 2 + (v - v5.cx) / v5.hw * (w / 2 - 70); };
+  var unit = X(1) - X(0);
+  var zb = document.getElementById('zout');
+  if (zb.disabled !== (z5 === null)) zb.disabled = (z5 === null);
+  map5 = { X: X, Y: Y, inv: function (x) { return v5.cx + (x - w / 2) / (w / 2 - 70) * v5.hw; } };
+  cv.style.cursor = b === 1 ? (drag5 ? 'grabbing' : 'grab') : 'pointer';
+  var qm = qMaxFor();
+  if (now - qmAt > 260) {
+    qmAt = now;
+    document.getElementById('hQmax').innerHTML = '&le; ' + qm;
+  }
+
+  g.strokeStyle = '#3a3a52'; g.lineWidth = 1.8; g.lineCap = 'round';
+  g.beginPath(); g.moveTo(20, Y); g.lineTo(w - 20, Y); g.stroke();
+  var step = v5.hw > 0.4 ? 0.25 : Math.pow(10, Math.floor(Math.log10(v5.hw)));
+  var lastLabel = -1e9, nd5 = -Math.floor(Math.log10(v5.hw));
+  g.font = '10px "JetBrains Mono", monospace';
+  for (var v = Math.floor((v5.cx - v5.hw) / step) * step; v <= v5.cx + v5.hw; v += step) {
+    var x = X(v); if (x < 24 || x > w - 24) continue;
+    var major = Math.abs(v - Math.round(v)) < step / 2;
+    g.strokeStyle = '#31314a'; g.lineWidth = major ? 1.4 : 1;
+    g.beginPath(); g.moveTo(x, Y - (major ? 9 : 5)); g.lineTo(x, Y + (major ? 9 : 5)); g.stroke();
+    var lab5 = v5.hw > 0.4 ? String(Math.round(v)) : v.toFixed(Math.max(1, Math.min(nd5 + 1, Math.max(9, nd5))));
+    var lw5 = g.measureText(lab5).width;
+    if ((major || v5.hw < 0.4) && x - lastLabel > Math.max(58, lw5 + 12) && x - lw5 / 2 > 6 && x + lw5 / 2 < w - 6) {
+      lastLabel = x;
+      g.fillStyle = '#5a5a72'; g.textAlign = 'center';
+      g.fillText(lab5, x, Y + 25);
+    }
+  }
+
+  if (b === 0) {
+    [[1, 2], [2, 3], [3, 4], [1, 3], [3, 5], [5, 4], [7, 5], [4, 3], [5, 3], [7, 4], [9, 7], [11, 8]].forEach(function (fr) {
+      var xf = X(fr[0] / fr[1]); if (xf < 26 || xf > w - 26) return;
+      g.fillStyle = '#4fc3f7'; g.globalAlpha = .75;
+      g.beginPath(); g.arc(xf, Y, 3.4, 0, 6.284); g.fill(); g.globalAlpha = 1;
+    });
+    g.fillStyle = '#55556a'; g.font = '10px "JetBrains Mono", monospace'; g.textAlign = 'center';
+    g.fillText('between any two, another', w / 2, Y + BAND.note);
+  }
+
+  // construct, then name: square, diagonal, the hypotenuse falls along the arc
+  var seg = function (a, c) { return clamp((age - a) / (c - a), 0, 1); };
+  var sq = b >= 1 ? expoOut(seg(200, 1100)) : 0;
+  var dg = b >= 1 ? expoOut(seg(1150, 1900)) : 0;
+  var ar = b >= 1 ? inOutCubic(seg(1950, 3200)) : 0;
+  if (sq > .01 && !zoom) {
+    var side = unit;
+    g.globalAlpha = sq; g.fillStyle = 'rgba(79,195,247,.09)';
+    g.fillRect(X(0), Y - side * sq, side, side * sq);
+    g.strokeStyle = '#3f7f9c'; g.lineWidth = 2.2;
+    g.strokeRect(X(0), Y - side * sq, side, side * sq);
+    g.globalAlpha = 1;
+    if (dg > .01) {
+      var ghost = ar > .001;
+      g.globalAlpha = ghost ? dg * .3 : dg;
+      g.strokeStyle = ghost ? '#8a7440' : '#ffca28'; g.lineWidth = ghost ? 1.6 : 2.6;
+      g.beginPath(); g.moveTo(X(0), Y); g.lineTo(X(0) + side * dg, Y - side * dg); g.stroke();
+      g.globalAlpha = 1;
+    }
+    if (ar > .001) {
+      var Rr = side * R2, a0 = -Math.PI / 4, a1r = a0 + (Math.PI / 4) * ar;
+      g.save(); g.strokeStyle = '#8a7440'; g.globalAlpha = .55; g.lineWidth = 1.4; g.setLineDash([5, 5]);
+      g.beginPath(); g.arc(X(0), Y, Rr, a0, a1r); g.stroke(); g.restore();
+      if (ar < 1) {
+        var hx = X(0) + Rr * Math.cos(a1r), hy = Y + Rr * Math.sin(a1r);
+        g.strokeStyle = '#ffca28'; g.lineWidth = 2.6; g.lineCap = 'round';
+        g.beginPath(); g.moveTo(X(0), Y); g.lineTo(hx, hy); g.stroke();
+        var gr = g.createRadialGradient(hx, hy, 0, hx, hy, 18);
+        gr.addColorStop(0, 'rgba(255,202,40,.5)'); gr.addColorStop(1, 'rgba(255,202,40,0)');
+        g.fillStyle = gr; g.beginPath(); g.arc(hx, hy, 18, 0, 6.284); g.fill();
+        g.fillStyle = '#ffe9a8'; g.beginPath(); g.arc(hx, hy, 3.4, 0, 6.284); g.fill();
+      }
+    }
+  }
+
+  var xr = X(R2);
+  if (b >= 1 && b !== 3 && (ar >= 1 || zoom || b >= 2) && xr > 20 && xr < w - 20) {
+    var failed = b === 1 && huntTries > 0;
+    var col = failed ? mix('#ffca28', '#ff8a80', clamp(huntTries / 3, 0, 1)) : '#ffca28';
+    g.strokeStyle = col; g.lineWidth = 2.4;
+    g.beginPath(); g.arc(xr, Y, 7.5, 0, 6.284); g.stroke();
+    g.fillStyle = col; g.font = '13px "JetBrains Mono", monospace'; g.textAlign = 'center';
+    g.fillText(b >= 2 ? '√2' : '?', xr, Y - 22);
+  }
+
+  if (b === 1) {
+    var fx = X(huntP / huntQ);
+    if (fx > 24 && fx < w - 24) {
+      var held = drag5 ? 1 : 0;
+      g.strokeStyle = held ? 'rgba(79,195,247,.55)' : 'rgba(79,195,247,.3)'; g.lineWidth = 1.4;
+      g.beginPath(); g.arc(fx, Y, held ? 14 : 11, 0, 6.284); g.stroke();
+      g.fillStyle = '#0e0e12'; g.beginPath(); g.arc(fx, Y, 6.4, 0, 6.284); g.fill();
+      g.fillStyle = '#4fc3f7'; g.beginPath(); g.arc(fx, Y, 5.2, 0, 6.284); g.fill();
+      g.fillStyle = '#4fc3f7'; g.font = '12px "JetBrains Mono", monospace'; g.textAlign = 'center';
+      g.fillText(huntP + '/' + huntQ, fx, Y + 46);
+      if (!huntTries) {
+        g.fillStyle = '#4a7d96'; g.font = '10px "Space Grotesk", sans-serif';
+        g.fillText('grab and slide', fx, Y + 62);
+      }
+    }
+  }
+
+  if (zoom) {
+    var dp = depth5();
+    g.font = '10px "JetBrains Mono", monospace'; g.textAlign = 'center';
+    g.fillStyle = '#55556a'; g.fillText(dp[0], w / 2, Y + BAND.caption);
+    if (dp[1]) { g.fillStyle = '#8a4a48'; g.fillText(dp[1], w / 2, Y + BAND.verdict); }
+  }
+
+  if (b === 3) {
+    var holes = [[R2, '√2'], [Math.sqrt(3), '√3'], [Math.PI / 3, 'π/3'], [Math.sqrt(5) / 2, '√5/2'], [Math.E / 2, 'e/2'], [Math.SQRT1_2, '√½']];
+    var lastX = -999, tier = 0;
+    holes.map(function (hh) { return [X(hh[0]), hh[1]]; }).sort(function (a, c) { return a[0] - c[0]; }).forEach(function (hh) {
+      var x5 = hh[0]; if (x5 < 28 || x5 > w - 28) return;
+      g.fillStyle = '#0e0e18'; g.beginPath(); g.arc(x5, Y, 5.4, 0, 6.284); g.fill();
+      g.strokeStyle = '#ffca28'; g.lineWidth = 1.6; g.stroke();
+      tier = (x5 - lastX < 46) ? (tier + 1) % 3 : 0; lastX = x5;
+      var ly = Y - 18 - tier * 13;
+      g.globalAlpha = .35; g.strokeStyle = '#8a7440'; g.lineWidth = 1;
+      g.beginPath(); g.moveTo(x5, Y - 8); g.lineTo(x5, ly + 4); g.stroke();
+      g.globalAlpha = .85; g.fillStyle = '#9a8450'; g.font = '9px "JetBrains Mono", monospace'; g.textAlign = 'center';
+      g.fillText(hh[1], x5, ly); g.globalAlpha = 1;
+    });
+    g.fillStyle = '#7a6a3a'; g.font = '10px "Space Grotesk", sans-serif'; g.textAlign = 'center';
+    g.fillText('EVERY ONE OF THESE WAS ALWAYS THERE', w / 2, h - 36);
+  }
+
+  drawDamage(g, X, Y, now, null);
+}
+
+/* ── the loop. The draw stays inside a try/catch: a failed frame reports once
+      instead of silently blanking the card (DES invariant 6). ── */
+function tick(now) {
+  if (!closingOn) {
+    try {
+      if (r === 5) drawRung5(now); else drawRung(now);
+    } catch (err) {
+      if (!told) { told = true; console.error('rung ' + r + ' draw failed', err); }
+    }
+  }
+  requestAnimationFrame(tick);
+}
+
+/* ── input ── */
+var stage = document.getElementById('stage');
+
+stage.addEventListener('click', function () {
+  // a drag on rung 5's line is not a beat step, or the visitor loses the beat
+  // they were working in the moment they try the thing it asks for
+  if (r === 5 && suppress5) { suppress5 = 0; return; }
+  advance();
+});
+['hunt', 'drawer', 'drawerTab'].forEach(function (id) {
+  document.getElementById(id).addEventListener('click', function (e) { e.stopPropagation(); });
+});
+document.getElementById('try').addEventListener('click', function (e) { e.stopPropagation(); });
+
+cv.addEventListener('pointerdown', function (e) {
+  if (r !== 5 || b !== 1 || !map5) return;
+  var rc = cv.getBoundingClientRect();
+  var px = e.clientX - rc.left, py = e.clientY - rc.top;
+  if (Math.abs(py - map5.Y) > 46) return;   // away from the line, still a beat step
+  drag5 = 1; dragX0 = px; suppress5 = 0;
+  try { cv.setPointerCapture(e.pointerId); } catch (err) {}
+  dragTo(px);
+  e.preventDefault();
+});
+// a tap on the line still steps the beat; only an actual slide eats the click,
+// and the flag is disarmed on release so it can never outlive its own drag
+cv.addEventListener('pointermove', function (e) {
+  if (!drag5) return;
+  var rc = cv.getBoundingClientRect();
+  var px = e.clientX - rc.left;
+  if (Math.abs(px - dragX0) > 3) suppress5 = 1;
+  dragTo(px); e.preventDefault();
+});
+function endDrag() { if (drag5) deepen5(); drag5 = 0; setTimeout(function () { suppress5 = 0; }, 0); }
+cv.addEventListener('pointerup', endDrag);
+cv.addEventListener('pointercancel', endDrag);
+
+document.getElementById('closer').addEventListener('click', function (e) { e.stopPropagation(); nextConvergent(); });
+document.getElementById('zout').addEventListener('click', function (e) { e.stopPropagation(); z5 = null; });
+elPrev.addEventListener('click', function (e) { e.stopPropagation(); goBack(); });
+elReset.addEventListener('click', function (e) { e.stopPropagation(); restart(); });
+document.getElementById('again').addEventListener('click', restart);
+document.getElementById('drawerTab').addEventListener('click', function () { document.body.classList.add('drawer-open'); });
+document.getElementById('drawerClose').addEventListener('click', function () { document.body.classList.remove('drawer-open'); });
+
+document.addEventListener('keydown', function (e) {
+  if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable) return;
+  if (e.key === 'ArrowRight' || e.key === ' ') {
+    if (e.key === ' ') e.preventDefault();
+    if (r === 5 && suppress5) suppress5 = 0;
+    advance();
+  }
+  if (e.key === 'ArrowLeft') goBack();
+  if (e.key === 'Escape') document.body.classList.remove('drawer-open');
+});
+
+render();
+requestAnimationFrame(tick);
+})();
+</script>
+<script data-goatcounter="https://kuramoto.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>

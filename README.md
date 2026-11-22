@@ -16,8 +16,9 @@ Live at [kuramoto.dev](https://kuramoto.dev).
 - **[The Torus](https://kuramoto.dev/torus.html)** — Two coupled angles live on a torus. A winding flow fills the surface, collapses under coupling, and splits into a **locking state** — a coherent arc beside an incoherent one. Euler in the drawer: χ = 0, not the sphere's 2.
 *(The Torus + — an Apollonian gasket revolved into a torus — was archived 2026-09-18 along with the gasket itself; it is kept at `/archive/torus-plus.html`. A replacement built from parametric seeds is planned.)*
 - **[One Josephson Junction](https://kuramoto.dev/josephson-junction.html)** — A single junction in the **RCSJ model** (resistively and capacitively shunted junction), integrated live: two superconductor slabs with one condensate phase each, the supercurrent I₀ sin δ tunnelling across the barrier, the circuit with its three current branches, the washboard potential, the swept I–V curve (hysteretic when underdamped), and the AC Josephson effect, f = 2eV/h. Sliders for bias, the Stewart–McCumber damping β_c, temperature (Ambegaokar–Baratoff I₀(T) plus Johnson noise), and noise scale. The **`P H Y S I C S` drawer** walks ten sections, each cited to its equation in Martinis & Osborne.
+- **[The Lineage](https://kuramoto.dev/lineage.html)** — One number line, rebuilt eleven times. Every kind of number exists because the previous kind failed at a task somebody actually needed to do. A repair record, from pebbles to the tangent.
 
-*In progress:* **Resonance** (pulling voices out of noise with coupled oscillators) and a lineage card.
+*In progress:* **Resonance** (pulling voices out of noise with coupled oscillators).
 
 Most pages carry a `M A T H` drawer with the equations, the reasoning, and the citations; the
 Josephson page's is `P H Y S I C S`.
