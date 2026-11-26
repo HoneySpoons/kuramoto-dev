@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>The Riemann Hypothesis, from the ground up</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#0a0a0f">
+<style>
+/* ═══════════════════════════════════════════════════════════════════════════
+   The Riemann Hypothesis, from the ground up · kuramoto.dev · comp 2026-11-21 (DES)
+   Built by build.py from two pinned files in ~/normandy/drops/2026-11-21-riemann-explainer/:
+     the card   riemann-ground-up.html   (EVA; fifteen screens, tested by Dan), plus one new screen 8
+                from the handoff's addendum; EVA's screens 8 to 15 are 9 to 16 here, and their
+                element ids (c8, s9 … s15) keep the old numbers
+     the drawer riemann.html             (EVA; carried whole, its script changed in one line)
+   The mathematics and the wording are EVA's. Both were audited on 23 November 2026, before placing.
+   Seven edits from that audit, the canvas labels and the analytics tag are all that differs from the comp.
+
+   INTENT (what an implementation is checked against)
+   tokens   --bg #0e0e12 page · --panel #08080f figure fill · --line #1a1a2a hairline
+            --raised #14142a readouts, buttons · --edge #222238 button and track edges
+            --bar #0e0e18 control bar and drawer fill · --rule #1a1a28 their hairlines
+            --text #c8c8d0 · --bright #e6e6ee headings, bold · --label #8a8aa0 · --muted #5e5e74
+            --blue #3a9fd1 the real thing (count, miss, arms) and the primary action
+            --amber #bd8a14 the prediction, the band, what the waves build, the one-idea rule
+            --pink #e0619a the marked point (tips, crossings) and the make-believe state
+            derived, change with their parent: --blue-seen #2c5f7c · --blue-fill #17384a
+            --amber-fill #3a2a08 · --band rgba(189,138,20,.16) · --on-blue #04121a
+   type     system-ui throughout; numbers that are values in --math
+            kicker 13 px .06em caps --label · screen title 30 / 1.2 / 600 (25 at <= 560)
+            body 19 / 1.55 (17 at <= 560) · one-idea 19 / 1.5 with a 12 px .08em caps label
+            readout 17 · control row 15, its value 17 --math · legend 14 · small print 14 --label
+            in-canvas labels 12 px (screen 16: 11 px)
+            drawer: tab 11 px .25em · header 11 px .18em caps --blue · kicker 10 px .18em caps
+            title 17 / 600 · section head 15 / 600 · body 13 / 1.65 · notice 12 / 1.6
+            equation 13 --math · readout 12 --math · legend, controls 11.5 · sources 11 / 1.6
+   spacing  column max 760, side padding 20, top 22, bottom 40 · progress 6 px bars, 6 px gaps,
+            14 above and 26 below · paragraph gap 12 · figure: 14 px padding, 18 above, 12 below,
+            radius 6 · canvas 270 tall (230 at <= 560); screen 9: 300; screen 12: 110 + 220;
+            screen 16: 470; screen 8: two panels 220 tall (200 at <= 560), 14 px apart, side by side
+            above 560 and stacked below, each under a 12 px .08em caps label, readouts 15 px · one-idea: 3 px --amber rule, 14 px indent, 18 above
+            control bar: 10 px above, 14 below (+ safe area), buttons on the column's edges
+            drawer 400 wide (100vw at <= 600), 16 px padding, 26 px between sections;
+            its canvases 240 / 200 (.mid) / 100 (.short) tall
+   states   exactly one .step.on · progress bar: --edge not reached, --blue-seen visited,
+            --blue current; each bar's hit area is 26 px tall
+            Back: --raised; disabled at screen 1 (opacity .3) · Next: --blue fill, --on-blue text;
+            reads "The end" and is disabled on screen 16 · hover: border --blue-seen
+            focus-visible: 2 px --blue outline, 2 px offset, on every button, bar and slider
+            make-believe (screens 11, 12): the trace and the pushed fader turn --pink
+            screen 16 play: 26 s from 2 to 60, button reads pause; a press on the slider, a key
+            on the slider, or leaving the screen stops it
+            drawer: closed by default; opens from the MATH tab (> 840 wide), the Math button in
+            the bar (<= 840) or the button on screen 16; closes on the cross or Esc.
+            Open at >= 960 wide the column and the bar move left by 400; below that it overlays.
+            Arrow keys turn the screen only while the drawer is closed.
+   figures  (screen numbers are this page's; one rule each, as the code draws it)
+            1  pebbles: cell = min((w-20)/columns, (h-20)/rows, 34) px, pebble radius .34 cell. Not prime:
+               the rectangle with the most rows, --blue. Prime: the best rectangle of n-1 plus one pebble
+               under the first column, all --amber, the extra one ringed (1.5 px, 4 px out)
+            3  100 cells, 10 a row; starts 0, 100, 1,000, 10,000, 100,000, 500,000, 1,000,000
+            4  the first 90 gaps, one bar each, 0 to 16 up
+            5  0 to 10^slider across (32 to 1,000,000); up to 1.06 x the larger of count and curve
+            6  curve minus count, 700 points from 100; band = plus and minus the square root of x;
+               up and down 1.15 x the square root of the right edge
+            7  10,000 flips, heads minus tails every 10 flips; band = plus and minus TWICE the square
+               root of the flips; up and down 260
+            8  both panels 0 to 1,000,000 across and -1,150 to +1,150 up; band = plus and minus the
+               square root; coins = heads minus half the flips; primes = curve minus count
+            9  one unit of height = min(.30 h, .33 split) px, split = min(.36 w, 250); arm n (odd) is
+               4/(pi n) units long and turns n x 0.22 times a second; the trace uses the same unit,
+               newest at the left, two turns across; the dotted link is level
+            10 the weighted staircase, 1 to 50 across, -2 to 52 up, 0 to 100 waves, 1,200 points
+            11 x^dial x sin(14.1347 ln x), 1 to 400 across; band = plus and minus the square root of x
+            12 ten faders drawn, the first TWENTY waves summed; (built - x) / square root of x from 10
+               to 10^9 on a log axis, 1,800 points; band = plus and minus 1
+            15 budget 36, floor(36 / m) crossings evenly spaced; heights rescaled between crossings
+            16 1 to 60 across on both plots; staircase 0 to 60 up; miss: 1 unit = half the panel /
+               (1.04 x square root of 60) px; band = plus and minus the square root of x; 60 waves,
+               2,900 points; arms drawn at zoom x that unit, zoom = the largest of 3, 2.5, 2, 1.5, 1
+               that keeps every joint in the panel (2.5 at a 730 px canvas, 1 at 320), label says which
+   ═══════════════════════════════════════════════════════════════════════════ */
+:root {
+  --bg: #0e0e12; --panel: #08080f; --line: #1a1a2a; --raised: #14142a; --edge: #222238;
+  --bar: #0e0e18; --rule: #1a1a28;
+  --text: #c8c8d0; --bright: #e6e6ee; --label: #8a8aa0; --muted: #5e5e74;
+  /* PALETTE: the one block to swap if the house colours should win (see the return, section 6) */
+  --blue: #3a9fd1; --amber: #bd8a14; --pink: #e0619a;
+  --blue-seen: #2c5f7c; --blue-fill: #17384a; --amber-fill: #3a2a08; --band: rgba(189,138,20,.16); --on-blue: #04121a;
+  --math: "Cambria Math", "STIX Two Math", "Latin Modern Math", Georgia, serif;
+  --drawer: 400px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; display: flex; flex-direction: column; height: 100vh; height: 100svh; }
+#stage { position: relative; flex: 1; min-height: 0; overflow: hidden; }
+#scroll { position: absolute; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; transition: padding-right .28s cubic-bezier(.4,0,.2,1); }
+button { font-family: inherit; }
+button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+/* ── the card ─────────────────────────────────────────────────────────────── */
+#card { max-width: 760px; margin: 0 auto; padding: 22px 20px 40px; }
+#card .top { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; color: var(--label); font-size: 13px; letter-spacing: .06em; text-transform: uppercase; }
+#card .top #count { white-space: nowrap; }
+#card .dots { display: flex; gap: 6px; margin: 4px 0 16px; }
+/* the bar is 6 px tall; the button around it is 26, so it can be pressed */
+#card .dots button { flex: 1; height: 26px; border: 0; background: none; cursor: pointer; position: relative; }
+#card .dots button::before { content: ""; position: absolute; left: 0; right: 0; top: 10px; height: 6px; border-radius: 3px; background: var(--edge); }
+#card .dots button.seen::before { background: var(--blue-seen); }
+#card .dots button.on::before { background: var(--blue); }
+#card .step { display: none; } #card .step.on { display: block; }
+#card h1 { color: var(--bright); font-size: 30px; line-height: 1.2; margin: 0 0 16px; font-weight: 600; text-wrap: balance; }
+#card p { font-size: 19px; line-height: 1.55; margin: 0 0 12px; text-wrap: pretty; }
+#card p b, #card .one b { color: var(--bright); font-weight: 600; }
+#card .fig { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 14px; margin: 18px 0 12px; }
+#card canvas { display: block; width: 100%; height: 270px; touch-action: pan-y; }
+#card .ctl { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin-top: 10px; font-size: 15px; color: var(--label); }
+#card .ctl input[type=range] { flex: 1; min-width: 110px; accent-color: var(--blue); cursor: pointer; }
+#card .ctl output { font-family: var(--math); color: var(--bright); font-size: 17px; min-width: 70px; text-align: right; }
+#card .ctl button { background: var(--raised); color: var(--text); border: 1px solid var(--edge); border-radius: 5px; padding: 7px 14px; font-size: 15px; cursor: pointer; }
+#card .ctl button:hover { border-color: var(--blue-seen); }
+#card .read { font-size: 17px; color: var(--text); background: var(--raised); border: 1px solid #1e1e3a; border-radius: 4px; padding: 10px 14px; margin-top: 10px; min-height: 46px; }
+#card .read b { color: var(--bright); }
+#card .one { border-left: 3px solid var(--amber); padding: 6px 0 6px 14px; margin-top: 18px; font-size: 19px; line-height: 1.5; color: var(--text); text-wrap: pretty; }
+#card .one span { display: block; color: var(--label); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 2px; }
+#card .one button { background: none; border: 0; border-bottom: 1px solid var(--blue); color: var(--blue); font-size: inherit; cursor: pointer; padding: 0; }
+#card .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 14px; color: var(--label); margin-bottom: 8px; }
+#card .legend i { display: inline-block; width: 18px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
+#card .bricks { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-height: 80px; font-family: var(--math); font-size: 26px; color: var(--bright); }
+#card .bricks .b { background: var(--blue-fill); border: 1px solid var(--blue); border-radius: 5px; padding: 8px 16px; }
+#card .bricks .b.p { background: var(--amber-fill); border-color: var(--amber); }
+#card .bricks .x { color: var(--label); font-size: 20px; }
+#card .grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; }
+#card .grid div { text-align: center; padding: 7px 0; border-radius: 4px; font-size: 13px; color: var(--muted); background: #0d0d18; font-family: var(--math); }
+#card .grid div.p { background: var(--blue); color: var(--on-blue); font-weight: 600; }
+#card .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 16px 0; }
+#card .cards div { background: var(--raised); border: 1px solid var(--edge); border-radius: 6px; padding: 14px; font-size: 16px; line-height: 1.45; }
+#card .cards .t { display: block; font-size: 12px; letter-spacing: .07em; text-transform: uppercase; color: var(--label); margin-bottom: 6px; }
+#card .cards .open { border-style: dashed; }
+#card small { color: var(--label); font-size: 14px; }
+#card .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+#card .pair > div { min-width: 0; }
+#card .pair canvas { height: 220px; }
+#card .pair .cap { display: block; color: var(--label); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; margin: 4px 0 6px; }
+#card .pair .read { font-size: 15px; min-height: 62px; }
+@media (max-width: 560px) {
+  #card h1 { font-size: 25px; } #card p, #card .one { font-size: 17px; } #card canvas { height: 230px; } #card .cards { grid-template-columns: 1fr; }
+  #card .ctl output { min-width: 52px; }
+  #card .pair { grid-template-columns: 1fr; } #card .pair canvas { height: 200px; } #card .pair .read { min-height: 0; }
+}
+
+/* ── the control bar ──────────────────────────────────────────────────────── */
+#controls { background: var(--bar); border-top: 1px solid var(--rule); padding: 10px 20px 14px; padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px)); flex-shrink: 0; transition: padding-right .28s cubic-bezier(.4,0,.2,1); }
+#controls .nav { max-width: 720px; margin: 0 auto; display: flex; justify-content: space-between; gap: 12px; }
+#controls button { background: var(--raised); color: var(--text); border: 1px solid var(--edge); border-radius: 5px; padding: 11px 22px; font-size: 16px; cursor: pointer; transition: border-color .12s, background .12s; }
+#controls button:hover:not(:disabled) { border-color: var(--blue-seen); }
+#controls #next { background: var(--blue); color: var(--on-blue); border-color: var(--blue); font-weight: 600; flex: 1; max-width: 420px; }
+#controls #next:hover:not(:disabled) { background: #4aabdb; }
+#controls button:disabled { opacity: .3; cursor: default; }
+#controls #mathBtn { display: none; margin-right: auto; letter-spacing: .12em; font-size: 12px; text-transform: uppercase; color: var(--label); padding: 11px 14px; }
+
+/* ── the drawer, as lineage.html and josephson-junction.html build theirs ──── */
+#drawerTab { position: absolute; top: 50%; right: 0; background: var(--raised); color: #888; border: 1px solid var(--edge); border-right: none; border-radius: 6px 0 0 6px; padding: 14px 8px; cursor: pointer; font: 11px system-ui; letter-spacing: .25em; writing-mode: vertical-rl; transform: translateY(-50%); transition: opacity .25s, color .12s, background .12s; z-index: 5; user-select: none; }
+#drawerTab:hover { color: var(--blue); background: #1c1c38; }
+body.drawer-open #drawerTab { opacity: 0; pointer-events: none; }
+#drawer { position: absolute; top: 0; right: 0; width: min(var(--drawer), 100vw); height: 100%; background: var(--bar); border-left: 1px solid var(--rule); transform: translateX(100%); visibility: hidden; transition: transform .28s cubic-bezier(.4,0,.2,1), visibility 0s .28s; display: flex; flex-direction: column; z-index: 6; font-size: 13px; color: #b8b8c2; }
+body.drawer-open #drawer { transform: translateX(0); visibility: visible; transition: transform .28s cubic-bezier(.4,0,.2,1), visibility 0s; }
+#drawerHeader { padding: 14px 16px; border-bottom: 1px solid var(--rule); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+#drawerHeader h2 { font-size: 11px; font-weight: 600; letter-spacing: .18em; color: var(--blue); text-transform: uppercase; }
+#drawerClose { background: none; border: none; color: #777; cursor: pointer; font-size: 20px; padding: 0 6px; line-height: 1; }
+#drawerClose:hover { color: var(--blue); }
+#drawerBody { overflow-y: auto; padding: 16px 16px 24px; flex: 1; }
+#drawerBody .kicker { font-size: 10px; font-weight: 600; letter-spacing: .18em; color: #7a7a90; text-transform: uppercase; margin-bottom: 8px; line-height: 1.5; }
+#drawerBody .mtitle { color: var(--bright); font-size: 17px; line-height: 1.3; font-weight: 600; margin-bottom: 10px; text-wrap: balance; }
+#drawerBody h4 { color: var(--bright); font-size: 15px; line-height: 1.35; font-weight: 600; margin-bottom: 8px; text-wrap: balance; }
+#drawerBody section { margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--rule); }
+#drawerBody p { line-height: 1.65; margin-bottom: 9px; color: #a8a8b8; text-wrap: pretty; }
+#drawerBody .lede { color: var(--text); font-size: 14px; }
+#drawerBody .status { border-left: 2px solid var(--amber); background: var(--raised); padding: 9px 12px; border-radius: 0 4px 4px 0; font-size: 12px; line-height: 1.6; margin-top: 12px; }
+#drawerBody p b { color: var(--text); font-weight: 600; }
+#drawerBody .fig { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 10px 10px 8px; margin: 12px 0 10px; }
+#drawerBody canvas { display: block; width: 100%; height: 240px; touch-action: pan-y; }
+#drawerBody canvas.short { height: 100px; }
+#drawerBody canvas.mid { height: 200px; }
+#drawerBody .ctl { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin: 4px 2px 8px; font-size: 11.5px; color: var(--label); }
+#drawerBody .ctl label { display: flex; align-items: center; gap: 8px; flex: 1 1 100%; }
+#drawerBody .ctl input[type=range] { flex: 1; min-width: 90px; accent-color: var(--blue); cursor: pointer; }
+#drawerBody .ctl output { font-family: var(--math); color: var(--bright); min-width: 44px; text-align: right; font-size: 13px; }
+#drawerBody .legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 11.5px; color: var(--label); margin: 2px 2px 8px; }
+#drawerBody .legend i { display: inline-block; width: 16px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
+#drawerBody .legend i.dash { background: repeating-linear-gradient(90deg, currentColor 0 5px, transparent 5px 9px) !important; }
+#drawerBody .read { font-family: var(--math); font-size: 12px; line-height: 1.6; color: var(--text); background: var(--raised); border: 1px solid #1e1e3a; border-radius: 4px; padding: 8px 10px; margin-top: 6px; min-height: 36px; }
+#drawerBody .read b { color: var(--bright); font-weight: 600; }
+#drawerBody .notice { font-size: 12px; line-height: 1.6; color: #8a8a9c; border-left: 2px solid var(--edge); padding-left: 11px; margin-top: 10px; }
+#drawerBody .notice b { color: #b4b4c4; }
+#drawerBody .eq { font-family: var(--math); font-size: 13px; line-height: 1.9; color: #d8d8e0; background: #0b0b16; border-left: 2px solid #2a2a44; border-radius: 0 4px 4px 0; padding: 6px 12px; margin: 10px 0; }
+#drawerBody code, #drawerBody pre { font-family: ui-monospace, "JetBrains Mono", Menlo, monospace; font-size: 11px; }
+#drawerBody pre { background: #0b0b16; border: 1px solid var(--line); border-radius: 4px; padding: 10px 12px; color: #d8d8e0; margin: 10px 0; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+#drawerBody .steps { display: grid; grid-template-columns: 1fr; gap: 8px; margin: 12px 0; }
+#drawerBody .step { background: var(--raised); border: 1px solid var(--edge); border-radius: 6px; padding: 10px 12px; font-size: 12.5px; line-height: 1.55; }
+#drawerBody .step .n { color: var(--label); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; }
+#drawerBody .step q { display: block; font-family: var(--math); color: var(--label); font-size: 12.5px; margin-top: 6px; quotes: "\201C" "\201D"; }
+#drawerBody .chain { display: flex; align-items: center; margin: 8px 0 2px; flex-wrap: wrap; }
+#drawerBody .chain span { width: 14px; height: 14px; border: 2px solid var(--blue); border-radius: 50%; margin-right: -4px; }
+#drawerBody .chain em { margin-left: 12px; color: var(--label); font-style: normal; font-size: 11.5px; }
+#drawerBody .pipe { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0; }
+#drawerBody .pipe div { border: 1px solid var(--edge); border-radius: 6px; padding: 10px; font-size: 12px; line-height: 1.5; background: var(--raised); }
+#drawerBody .pipe .tag { display: block; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 5px; color: var(--label); }
+#drawerBody .pipe .done .tag::before { content: "\2713  "; color: var(--blue); }
+#drawerBody .pipe .open { border-style: dashed; }
+#drawerBody .pipe .open .tag::before { content: "\25CB  "; color: var(--amber); }
+#drawerBody .src { margin-top: 26px; padding-top: 16px; border-top: 1px solid var(--rule); }
+#drawerBody .src p { font-size: 11px; color: #77778c; line-height: 1.6; }
+#drawerBody .src p b { color: #9a9ab0; }
+#drawerBody a { color: var(--blue); }
+#drawerBody .about-link { display: block; text-align: center; color: #6f6f82; font-size: 11px; text-decoration: none; letter-spacing: .06em; padding: 10px 0; border-top: 1px solid var(--rule); margin-top: 16px; }
+#drawerBody .about-link:hover { color: var(--blue); }
+
+@media (min-width: 960px) {
+  body.drawer-open #scroll, body.drawer-open #controls { padding-right: var(--drawer); }
+  body.drawer-open #controls { padding-right: calc(var(--drawer) + 20px); }
+}
+@media (max-width: 840px) {
+  #drawerTab { display: none; }
+  #controls #mathBtn { display: block; }
+  #controls #next { max-width: none; }
+}
+@media (max-width: 600px) {
+  #drawer { width: 100vw; }
+  #controls { padding: 10px 12px 14px; padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px)); }
+  #controls .nav { gap: 8px; }
+  #controls button { padding: 12px 16px; }
+}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="scroll">
+<main id="card">
+<div class="top"><span>The Riemann Hypothesis, from the ground up</span><span id="count"></span></div>
+<div class="dots" id="dots" role="group" aria-label="Screens"></div>
+
+<div class="step">
+<h1>1. Some numbers can't be split</h1>
+<p>Take a pile of pebbles. Try to lay them out as a full rectangle, with more than one row.</p>
+<p>Most piles can do it. Some can't: however you stack them, there are always some left over. A number like that is called a <b>prime</b>.</p>
+<div class="fig"><canvas id="c1" role="img" aria-label="Pebbles laid out as a full rectangle, or with some left over"></canvas>
+<div class="ctl"><span>pebbles</span><input id="s1" type="range" min="2" max="48" value="12"><output id="o1"></output></div>
+<div class="read" id="r1"></div></div>
+<div class="one"><span>The one idea</span>A prime is a number you can't make by multiplying two smaller numbers. 2, 3, 5, 7, 11, 13 …</div>
+</div>
+
+<div class="step">
+<h1>2. Every number is built from primes</h1>
+<p>Keep splitting any number and you always end at primes. They are the bricks. Every other number is a wall built from them, and there is only one way to build each wall.</p>
+<div class="fig"><div class="bricks" id="b2"></div>
+<div class="ctl"><span>number</span><input id="s2" type="range" min="2" max="360" value="60"><output id="o2"></output></div></div>
+<div class="one"><span>The one idea</span>Primes are the atoms of counting. That is why people care where they are.</div>
+</div>
+
+<div class="step">
+<h1>3. They never run out, but they thin out</h1>
+<p>Here are a hundred numbers in a row. The lit ones are prime. Move far up the number line and look again.</p>
+<div class="fig"><div class="grid" id="g3"></div>
+<div class="ctl"><span>start at</span><input id="s3" type="range" min="0" max="6" value="0"><output id="o3"></output></div>
+<div class="read" id="r3"></div></div>
+<div class="one"><span>The one idea</span>The further you go, the rarer primes get. They never stop.</div>
+</div>
+
+<div class="step">
+<h1>4. Nobody can say where the next one is</h1>
+<p>Each bar is the distance from one prime to the next. Look for a pattern.</p>
+<div class="fig"><canvas id="c4" role="img" aria-label="Bars showing the distance from each prime to the next, for the first 90 gaps"></canvas><div class="read" id="r4"></div></div>
+<p>There isn't one. Sometimes two primes sit side by side. Sometimes there is a long empty stretch. No formula gives the next prime.</p>
+<div class="one"><span>The one idea</span>Up close, primes look random.</div>
+</div>
+
+<div class="step">
+<h1>5. But from far away, they follow a curve</h1>
+<p>Stop asking <i>where</i> the primes are. Ask <i>how many</i> there are up to some number. That count is a staircase: one step up at each prime.</p>
+<p>In the 1790s Gauss, as a teenager, found a smooth curve that predicts the count.</p>
+<div class="fig"><div class="legend"><span><i style="background:var(--blue)"></i>the real count</span><span><i style="background:var(--amber)"></i>Gauss's prediction</span></div>
+<canvas id="c5" role="img" aria-label="The prime counting staircase against Gauss's smooth prediction"></canvas>
+<div class="ctl"><span>count up to</span><input id="s5" type="range" min="1.5" max="6" step="0.01" value="3"><output id="o5"></output></div>
+<div class="read" id="r5"></div></div>
+<div class="one"><span>The one idea</span>Random up close, orderly from a distance. Like rain: you can't say where the next drop lands, but you can say how wet the pavement gets.</div>
+</div>
+
+<div class="step">
+<h1>6. The question: how big is the miss?</h1>
+<p>Gauss's curve is never exactly right. This picture shows only the <b>miss</b>, measured from Gauss's curve: the prediction minus the real count.</p>
+<p>The shaded band is roughly the square root of the number you've counted to. Count to a million and the band reaches about a thousand either side.</p>
+<div class="fig"><div class="legend"><span><i style="background:var(--blue)"></i>the miss</span><span><i style="background:var(--amber-fill); height:10px; border:1px solid var(--amber)"></i>the square-root band</span></div>
+<canvas id="c6" role="img" aria-label="The miss between Gauss's prediction and the real count, with the square-root band"></canvas>
+<div class="ctl"><span>count up to</span><input id="s6" type="range" min="3.5" max="6" step="0.01" value="4.5"><output id="o6"></output></div>
+<div class="read" id="r6"></div></div>
+<div class="one"><span>The Riemann Hypothesis, in plain words</span><b>The miss stays inside that band. Forever.</b> That is the whole claim. Everything after this screen is about why it is hard to prove. <small><br>(The exact band is the square root times a small, slowly growing factor. The square root is the heart of it.)</small></div>
+</div>
+
+<div class="step">
+<h1>7. Why the square root?</h1>
+<p>Flip a fair coin many times. You expect half heads. You won't get exactly half. How far off will you be?</p>
+<p>About the square root of the number of flips. Flip 10,000 times and you miss by around 50 or 100, not by 2,000.</p>
+<div class="fig"><div class="legend"><span><i style="background:var(--blue)"></i>heads minus tails, as you flip</span><span><i style="background:var(--amber-fill); height:10px; border:1px solid var(--amber)"></i>the square-root band</span></div>
+<canvas id="c7" role="img" aria-label="Heads minus tails over 10,000 coin flips, with the square-root band"></canvas>
+<div class="ctl"><button id="b7">flip again</button><span id="r7"></span></div></div>
+<p>A square-root miss is the signature of a <b>fair</b> process: no bias, no hidden lean.</p>
+<div class="one"><span>The one idea</span>The hypothesis says the primes are as fair as coin flips. Nothing is secretly pushing them to bunch up or spread out.</div>
+</div>
+
+<div class="step">
+<h1>8. Coins are fair by design. Primes are not random at all.</h1>
+<p><b>Coins</b> drift from an even split. Flip a million times and you expect 500,000 heads. You will typically be off by about 500. The square root of a million is 1,000.</p>
+<p><b>Primes</b> drift from what Gauss's curve predicts. Up to a million the curve says 78,628. The real count is 78,498. Off by 130. The same square root, 1,000.</p>
+<div class="fig"><div class="legend"><span><i style="background:var(--blue)"></i>how far off, as you go</span><span><i style="background:var(--amber-fill); height:10px; border:1px solid var(--amber)"></i>the square-root band, the same in both</span></div>
+<div class="pair">
+<div><span class="cap">Coins: off from an even split</span><canvas id="c-coins" role="img" aria-label="Coins: how far the heads are from an even split over a million flips, with the square-root band"></canvas><div class="read" id="r-coins"></div><div class="ctl"><button id="b-coins">flip again</button></div></div>
+<div><span class="cap">Primes: off from Gauss's curve</span><canvas id="c-primes" role="img" aria-label="Primes: how far the real count is from Gauss's curve up to a million, with the square-root band"></canvas><div class="read" id="r-primes"></div></div>
+</div></div>
+<p>With coins we know exactly why. Each flip is independent, and the square-root drift follows from that in a few lines. It has been a theorem for about 300 years.</p>
+<p>With primes nothing is flipped. Whether a number is prime was always settled, and each prime constrains the rest: once 3 is prime, every third number after it is out.</p>
+<div class="one"><span>The one idea</span>For coins, fairness is where you start. For primes, fairness is the thing that had to be proved.</div>
+</div>
+
+<div class="step">
+<h1>9. A detour: any shape is a stack of waves</h1>
+<p>Picture an arm spinning at a steady rate, like a pendulum that goes all the way round. Watch only the <b>height</b> of its tip. It rises and falls in the smoothest wave there is. That is one pure tone.</p>
+<p>Now bolt a shorter, faster arm onto the end of the first. Then another onto that. The height of the last tip is all those waves added together.</p>
+<div class="fig"><canvas id="c8" style="height:300px" role="img" aria-label="Spinning arms chained tip to tail, the last tip tracing a square wave"></canvas>
+<div class="ctl"><span>spinning arms</span><input id="s8" type="range" min="1" max="30" value="1"><output id="o8"></output></div></div>
+<p>The grey shape is a square wave: flat, a sudden drop, flat, a sudden jump. Nothing about it is smooth. Add arms and the tip learns to draw it anyway. The long slow arm gets the rough shape. Each shorter, faster arm fixes a finer detail, and the sharp corners need the fastest ones.</p>
+<p>Working out which arms a shape needs, how long and how fast, is the <b>Fourier transform</b>. Track the tip's sideways position as well as its height and the same arms will draw any outline on a page. A synth adding pure tones is doing the same sum by ear.</p>
+<div class="one"><span>The one idea</span>Any shape, even one with sharp steps, is a list of spinning arms: a speed and a length for each. Find the list and you have the shape.</div>
+</div>
+
+<div class="step">
+<h1>10. The prime staircase is a stack of waves too</h1>
+<p>The prime staircase is a shape with sharp steps, so it has a list of arms too. In 1859 Riemann found it. Add them one at a time and watch the smooth line learn where the primes are.</p>
+<div class="fig"><div class="legend"><span><i style="background:var(--blue)"></i>the prime staircase</span><span><i style="background:var(--amber)"></i>built from waves</span></div>
+<canvas id="c9" role="img" aria-label="The prime staircase and the smooth line built from waves"></canvas>
+<div class="ctl"><span>waves added</span><input id="s9" type="range" min="0" max="100" value="0"><output id="o9"></output></div></div>
+<p><small>The staircase here is a close cousin of the one on screen 5: the steps have different heights so the waves fit cleanly.</small></p>
+<div class="one"><span>The one idea</span>The primes are a chord. Each wave in it is called a <b>zero</b>. Know all the zeros and you know all the primes.</div>
+</div>
+
+<div class="step">
+<h1>11. Each wave has a pitch and a volume</h1>
+<p>Every wave in the prime chord has two settings.</p>
+<p><b>Pitch:</b> how fast it wiggles. Every wave has a different pitch. Nobody argues about these.</p>
+<p><b>Volume:</b> how fast it gets louder as you count higher. This is a dial that could sit anywhere from 0 to 1.</p>
+<div class="fig"><canvas id="c10" role="img" aria-label="One wave growing as you count higher, with the square-root band"></canvas>
+<div class="ctl"><span>volume dial</span><input id="s10" type="range" min="0.3" max="0.9" step="0.01" value="0.5"><output id="o10"></output></div>
+<div class="read" id="r10"></div></div>
+<div class="one"><span>The one idea</span>A dial at ½ means the wave grows like the square root. That is the band from screen 6.</div>
+</div>
+
+<div class="step">
+<h1>12. The hypothesis: every dial is at exactly ½</h1>
+<p>Below are the first ten waves as faders on a mixing desk. All ten sit at ½, and the miss stays in its band.</p>
+<p>Now push the first fader up. This is make-believe: it shows what would happen if even one wave were louder.</p>
+<div class="fig"><canvas id="c11a" style="height:110px" role="img" aria-label="Ten faders, one for each of the first ten waves"></canvas>
+<div class="legend" style="margin-top:8px"><span><i style="background:var(--blue)"></i>the miss, in units of the square root</span><span><i style="background:var(--amber-fill); height:10px; border:1px solid var(--amber)"></i>the band</span></div>
+<canvas id="c11" style="height:220px" role="img" aria-label="The miss in units of the square root, with the band"></canvas>
+<div class="ctl"><span>first fader</span><input id="s11" type="range" min="0.5" max="0.8" step="0.005" value="0.5"><output id="o11"></output></div>
+<div class="read" id="r11"></div></div>
+<div class="one"><span>The one idea</span>One loud wave and the miss breaks out of the band. So "the miss stays in the band" and "every fader is at ½" are the same statement. The second is the form mathematicians use.</div>
+</div>
+
+<div class="step">
+<h1>13. Why it stood for 167 years</h1>
+<p>There are infinitely many waves. Computers checked the first ten trillion faders. Every one sits at exactly ½.</p>
+<p>That is evidence. It is not proof. Proof means a reason that covers <b>all</b> of them at once, including the ones no computer will ever reach.</p>
+<p>Nobody could find that reason. It became the most famous open problem in mathematics, with a million-dollar prize on it.</p>
+<div class="one"><span>The one idea</span>Checking a trillion cases is measurement. A proof is a reason why no case can ever fail.</div>
+</div>
+
+<div class="step">
+<h1>14. What happened on 20 November 2026</h1>
+<p>A mathematician, Levent Alpöge, working with the AI model Claude, published a proof. Not on paper. It is written in <b>Lean</b>, a language built so a computer can check every step.</p>
+<p>Think of a shop drawing set where every dimension is derived from the one before it, and a machine re-derives every single one. This set has about 17 million lines.</p>
+<div class="cards">
+<div><span class="t">✓ The claim being proved</span>Written years ago by other people. The author didn't get to word it his own way.</div>
+<div><span class="t">✓ Every step</span>Rebuilt from scratch by dozens of people, and re-checked by several independent programs. All of them pass it.</div>
+<div><span class="t">✓ The verdict</span>The community that maintains Lean has certified the proof as correct.</div>
+<div class="open"><span class="t">○ Understanding</span>No person has read it end to end. The author says he doesn't yet understand all of it himself.</div>
+</div>
+<div class="one"><span>The one idea</span>We are fairly sure <b>that</b> it's true. Nobody can yet say <b>why</b> in words a person can follow. That has never happened before on a problem this size.</div>
+</div>
+
+<div class="step">
+<h1>15. One piece of the "why" that can be shown</h1>
+<p>The proof says it grew from an older trick. Here is that trick, on its own.</p>
+<p>A curve with a limited number of bends can only cross a line so many times. If you force it to <b>linger</b> at each crossing, flattening against the line, each crossing costs more bends. So fewer crossings fit.</p>
+<div class="fig"><canvas id="c14" role="img" aria-label="A curve crossing a line, lingering at each crossing"></canvas>
+<div class="ctl"><span>how hard it lingers at each crossing</span><input id="s14" type="range" min="1" max="6" value="1"><output id="o14"></output></div>
+<div class="read" id="r14"></div></div>
+<p>In 1969 Sergei Stepanov used this to give a new, simpler proof of a small-scale cousin of the hypothesis: build something that must linger at every exception, and show there is no room for exceptions. The author's note says the new proof finds a way to make things "linger" in the world of whole numbers, where that had been out of reach.</p>
+<div class="one"><span>Where the simple story ends</span>How it does that is the part nobody can explain simply yet. That work starts now.</div>
+</div>
+
+<div class="step">
+<h1>The whole thing on one screen</h1>
+<div class="fig"><canvas id="c15" style="height:470px" role="img" aria-label="Primes on a number line, the prime staircase, the miss inside its band, and the spinning arms whose last tip follows the miss"></canvas>
+<div class="ctl"><span>count up to</span><input id="s15" type="range" min="2" max="60" step="0.02" value="2"><output id="o15"></output><button id="b15">play</button></div>
+<div class="read" id="r15" style="font-size:18px; min-height:74px"></div>
+<p style="margin:8px 2px 0"><small>Small extra steps at 4, 8, 9, 16 … are powers of primes. They belong to this version of the staircase.</small></p></div>
+<p>1. Primes are the numbers that can't be split. Everything else is built from them.</p>
+<p>2. Up close they look random. From far away their count follows a smooth curve.</p>
+<p>3. <b>The question:</b> does the miss between the count and the curve stay as small as a fair coin's would? That is the Riemann Hypothesis.</p>
+<p>4. The primes are a chord made of waves. The question is the same as asking whether every wave's volume dial sits at exactly ½.</p>
+<p>5. Every dial ever checked did. For 167 years nobody could prove they all do.</p>
+<p>6. On 20 November 2026 a proof appeared that machines have checked and people have not yet understood.</p>
+<div class="one"><span>If you want more</span><button type="button" id="toMath">The math drawer</button> covers the same ground with the real names and formulas.</div>
+<p style="margin-top:22px"><small>Written 21 November 2026. Pictures are computed in your browser. Sources: Alpöge's note "Remark", Sutherland's verification page, the Lean and Mathlib joint statement. Audited alongside Claude AI. <span id="disclosure">Written with an AI assistant.</span></small></p>
+</div>
+</main>
+  </div>
+  <button type="button" id="drawerTab" title="Show the math">M A T H</button>
+  <aside id="drawer" aria-label="The math">
+    <div id="drawerHeader">
+      <h2>The Riemann Hypothesis</h2>
+      <button id="drawerClose" aria-label="Close">×</button>
+    </div>
+    <div id="drawerBody">
+
+<div class="kicker">Written 21 November 2026 · one day after the announcement</div>
+<h3 class="mtitle">The Riemann Hypothesis: the question, and what was just proved</h3>
+<p class="lede">Seven pictures. The first five are the question. The last two are the idea behind the answer, as far as anyone has explained it.</p>
+<p class="status"><b>Where things stand.</b> On 20 November 2026 Levent Alpöge released a proof, found with the AI model Claude, written entirely in the proof language Lean. Independent checking programs accept it, and the Lean and Mathlib communities have certified it. No person has yet read and understood the whole argument. Pictures 1 to 6 below are settled mathematics. Picture 7 is a map of the author's short note, and is marked as such.</p>
+
+<!-- 1 -->
+<section>
+<div class="kicker">1 · The question starts here</div>
+<h4>Primes thin out. How evenly?</h4>
+<p>Count the primes up to x and you get a staircase: it rises by one at every prime. There is no formula for where the next step comes. But a smooth curve, written down by Gauss, follows the staircase closely.</p>
+<div class="fig">
+  <div class="legend"><span><i style="background:var(--blue)"></i>primes up to x (the staircase)</span><span><i style="background:var(--amber)"></i>Gauss's smooth estimate, Li(x)</span></div>
+  <canvas id="m-c1" role="img" aria-label="Prime counting staircase against Gauss's smooth estimate"></canvas>
+  <div class="ctl"><label>count up to <input id="m-s1" type="range" min="1.5" max="5" step="0.01" value="3"><output id="m-o1"></output></label></div>
+  <div class="read" id="m-r1"></div>
+</div>
+<p class="notice"><b>Notice:</b> slide the range up. The staircase and the curve stay close, and the gap between them stays small compared with x. <b>The Riemann Hypothesis is a precise statement about how small that gap stays, forever.</b></p>
+</section>
+
+<!-- 2 -->
+<section>
+<div class="kicker">2 · The bridge</div>
+<h4>One function that knows every prime</h4>
+<p>Euler found that adding over all whole numbers gives the same answer as multiplying over only the primes. This is the zeta function, and it is why a question about primes becomes a question about one function.</p>
+<div class="eq">ζ(s) &nbsp;=&nbsp; 1 + 1/2<sup>s</sup> + 1/3<sup>s</sup> + 1/4<sup>s</sup> + …  &nbsp;=&nbsp;  1/(1 − 2<sup>−s</sup>) · 1/(1 − 3<sup>−s</sup>) · 1/(1 − 5<sup>−s</sup>) · 1/(1 − 7<sup>−s</sup>) · …</div>
+<div class="fig">
+  <div class="legend"><span><i style="background:var(--blue)"></i>sum over whole numbers up to N</span><span><i style="background:var(--amber)"></i>product over primes up to N</span><span style="color:var(--label)"><i class="dash" style="color:var(--label)"></i>π²/6</span></div>
+  <canvas id="m-c2" class="mid" role="img" aria-label="Partial sum and partial product both approaching pi squared over six"></canvas>
+  <div class="ctl"><label>N <input id="m-s2" type="range" min="2" max="200" step="1" value="30"><output id="m-o2"></output></label><span>shown at s = 2</span></div>
+  <div class="read" id="m-r2"></div>
+</div>
+<p class="notice"><b>Notice:</b> two different recipes, one built from every number and one from primes alone, close in on the same value. Everything zeta does is therefore something the primes do.</p>
+</section>
+
+<!-- 3 -->
+<section>
+<div class="kicker">3 · The statement</div>
+<h4>Where is the function zero?</h4>
+<p>Riemann let s be a complex number, s = σ + it, a point on a plane. In the strip where σ is between 0 and 1, zeta has infinitely many zeros. Each dot in the top band is one of them. The strip is drawn on its side here, so the famous "critical line" σ = ½ runs left to right through the middle. The curve underneath shows the size of zeta along the line you choose with the slider.</p>
+<div class="fig">
+  <canvas id="m-c3a" class="short" role="img" aria-label="The critical strip with the known zeros on the middle line"></canvas>
+  <div class="legend"><span><i style="background:var(--blue)"></i>size of ζ(σ + it) along your line</span><span><i style="background:var(--pink); height:8px; width:8px; border-radius:50%"></i>zeros of zeta</span></div>
+  <canvas id="m-c3" class="mid" role="img" aria-label="Absolute value of zeta along the chosen line"></canvas>
+  <div class="ctl"><label>σ <input id="m-s3" type="range" min="0" max="1" step="0.01" value="0.75"><output id="m-o3"></output></label><button id="m-b3" style="background:var(--raised);color:var(--text);border:1px solid var(--edge);border-radius:4px;padding:4px 10px;font-size:13px;cursor:pointer">put it on ½</button></div>
+  <div class="read" id="m-r3"></div>
+</div>
+<p class="notice"><b>Notice:</b> move σ anywhere except ½ and the curve dips but never touches zero. Set it to exactly ½ and it touches zero again and again. <b>The Riemann Hypothesis: every zero in the strip sits on the line σ = ½.</b> Computers had checked trillions of them. None had ever been found off the line, and nobody could prove none ever would be.</p>
+</section>
+
+<!-- 4 -->
+<section>
+<div class="kicker">4 · Why the zeros matter</div>
+<h4>Each zero is one note in the music of the primes</h4>
+<p>Riemann's formula rebuilds the prime staircase out of waves, one wave for each zero. Here the staircase is the weighted count ψ(x), which steps up by log p at every prime power. Add the zeros one at a time.</p>
+<div class="fig">
+  <div class="legend"><span><i style="background:var(--blue)"></i>the true prime staircase ψ(x)</span><span><i style="background:var(--amber)"></i>rebuilt from the zeros</span></div>
+  <canvas id="m-c4" role="img" aria-label="The prime staircase and its reconstruction from zeta zeros"></canvas>
+  <div class="ctl"><label>zeros used <input id="m-s4" type="range" min="0" max="100" step="1" value="0"><output id="m-o4"></output></label></div>
+  <div class="read" id="m-r4"></div>
+</div>
+<p class="notice"><b>Notice:</b> with no zeros you get a straight line, the average. With a hundred, the line has learned where every prime in view is. The zeros are not near the primes or like the primes. They are the primes, written as frequencies.</p>
+</section>
+
+<!-- 5 -->
+<section>
+<div class="kicker">5 · What is at stake</div>
+<h4>On the line, every note is as quiet as it can be</h4>
+<p>A zero at σ + it gives a wave whose loudness grows like x<sup>σ</sup>. Zeros come in mirrored pairs across the line, so moving one to the right of ½ makes a louder wave. On the line, every wave grows like √x, the slowest growth the mirror allows. This is a thought experiment: drag the first zero off the line and watch the error in the prime count.</p>
+<div class="fig">
+  <div class="legend"><span><i style="background:var(--blue)"></i>error ÷ √x with every zero on the line</span><span><i style="background:var(--pink)"></i>with the first zero moved off (not real)</span></div>
+  <canvas id="m-c5" role="img" aria-label="Error in the prime count divided by square root of x, with and without a zero moved off the line"></canvas>
+  <div class="ctl"><label>move the first zero to σ = <input id="m-s5" type="range" min="0.5" max="0.8" step="0.005" value="0.5"><output id="m-o5"></output></label></div>
+  <div class="read" id="m-r5"></div>
+</div>
+<p class="notice"><b>Notice:</b> on the line the error, measured against √x, stays small. With every zero counted it can still creep up, but no faster than (log x)². Off the line it grows like a power of x. So the hypothesis says <b>the primes are as evenly spread as they could possibly be</b>. A great many theorems were proved "assuming the Riemann Hypothesis". This is what they were assuming. <span style="color:var(--muted)">(Drawn from the first 20 zeros.)</span></p>
+</section>
+
+<!-- 6 -->
+<section>
+<div class="kicker">6 · The version that was already proved</div>
+<h4>In a smaller world, this has been a theorem for ninety years</h4>
+<p>Replace the whole numbers with clock arithmetic modulo a prime p, and replace "count the primes" with "count the solutions of a curve". The same question has an exact answer there. For a curve y² = x³ + ax + b, the count of solutions differs from p + 1 by at most 2√p. That bound is that world's Riemann Hypothesis. Hasse proved it for these curves in the 1930s and Weil for all curves in the 1940s. Below, every such curve for your p is counted.</p>
+<div class="fig">
+  <div class="legend"><span><i style="background:var(--blue)"></i>number of curves with each error</span><span style="color:var(--label)"><i class="dash" style="color:var(--pink)"></i>the bound ±2√p</span></div>
+  <canvas id="m-c6" role="img" aria-label="Histogram of point-count errors for all elliptic curves modulo p, inside the Hasse bound"></canvas>
+  <div class="ctl"><label>p <input id="m-s6" type="range" min="0" max="21" step="1" value="8"><output id="m-o6"></output></label></div>
+  <div class="read" id="m-r6"></div>
+</div>
+<p class="notice"><b>Notice:</b> pick any p. Not one curve lands outside the dashed lines. In 1969 Sergei Stepanov found a way to prove this bound with nothing but polynomials. The new proof calls itself "a descendant of Stepanov's".</p>
+</section>
+
+<!-- 7 -->
+<section>
+<div class="kicker">7 · The idea behind the answer</div>
+<h4>Stepanov's trick: make it vanish many times</h4>
+<p>A polynomial of degree D can be zero at most D times, counting repeats. Stepanov built a polynomial of modest degree that is forced to vanish, not once, but many times over at every solution of the curve. Then the solutions cannot be numerous: there is not enough degree to pay for them.</p>
+<div class="fig">
+  <canvas id="m-c7" class="mid" role="img" aria-label="A polynomial with repeated roots, showing fewer roots allowed as multiplicity rises"></canvas>
+  <canvas id="m-c7b" class="short" style="height:54px" role="img" aria-label="Degree budget bar"></canvas>
+  <div class="ctl"><label>degree budget D <input id="m-s7a" type="range" min="12" max="60" step="1" value="36"><output id="m-o7a"></output></label><label>vanishes m times at each point <input id="m-s7b" type="range" min="1" max="6" step="1" value="1"><output id="m-o7b"></output></label></div>
+  <div class="read" id="m-r7"></div>
+</div>
+<p class="notice"><b>Notice:</b> raise m. The curve flattens against the axis at each root, and fewer roots fit. More vanishing per point means fewer points allowed. That is the whole trick. <span style="color:var(--muted)">(Heights are rescaled between roots so the shape is visible.)</span></p>
+
+<h4 style="margin-top:26px">What the new proof says it does</h4>
+<p>For a polynomial, "vanishes m times" means its first m − 1 derivatives are zero too. Whole numbers have no derivative, which is why Stepanov's method stayed in the smaller world for fifty years. The note's claim is that a different kind of object supplies the missing repeats.</p>
+<div class="steps">
+  <div class="step"><span class="n">Start</span><br>A sum over the primes of length X.<q>the von Mangoldt sum of length X</q></div>
+  <div class="step"><span class="n">The obstacle</span><br>No derivative, so no repeats.<q>multiplicity is hard to find over the integers, corresponding to something like differentiating whole numbers</q></div>
+  <div class="step"><span class="n">The substitute</span><br>A chain of "theta lifts". Each link stands in for one repeat.
+    <div class="chain"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><em>… √X links</em></div>
+    <q>Claude's suggested length of chain of theta lifts, in view of each mimicking multiplicity, was √X</q></div>
+  <div class="step"><span class="n">The end</span><br>Enough repeats to force every zero onto the line.<q>11/16/26: GRH.</q></div>
+</div>
+<p class="notice"><b>Read this box carefully.</b> It is a map of the author's four-page note, in his words. It is not a picture of the proof. The note lists twenty steps drawing on some of the deepest machinery in number theory, and the author writes that he does not yet command all of it himself. A theta lift is a way of carrying a highly symmetric function from one symmetry group to another. I can tell you that much and not much more.</p>
+</section>
+
+<!-- 8 -->
+<section>
+<div class="kicker">How anyone can be sure</div>
+<h4>Checked by machine, not yet read by people</h4>
+<p>This is the exact sentence that was proved. It was written into the Mathlib library by other people, before this proof existed:</p>
+<pre>def RiemannHypothesis : Prop :=
+  ∀ (s : ℂ) (_ : riemannZeta s = 0) (_ : ¬∃ n : ℕ, s = -2 * (n + 1)) (_ : s ≠ 1),
+    s.re = 1 / 2</pre>
+<p>In words: for every complex number s where zeta is zero, leaving aside the known zeros at −2, −4, −6, … , the real part of s is ½. Picture 3, in one line.</p>
+<div class="pipe">
+  <div class="done"><span class="tag">The statement</span>Mathlib's own definition, vetted earlier by number theorists. The author did not write it.</div>
+  <div class="done"><span class="tag">The proof</span>175,187 files, about 17 million lines of Lean. Rebuilt from scratch by dozens of people.</div>
+  <div class="done"><span class="tag">The checkers</span>Several small independent programs, by different authors in different languages, each accept every step.</div>
+  <div class="open"><span class="tag">Understanding</span>No paper. No person has followed the argument end to end. This is the work now beginning.</div>
+</div>
+<p class="notice">A proof checker cannot be persuaded, impressed or hurried. It can only confirm that each line follows from the last. What it cannot tell you is <b>why</b>. For the first time on a problem of this size, the checking finished before the understanding began.</p>
+</section>
+
+<div class="src">
+<p><b>Sources, read 21 November 2026.</b> Alpöge, <a href="https://alpo.ge/remark.pdf">"Remark"</a> (all quotations in picture 7) · Sutherland, <a href="https://math.mit.edu/~drew/grh/">verification page</a> · <a href="https://leanprover-community.github.io/blog/posts/riemann-hypothesis/">Lean and Mathlib joint statement</a> · Tao, <a href="https://terrytao.wordpress.com/2026/11/20/unforced-euler-singularity-unforced-navier-stokes-singularity-and-the-generalized-riemann-hypothesis/">blog post of 20 November</a> · the Lean statement from <a href="https://github.com/leanprover-community/mathlib4/blob/master/Mathlib/NumberTheory/LSeries/RiemannZeta.lean">Mathlib</a>.</p>
+<p><b>How the pictures are computed.</b> Everything is calculated in your browser. Zeta is evaluated with Borwein's algorithm. The first 100 zeros were computed with mpmath and are stored in the page. Picture 4 uses the explicit formula ψ(x) = x − Σ x<sup>ρ</sup>/ρ − log 2π − ½ log(1 − x<sup>−2</sup>). Picture 6 counts points directly.</p>
+<p><b>Limits.</b> This page explains the question and one idea from the note. It does not explain the proof. Audited alongside Claude AI. Written with an AI assistant.</p>
+</div>
+      <a class="about-link" href="https://kuramoto.dev/">kuramoto.dev →</a>
+    </div>
+  </aside>
+</div>
+<div id="controls"><div class="nav"><button id="back">Back</button><button id="mathBtn">Math</button><button id="next">Next</button></div></div>
+
+<script>
+// ── Drawer ───────────────────────────────────────────────────────────────
+let drawerOpen = false;
+function openDrawer() { drawerOpen = true; document.body.classList.add('drawer-open'); }
+function closeDrawer() { drawerOpen = false; document.body.classList.remove('drawer-open'); }
+document.getElementById('drawerTab').addEventListener('click', openDrawer);
+document.getElementById('mathBtn').addEventListener('click', openDrawer);
+document.getElementById('drawerClose').addEventListener('click', closeDrawer);
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && drawerOpen) closeDrawer(); });
+</script>
+
+<!-- ── the card: riemann-ground-up.html's script, with the edits build.py asserts ── -->
+<script>
+(function () {
+"use strict";
+const ZEROS = [14.134725,21.022040,25.010858,30.424876,32.935062,37.586178,40.918719,43.327073,48.005151,49.773832,52.970321,56.446248,59.347044,60.831779,65.112544,67.079811,69.546402,72.067158,75.704691,77.144840,79.337375,82.910381,84.735493,87.425275,88.809111,92.491899,94.651344,95.870634,98.831194,101.317851,103.725538,105.446623,107.168611,111.029536,111.874659,114.320221,116.226680,118.790783,121.370125,122.946829,124.256819,127.516684,129.578704,131.087689,133.497737,134.756510,138.116042,139.736209,141.123707,143.111846,146.000982,147.422765,150.053520,150.925258,153.024694,156.112909,157.597592,158.849988,161.188964,163.030710,165.537069,167.184440,169.094515,169.911976,173.411537,174.754192,176.441434,178.377408,179.916484,182.207078,184.874468,185.598784,187.228923,189.416159,192.026656,193.079727,195.265397,196.876482,198.015310,201.264752,202.493595,204.189672,205.394697,207.906259,209.576510,211.690863,213.347919,214.547045,216.169539,219.067596,220.714919,221.430706,224.007000,224.983325,227.421444,229.337413,231.250189,231.987235,233.693404,236.524230];
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const C = { blue: css('--blue'), amber: css('--amber'), pink: css('--pink'), seen: css('--blue-seen'), band: css('--band'), edge: css('--edge'), grid: '#1a1a2a', axis: '#2a2a44', label: '#8a8aa0', bg: '#08080f' };
+const $ = id => document.getElementById(id);
+const fmt = (v, d = 0) => Number(v).toLocaleString('en-US', { maximumFractionDigits: d });
+
+const NMAX = 1000100, sieve = new Uint8Array(NMAX + 1).fill(1); sieve[0] = sieve[1] = 0;
+for (let i = 2; i * i <= NMAX; i++) if (sieve[i]) for (let j = i * i; j <= NMAX; j += i) sieve[j] = 0;
+const PRIMES = []; for (let i = 2; i <= NMAX; i++) if (sieve[i]) PRIMES.push(i);
+const PI = new Uint32Array(NMAX + 1); for (let i = 1, c = 0; i <= NMAX; i++) { c += sieve[i]; PI[i] = c; }
+function Li(x) { if (x <= 2) return 1.045; const n = 200, a = Math.log(2), b = Math.log(x), h = (b - a) / n; let s = 0; for (let i = 0; i <= n; i++) { const u = a + i * h; s += Math.exp(u) / u * (i === 0 || i === n ? 1 : i % 2 ? 4 : 2); } return s * h / 3 + 1.045163780117; }
+
+function niceTicks(a, b, n) { const raw = (b - a) / n, p = Math.pow(10, Math.floor(Math.log10(raw))), f = raw / p, st = (f < 1.5 ? 1 : f < 3.5 ? 2 : f < 7.5 ? 5 : 10) * p, o = []; for (let v = Math.ceil(a / st) * st; v <= b + 1e-9; v += st) o.push(Math.abs(v) < 1e-12 ? 0 : v); return o; }
+class Plot {
+  constructor(cv, pad) { this.cv = cv; this.pad = Object.assign({ l: 50, r: 14, t: 10, b: 26 }, pad || {}); }
+  begin(xr, yr) { const dpr = window.devicePixelRatio || 1, r = this.cv.getBoundingClientRect(), W = Math.round(r.width * dpr), H = Math.round(r.height * dpr);
+    if (this.cv.width !== W || this.cv.height !== H) { this.cv.width = W; this.cv.height = H; }
+    const g = this.g = this.cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); this.w = r.width; this.h = r.height; this.xr = xr; this.yr = yr; g.clearRect(0, 0, this.w, this.h); g.font = '12px system-ui, sans-serif'; return g; }
+  X(x) { const p = this.pad; return p.l + (x - this.xr[0]) / (this.xr[1] - this.xr[0]) * (this.w - p.l - p.r); }
+  Y(y) { const p = this.pad; return this.h - p.b - (y - this.yr[0]) / (this.yr[1] - this.yr[0]) * (this.h - p.t - p.b); }
+  grid(xt, yt, fx, fy) { const g = this.g, p = this.pad; g.lineWidth = 1; g.strokeStyle = C.grid; g.fillStyle = C.label; g.textAlign = 'right'; g.textBaseline = 'middle';
+    for (const v of yt) { const y = Math.round(this.Y(v)) + .5; g.beginPath(); g.moveTo(p.l, y); g.lineTo(this.w - p.r, y); g.stroke(); g.fillText(fy ? fy(v) : fmt(v, 2), p.l - 6, y); }
+    g.textAlign = 'center'; g.textBaseline = 'top'; for (const v of xt) { const x = this.X(v); if (x < p.l - 1 || x > this.w - p.r + 1) continue; g.fillText(fx ? fx(v) : fmt(v), x, this.h - p.b + 6); } }
+  clip() { const g = this.g, p = this.pad; g.save(); g.beginPath(); g.rect(p.l, p.t - 2, this.w - p.l - p.r, this.h - p.t - p.b + 4); g.clip(); }
+  line(xs, ys, color, width) { const g = this.g; g.strokeStyle = color; g.lineWidth = width || 2; g.lineJoin = 'round'; g.beginPath(); for (let i = 0; i < xs.length; i++) { const x = this.X(xs[i]), y = this.Y(ys[i]); i ? g.lineTo(x, y) : g.moveTo(x, y); } g.stroke(); }
+  steps(xs, ys, color, width) { const g = this.g; g.strokeStyle = color; g.lineWidth = width || 2; g.lineJoin = 'miter'; g.beginPath(); for (let i = 0; i < xs.length; i++) { const x = this.X(xs[i]), y = this.Y(ys[i]); if (!i) g.moveTo(x, y); else { g.lineTo(x, this.Y(ys[i - 1])); g.lineTo(x, y); } } g.lineTo(this.X(this.xr[1]), this.Y(ys[ys.length - 1])); g.stroke(); }
+  band(xs, lo, hi) { const g = this.g; g.fillStyle = C.band; g.beginPath(); for (let i = 0; i < xs.length; i++) { const x = this.X(xs[i]), y = this.Y(hi[i]); i ? g.lineTo(x, y) : g.moveTo(x, y); } for (let i = xs.length - 1; i >= 0; i--) g.lineTo(this.X(xs[i]), this.Y(lo[i])); g.closePath(); g.fill();
+    g.strokeStyle = C.amber; g.lineWidth = 1; for (const a of [lo, hi]) { g.beginPath(); for (let i = 0; i < xs.length; i++) { const x = this.X(xs[i]), y = this.Y(a[i]); i ? g.lineTo(x, y) : g.moveTo(x, y); } g.stroke(); } }
+}
+const draws = {};   // step index -> draw fn
+function on(step, ids, fn) { ids.forEach(i => $(i).addEventListener('input', fn)); draws[step] = fn; }
+
+// 1 pebbles
+{ const P = new Plot($('c1'), { l: 10, r: 10, t: 10, b: 10 });
+  on(0, ['s1'], () => { const n = +$('s1').value; $('o1').textContent = n; const best = m => { for (let r = Math.floor(Math.sqrt(m)); r >= 1; r--) if (m % r === 0) return r; return 1; };
+    let rows = best(n); const prime = rows === 1 && n > 1; if (prime) rows = best(n - 1); const cols = (prime ? n - 1 : n) / rows, R = rows + (prime ? 1 : 0);
+    const g = P.begin([0, 1], [0, 1]), cell = Math.min((P.w - 20) / cols, (P.h - 20) / R, 34), ox = (P.w - cols * cell) / 2, oy = (P.h - R * cell) / 2, rad = Math.max(2, cell * .34);
+    g.fillStyle = prime ? C.amber : C.blue; for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) { g.beginPath(); g.arc(ox + (c + .5) * cell, oy + (r + .5) * cell, rad, 0, 7); g.fill(); }
+    if (prime) { const ex = ox + .5 * cell, ey = oy + (rows + .5) * cell; g.beginPath(); g.arc(ex, ey, rad, 0, 7); g.fill(); g.strokeStyle = C.amber; g.lineWidth = 1.5; g.beginPath(); g.arc(ex, ey, rad + 4, 0, 7); g.stroke();
+      g.fillStyle = C.label; g.font = '13px system-ui, sans-serif'; g.textAlign = 'left'; g.textBaseline = 'middle'; g.fillText('one left over', ex + rad + 12, ey); }
+    $('r1').innerHTML = prime ? `<b>${n}</b> pebbles: ${rows > 1 ? `<b>${rows} × ${cols}</b> with one left over` : `a line of ${cols} with one left over`}. Try any other stacking and some are still left over. <b>${n} is prime.</b>` : `<b>${n}</b> pebbles make a rectangle: <b>${rows} × ${cols}</b>. Not prime.`; }); }
+// 2 bricks
+on(1, ['s2'], () => { let n = +$('s2').value; $('o2').textContent = n; const f = []; let m = n; for (let p = 2; p * p <= m; p++) while (m % p === 0) { f.push(p); m /= p; } if (m > 1) f.push(m);
+  $('b2').innerHTML = `<span>${n}</span><span class="x">=</span>` + f.map(p => `<span class="b${f.length === 1 ? ' p' : ''}">${p}</span>`).join('<span class="x">×</span>') + (f.length === 1 ? '<span class="x" style="font-family:system-ui;font-size:16px">&nbsp; a single brick: prime</span>' : ''); });
+// 3 grid
+{ const STARTS = [0, 100, 1000, 10000, 100000, 500000, 1000000];
+  on(2, ['s3'], () => { const s = STARTS[+$('s3').value]; $('o3').textContent = fmt(s); let h = '', c = 0; for (let i = 1; i <= 100; i++) { const n = s + i, p = sieve[n]; c += p; h += `<div class="${p ? 'p' : ''}">${s < 10000 ? n : (p ? '●' : '·')}</div>`; }
+    $('g3').innerHTML = h; $('r3').innerHTML = `from <b>${fmt(s + 1)}</b> to <b>${fmt(s + 100)}</b>: &nbsp; <b>${c}</b> primes in this hundred` + (s ? ` &nbsp;(the first hundred had 25)` : ''); }); }
+// 4 gaps
+{ const P = new Plot($('c4'));
+  draws[3] = () => { const N = 90, gaps = []; for (let i = 0; i < N; i++) gaps.push(PRIMES[i + 1] - PRIMES[i]); const g = P.begin([0, N], [0, 16]); P.grid([], [0, 4, 8, 12, 16]);
+    const bw = (P.X(1) - P.X(0)) - 2; g.fillStyle = C.blue; gaps.forEach((v, i) => { g.beginPath(); g.roundRect(P.X(i) + 1, P.Y(v), bw, P.Y(0) - P.Y(v), [2, 2, 0, 0]); g.fill(); });
+    $('r4').innerHTML = `the first ${N} gaps: &nbsp;` + gaps.slice(0, 22).join(', ') + ' …'; }; }
+// 5 staircase
+{ const P = new Plot($('c5'), { r: 30 });
+  on(4, ['s5'], () => { const xm = Math.round(Math.pow(10, +$('s5').value)); $('o5').textContent = fmt(xm); const top = Math.max(PI[xm], Li(xm)) * 1.06, g = P.begin([0, xm], [0, top]); P.grid(niceTicks(0, xm, 5), niceTicks(0, top, 5)); P.clip();
+    const lx = [], ly = []; for (let i = 0; i <= 300; i++) { const x = 2 + (xm - 2) * i / 300; lx.push(x); ly.push(Li(x)); } P.line(lx, ly, C.amber, 2);
+    if (xm <= 3000) { const ps = PRIMES.filter(p => p <= xm); P.steps([0].concat(ps), [0].concat(ps.map((_, i) => i + 1)), C.blue, 2); } else { const sx = [], sy = []; for (let i = 0; i <= 1200; i++) { const x = Math.round(xm * i / 1200); sx.push(x); sy.push(PI[x]); } P.line(sx, sy, C.blue, 2); }
+    g.restore(); const real = PI[xm], pred = Li(xm); $('r5').innerHTML = `up to <b>${fmt(xm)}</b>: &nbsp; real count <b>${fmt(real)}</b> &nbsp;·&nbsp; prediction <b>${fmt(pred)}</b> &nbsp;·&nbsp; off by <b>${(Math.abs(pred - real) / real * 100).toFixed(real > 5000 ? 2 : 1)}%</b>`; }); }
+// 6 the miss
+{ const P = new Plot($('c6'), { r: 30 });
+  on(5, ['s6'], () => { const xm = Math.round(Math.pow(10, +$('s6').value)); $('o6').textContent = fmt(xm); const xs = [], miss = [], lo = [], hi = [];
+    for (let i = 0; i <= 700; i++) { const x = Math.max(100, Math.round(xm * i / 700)); xs.push(x); miss.push(Li(x) - PI[x]); const b = Math.sqrt(x); hi.push(b); lo.push(-b); }
+    const R = Math.sqrt(xm) * 1.15, g = P.begin([0, xm], [-R, R]); P.grid(niceTicks(0, xm, 5), niceTicks(-R, R, 6)); P.clip(); P.band(xs, lo, hi); P.line([0, xm], [0, 0], C.axis, 1); P.line(xs, miss, C.blue, 2); g.restore();
+    const big = Math.max(...miss.map(Math.abs)); $('r6').innerHTML = `counting to <b>${fmt(xm)}</b>: &nbsp; the band is ±<b>${fmt(Math.sqrt(xm))}</b> &nbsp;·&nbsp; the biggest miss so far is <b>${fmt(big)}</b> &nbsp;·&nbsp; inside the band: <b>${big < Math.sqrt(xm) ? 'yes' : 'check'}</b>`; }); }
+// 7 coins
+{ const P = new Plot($('c7'), { r: 26 }); let seed = 7;
+  const run = () => { const N = 10000, xs = [0], ys = [0], lo = [0], hi = [0]; let s = seed, v = 0; const rnd = () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296;
+    for (let i = 1; i <= N; i++) { v += rnd() < .5 ? 1 : -1; if (i % 10 === 0) { xs.push(i); ys.push(v); hi.push(2 * Math.sqrt(i)); lo.push(-2 * Math.sqrt(i)); } }
+    const g = P.begin([0, N], [-260, 260]); P.grid(niceTicks(0, N, 5), [-200, -100, 0, 100, 200]); P.clip(); P.band(xs, lo, hi); P.line([0, N], [0, 0], C.axis, 1); P.line(xs, ys, C.blue, 1.5); g.restore();
+    $('r7').innerHTML = `after 10,000 flips: heads lead by <b style="color:var(--bright)">${v}</b>. The square root of 10,000 is 100.`; };
+  $('b7').addEventListener('click', () => { seed = (Math.random() * 1e9) | 0; run(); }); draws[6] = run; }
+// 8 (new) coins beside primes
+// UNIT RULE: both panels run 0 to 1,000,000 across and -1,150 to +1,150 up (square root of a million x 1.15, screen 6's rule),
+// and carry the same band, plus and minus the square root of the count. Coins: heads so far minus half the flips so far, one
+// point per 1,000 flips. Primes: Gauss's curve minus the real count (screen 6's sign), 700 points.
+{ const PA = new Plot($('c-coins'), { r: 30 }), PB = new Plot($('c-primes'), { r: 30 }), N = 1e6, R = Math.sqrt(N) * 1.15, YT = [-1000, -500, 0, 500, 1000], XT = [0, 500000, 1000000];
+  const bx = [], lo = [], hi = [], px = [], py = []; let seed = 3, walk = null;
+  for (let i = 0; i <= 200; i++) { const x = N * i / 200; bx.push(x); hi.push(Math.sqrt(x)); lo.push(-Math.sqrt(x)); }
+  const flip = () => { const xs = [0], ys = [0]; let s = seed, h = 0; const rnd = () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296;
+    for (let i = 1; i <= N; i++) { if (rnd() < .5) h++; if (i % 1000 === 0) { xs.push(i); ys.push(h - i / 2); } } walk = { xs, ys, h }; };
+  const panel = (P, xs, ys) => { const g = P.begin([0, N], [-R, R]); P.grid(XT, YT); P.clip(); P.band(bx, lo, hi); P.line([0, N], [0, 0], C.axis, 1); P.line(xs, ys, C.blue, 1.5); g.restore(); };
+  const run = () => { if (!walk) flip(); if (!px.length) for (let i = 0; i <= 700; i++) { const x = Math.max(100, Math.round(N * i / 700)); px.push(x); py.push(Li(x) - PI[x]); }
+    panel(PA, walk.xs, walk.ys); panel(PB, px, py); const pred = Math.round(Li(N));
+    $('r-coins').innerHTML = `a million flips: expect <b>500,000</b> heads &nbsp;·&nbsp; got <b>${fmt(walk.h)}</b> &nbsp;·&nbsp; off by <b>${fmt(Math.abs(walk.h - N / 2))}</b>`;
+    $('r-primes').innerHTML = `up to a million: the curve says <b>${fmt(pred)}</b> &nbsp;·&nbsp; the real count is <b>${fmt(PI[N])}</b> &nbsp;·&nbsp; off by <b>${fmt(Math.abs(pred - PI[N]))}</b>`; };
+  $('b-coins').addEventListener('click', () => { seed = (Math.random() * 1e9) | 0; walk = null; run(); }); draws[7] = run; }
+// 9 (was 8) spinning arms -> square wave
+{ const P = new Plot($('c8'), { l: 0, r: 0, t: 0, b: 0 }); let t0 = null, raf = 0;
+  const frame = ts => { if (cur !== 8) { raf = 0; return; } if (t0 == null) t0 = ts; const t = (ts - t0) / 1000 * 0.22, K = +$('s8').value; $('o8').textContent = K;
+    const g = P.begin([0, 1], [0, 1]), W = P.w, H = P.h, cy = H / 2, split = Math.min(W * 0.36, 250), cx = split * 0.47, sc = Math.min(H * 0.30, split * 0.33), x0 = split + 14, span = W - x0 - 10, cyc = 2;
+    // target shape, faint
+    g.strokeStyle = '#3a3a5a'; g.lineWidth = 2; g.beginPath(); for (let i = 0; i <= 400; i++) { const u = i / 400 * cyc, ph = ((t - u) % 1 + 1) % 1, y = ph < .5 ? 1 : -1, X = x0 + i / 400 * span, Y = cy - y * sc; i ? g.lineTo(X, Y) : g.moveTo(X, Y); } g.stroke();
+    // the arms
+    let x = cx, y = cy; for (let k = 0; k < K; k++) { const n = 2 * k + 1, r = 4 / Math.PI / n * sc, a = 2 * Math.PI * n * t; if (r > 1.2) { g.strokeStyle = '#222238'; g.lineWidth = 1; g.beginPath(); g.arc(x, y, r, 0, 7); g.stroke(); }
+      const nx = x + r * Math.cos(a), ny = y - r * Math.sin(a); g.strokeStyle = C.blue; g.lineWidth = k ? 1.5 : 2.5; g.beginPath(); g.moveTo(x, y); g.lineTo(nx, ny); g.stroke(); x = nx; y = ny; }
+    // link from the tip to the trace
+    g.strokeStyle = C.label; g.setLineDash([3, 4]); g.lineWidth = 1; g.beginPath(); g.moveTo(x, y); g.lineTo(x0, y); g.stroke(); g.setLineDash([]);
+    g.fillStyle = C.pink; g.beginPath(); g.arc(x, y, 4.5, 0, 7); g.fill(); g.beginPath(); g.arc(x0, y, 4.5, 0, 7); g.fill();
+    // the trace: height of the tip over time, newest at the left
+    g.strokeStyle = C.amber; g.lineWidth = 2; g.lineJoin = 'round'; g.beginPath(); for (let i = 0; i <= 500; i++) { const tt = t - i / 500 * cyc; let v = 0; for (let k = 0; k < K; k++) { const n = 2 * k + 1; v += Math.sin(2 * Math.PI * n * tt) / n; } const X = x0 + i / 500 * span, Y = cy - 4 / Math.PI * v * sc; i ? g.lineTo(X, Y) : g.moveTo(X, Y); } g.stroke();
+    g.fillStyle = C.label; g.font = '12px system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'bottom'; g.fillText(K === 1 ? 'one spinning arm' : K + ' arms, tip to tail', cx, H - 6); g.fillText('the height of the last tip, over time', x0 + span / 2, H - 6);
+    raf = requestAnimationFrame(frame); };
+  draws[8] = () => { if (!raf) raf = requestAnimationFrame(frame); }; }
+// explicit formula
+function psiWave(x, K, b0) { const L = Math.log(x); let v = x - Math.log(2 * Math.PI) - .5 * Math.log(1 - 1 / (x * x)); for (let k = 0; k < K; k++) { const gm = ZEROS[k]; if (k === 0 && b0 != null && b0 !== .5) { for (const b of [b0, 1 - b0]) v -= Math.pow(x, b) * (b * Math.cos(gm * L) + gm * Math.sin(gm * L)) / (b * b + gm * gm); } else v -= 2 * Math.sqrt(x) * (.5 * Math.cos(gm * L) + gm * Math.sin(gm * L)) / (.25 + gm * gm); } return v; }
+// 9 rebuild
+{ const P = new Plot($('c9')), XM = 50, tx = [1], ty = [0]; let s = 0; for (let n = 2; n <= XM; n++) { let m = n, p = 0; for (const q of PRIMES) { if (q * q > m) break; if (m % q === 0) { p = q; while (m % q === 0) m /= q; break; } } if (!p) { p = n; m = 1; } if (m === 1) { s += Math.log(p); tx.push(n); ty.push(s); } }
+  on(9, ['s9'], () => { const K = +$('s9').value; $('o9').textContent = K; const g = P.begin([1, XM], [-2, 52]); P.grid(niceTicks(0, XM, 5), []); P.clip(); P.steps(tx, ty, C.blue, 2); const xs = [], ys = []; for (let i = 0; i <= 1200; i++) { const x = 1.5 + (XM - 1.5) * i / 1200; xs.push(x); ys.push(psiWave(x, K)); } P.line(xs, ys, C.amber, 2); g.restore(); }); }
+// 10 one wave
+{ const P = new Plot($('c10'));
+  on(10, ['s10'], () => { const b = +$('s10').value; $('o10').textContent = b.toFixed(2); const XM = 400, R = Math.max(32, Math.pow(XM, Math.max(b, 1 - b)) * 1.1), g = P.begin([1, XM], [-R, R]); P.grid(niceTicks(0, XM, 4), niceTicks(-R, R, 4)); P.clip();
+    const xs = [], lo = [], hi = [], ys = []; for (let i = 0; i <= 800; i++) { const x = 1 + (XM - 1) * i / 800; xs.push(x); hi.push(Math.sqrt(x)); lo.push(-Math.sqrt(x)); ys.push(Math.pow(x, b) * Math.sin(14.1347 * Math.log(x))); }
+    P.band(xs, lo, hi); P.line([1, XM], [0, 0], C.axis, 1); P.line(xs, ys, b > .5 ? C.pink : C.blue, 2); g.restore();
+    $('r10').innerHTML = Math.abs(b - .5) < .005 ? `dial at <b>½</b>: the wave grows exactly as fast as the band` : b > .5 ? `dial at <b>${b.toFixed(2)}</b>: the wave outgrows the band` : `dial at <b>${b.toFixed(2)}</b>: quieter. But the waves come in mirrored pairs, so its twin sits at ${(1 - b).toFixed(2)} and is louder. ½ is the only quiet setting.`; }); }
+// 11 faders
+{ const P = new Plot($('c11')), F = new Plot($('c11a'), { l: 50, t: 8, b: 20 }), K = 20, L0 = Math.log(10), L1 = Math.log(1e9), N = 1800, bx = [], by = [];
+  for (let i = 0; i <= N; i++) { const x = Math.exp(L0 + (L1 - L0) * i / N); bx.push(Math.log10(x)); by.push((psiWave(x, K) - x) / Math.sqrt(x)); }
+  const sup = v => '10' + String(v).split('').map(d => '⁰¹²³⁴⁵⁶⁷⁸⁹'[d]).join('');
+  on(11, ['s11'], () => { const b = +$('s11').value; $('o11').textContent = b.toFixed(3);
+    let g = F.begin([0, 10], [0, 1]); g.fillStyle = C.label; g.textAlign = 'right'; g.textBaseline = 'middle'; g.fillText('1', 44, F.Y(1)); g.fillText('½', 44, F.Y(.5)); g.fillText('0', 44, F.Y(0));
+    g.strokeStyle = C.amber; g.lineWidth = 1; g.setLineDash([4, 4]); g.beginPath(); g.moveTo(F.X(0), F.Y(.5)); g.lineTo(F.X(10), F.Y(.5)); g.stroke(); g.setLineDash([]);
+    for (let i = 0; i < 10; i++) { const x = F.X(i + .5), v = i ? .5 : b; g.strokeStyle = C.edge || '#222238'; g.lineWidth = 4; g.lineCap = 'round'; g.beginPath(); g.moveTo(x, F.Y(0)); g.lineTo(x, F.Y(1)); g.stroke(); g.fillStyle = (i === 0 && b > .5) ? C.pink : C.blue; const cw = Math.min(26, (F.X(1) - F.X(0)) * .62); g.beginPath(); g.roundRect(x - cw / 2, F.Y(v) - 6, cw, 12, 3); g.fill(); g.fillStyle = C.label; g.textAlign = 'center'; g.textBaseline = 'top'; g.fillText((F.X(1) - F.X(0) < 50 ? '' : 'wave ') + (i + 1), x, F.h - 16); }
+    const ys = []; let mx = 0; for (let i = 0; i <= N; i++) { const x = Math.exp(L0 + (L1 - L0) * i / N), v = (psiWave(x, K, b) - x) / Math.sqrt(x); ys.push(v); mx = Math.max(mx, Math.abs(v)); }
+    const R = Math.max(1.5, Math.ceil(mx * 1.1)); g = P.begin([1, 9], [-R, R]); P.grid([1, 2, 3, 4, 5, 6, 7, 8, 9], niceTicks(-R, R, 4), sup); P.clip(); P.band([1, 9], [-1, -1], [1, 1]); P.line([1, 9], [0, 0], C.axis, 1); P.line(bx, b === .5 ? by : ys, b === .5 ? C.blue : C.pink, 1.5); g.restore();
+    $('r11').innerHTML = b === .5 ? `every fader at ½: counting from 10 up to a billion, the miss stays <b>inside</b> the band` : mx > 1 ? `first fader at <b>${b.toFixed(3)}</b>: the miss has left the band, and reaches <b>${mx.toFixed(1)}×</b> the square root by a billion. It keeps growing.` : `first fader at <b>${b.toFixed(3)}</b>: still inside by a billion, but growing. Count far enough and it leaves.`; }); }
+// 14 linger
+{ const P = new Plot($('c14'), { l: 14, b: 12 }), D = 36;
+  on(14, ['s14'], () => { const m = +$('s14').value, n = Math.floor(D / m); $('o14').textContent = m + '×'; const roots = Array.from({ length: n }, (_, i) => -1 + 2 * (i + .5) / n);
+    const f = x => { let lg = 0, sg = 1; for (const r of roots) { const d = x - r; lg += m * Math.log(Math.abs(d) + 1e-300); if (d < 0 && m % 2) sg = -sg; } return [sg, lg]; };
+    const g = P.begin([-1, 1], [-1.3, 1.3]); g.strokeStyle = C.axis; g.lineWidth = 1; g.beginPath(); g.moveTo(P.X(-1), P.Y(0) + .5); g.lineTo(P.X(1), P.Y(0) + .5); g.stroke();
+    const ed = [-1].concat(roots, [1]); g.strokeStyle = C.blue; g.lineWidth = 2; g.lineJoin = 'round'; g.beginPath();
+    for (let j = 0; j < ed.length - 1; j++) { const a = ed[j], b = ed[j + 1], S = 48, pts = []; let mx = -Infinity; for (let i = 0; i <= S; i++) { const x = a + (b - a) * i / S, [sg, lg] = f(x); pts.push([x, sg, lg]); if (i > 0 && i < S) mx = Math.max(mx, lg); }
+      for (const [x, sg, lg] of pts) { const y = Math.max(-1.15, Math.min(1.15, sg * Math.exp(lg - mx))), X = P.X(x), Y = P.Y(y); (j === 0 && x === a) ? g.moveTo(X, Y) : g.lineTo(X, Y); } }
+    g.stroke(); g.fillStyle = C.pink; for (const r of roots) { g.beginPath(); g.arc(P.X(r), P.Y(0), 4.5, 0, 7); g.fill(); }
+    $('r14').innerHTML = `same curve budget (${D}). Lingering <b>${m}×</b> at each crossing leaves room for <b>${n}</b> crossings` + (m > 1 ? `, down from ${D}` : ''); }); }
+
+
+// 15 everything at once, on a slider
+{ const P = new Plot($('c15'), { l: 0, r: 0, t: 0, b: 0 }), XM = 60, K = 60, N = 2900, DUR = 26;
+  const xs = [], tip = [], miss = [], stair = [], built = []; let ps = 0, pk = 0, EH = 0, EV = 0; const ppow = [];
+  for (let n = 2; n <= XM; n++) { let m = n, q = 0; for (const p of PRIMES) { if (p * p > m) break; if (m % p === 0) { q = p; while (m % p === 0) m /= p; break; } } if (!q) { q = n; m = 1; } if (m === 1) ppow.push([n, Math.log(q), q === n]); }
+  const arm = (x, k) => { const gm = ZEROS[k], L = Math.log(x), A = 2 * Math.sqrt(x) / (.25 + gm * gm), c = Math.cos(gm * L), sn = Math.sin(gm * L); return [(.5 * c + gm * sn) * A, (.5 * sn - gm * c) * A]; };
+  for (let i = 0; i <= N; i++) { const x = 2 + (XM - 2) * i / N; while (pk < ppow.length && ppow[pk][0] <= x + 1e-9) ps += ppow[pk++][1]; let t = 0, s = 0; for (let k = 0; k < K; k++) { const a = arm(x, k); t += a[0]; s += a[1]; EV = Math.max(EV, Math.abs(t)); EH = Math.max(EH, Math.abs(s)); }
+    const c0 = Math.log(2 * Math.PI) + .5 * Math.log(1 - 1 / (x * x)); xs.push(x); tip.push(t); stair.push(ps); miss.push(x - c0 - ps); built.push(x - c0 - t); }
+  const CAP = [[0, 'Slide to count upward. Primes turn up with no pattern.'], [11, 'Count them as you go and you get a staircase. It hugs a straight line.'], [22, 'The gap between the staircase and the line is <b>the miss</b>, drawn underneath.'], [33, 'The spinning arms are the waves. Chained tip to tail, their last tip follows the miss. Sixty arms are drawn here. With all of them it would match exactly.'], [45, 'Every arm grows at the same square-root rate, so the miss stays inside the band. <b>That is the Riemann Hypothesis.</b>'], [59.5, 'For 167 years nobody could prove the arms all behave. On 20 November 2026 a proof appeared that machines have checked and people have not yet read.']];
+  let raf = 0, t0 = null;
+  const draw = () => { const x = +$('s15').value, I = Math.round((x - 2) / (XM - 2) * N); $('o15').textContent = x >= 59.99 ? '60' : x.toFixed(1);
+    const g = P.begin([0, 1], [0, 1]), W = P.w, H = P.h, LW = Math.max(92, Math.min(W * .26, 190)), x0 = LW + 34, x1 = W - 14, X = v => x0 + (v - 1) / (XM - 1) * (x1 - x0);
+    const yA = 26, sT = 50, sB = H * .43, mT = sB + 46, mB = H - 40, mC = (mT + mB) / 2, half = (mB - mT) / 2, u = half / (Math.sqrt(XM) * 1.04), SY = v => sB - v / XM * (sB - sT);
+    const zf = [3, 2.5, 2, 1.5].find(f => f * u * EH <= LW / 2 - 4 && f * u * EV <= half + 4) || 1, pr = Math.max(2.5, Math.min(4.5, (X(2) - X(1)) * .55));
+    g.font = '11px system-ui, sans-serif'; g.textBaseline = 'middle';
+    // axes: gridlines + numbers
+    g.strokeStyle = C.grid; g.lineWidth = 1; g.fillStyle = C.label; g.textAlign = 'right';
+    for (const v of [0, 20, 40, 60]) { const y = Math.round(SY(v)) + .5; g.beginPath(); g.moveTo(x0, y); g.lineTo(x1, y); g.stroke(); g.fillText(v, x0 - 6, y); }
+    for (const v of [-5, 0, 5]) { const y = Math.round(mC - v * u) + .5; g.beginPath(); g.moveTo(x0, y); g.lineTo(x1, y); g.stroke(); g.fillText((v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v), x0 - 6, y); }
+    g.textAlign = 'center'; g.textBaseline = 'top'; for (const v of [10, 20, 30, 40, 50, 60]) { g.fillText(v, X(v), sB + 6); g.fillText(v, X(v), mB + 6); }
+    g.strokeStyle = C.axis; for (const y of [sB, mB]) { g.beginPath(); g.moveTo(x0, Math.round(y) + .5); g.lineTo(x1, Math.round(y) + .5); g.stroke(); }
+    g.fillText('counting up to', (x0 + x1) / 2, mB + 21);
+    g.textBaseline = 'middle'; g.textAlign = 'left'; g.fillText('the primes', 8, yA); g.fillText('their count', 8, (sT + sB) / 2 - 8); g.fillText('(a staircase)', 8, (sT + sB) / 2 + 8); g.fillText('the miss', x0 + 4, mT - 14);
+    g.textAlign = 'center'; g.fillText('the waves, as', LW / 2, mB + 8); g.fillText('spinning arms', LW / 2, mB + 22); g.fillStyle = '#5e5e74'; if (zf > 1) g.fillText('(zoomed ' + zf + '×)', LW / 2, mT - 14);
+    // primes on the number line
+    for (const [n, , isP] of ppow) { const lit = n <= x + 1e-9; g.beginPath(); g.arc(X(n), yA, isP ? (lit ? pr : 2) : 2, 0, 7); if (isP) { g.fillStyle = lit ? C.blue : '#2a2a44'; g.fill(); if (lit && W > 600) { g.fillStyle = C.label; g.textAlign = 'center'; g.fillText(n, X(n), yA - 13); } } else { g.strokeStyle = lit ? C.seen : '#222238'; g.lineWidth = 1; g.stroke(); } }
+    // staircase panel
+    g.strokeStyle = '#3a3a5a'; g.lineWidth = 1; g.setLineDash([4, 4]); g.beginPath(); g.moveTo(X(1), SY(1)); g.lineTo(X(XM), SY(XM)); g.stroke(); g.setLineDash([]);
+    g.strokeStyle = C.blue; g.lineWidth = 2; g.lineJoin = 'miter'; g.beginPath(); g.moveTo(X(1), SY(0)); let pv = 0; for (let i = 0; i <= I; i++) { if (stair[i] !== pv) { g.lineTo(X(xs[i]), SY(pv)); pv = stair[i]; } g.lineTo(X(xs[i]), SY(pv)); } g.stroke();
+    g.strokeStyle = C.amber; g.lineWidth = 1.5; g.lineJoin = 'round'; g.beginPath(); for (let i = 0; i <= I; i++) { const Xp = X(xs[i]), Yp = SY(built[i]); i ? g.lineTo(Xp, Yp) : g.moveTo(Xp, Yp); } g.stroke();
+    // the square-root band, always there
+    g.fillStyle = C.band; g.beginPath(); for (let i = 0; i <= 120; i++) { const v = 1 + (XM - 1) * i / 120; g.lineTo(X(v), mC - Math.sqrt(v) * u); } for (let i = 120; i >= 0; i--) { const v = 1 + (XM - 1) * i / 120; g.lineTo(X(v), mC + Math.sqrt(v) * u); } g.closePath(); g.fill(); g.strokeStyle = C.amber; g.lineWidth = 1; g.stroke();
+    g.fillStyle = C.label; g.textAlign = 'right'; g.fillText('the square-root band', x1 - 6, mC - Math.sqrt(XM) * u + 12);
+    // the miss, true (blue) and drawn by the arms (amber)
+    g.strokeStyle = C.blue; g.lineWidth = 2; g.beginPath(); for (let i = 0; i <= I; i++) { const Xp = X(xs[i]), Yp = mC - miss[i] * u; i ? g.lineTo(Xp, Yp) : g.moveTo(Xp, Yp); } g.stroke();
+    g.strokeStyle = C.amber; g.lineWidth = 1.5; g.beginPath(); for (let i = 0; i <= I; i++) { const Xp = X(xs[i]), Yp = mC - tip[i] * u; i ? g.lineTo(Xp, Yp) : g.moveTo(Xp, Yp); } g.stroke();
+    // sweep line
+    g.strokeStyle = '#3a3a5a'; g.lineWidth = 1; g.beginPath(); g.moveTo(X(x) + .5, yA + 8); g.lineTo(X(x) + .5, mB); g.stroke();
+    // arms
+    g.save(); g.beginPath(); g.rect(0, mT - 4, LW, mB - mT + 8); g.clip(); const z = zf * u; let ax = LW / 2, ay = mC;
+    g.strokeStyle = '#222238'; g.lineWidth = 1; g.beginPath(); g.moveTo(6, mC + .5); g.lineTo(LW - 6, mC + .5); g.stroke();
+    for (let k = 0; k < K; k++) { const [re, im] = arm(x, k), nx = ax + im * z, ny = ay - re * z, r = Math.hypot(re, im) * z; if (k < 4) { g.strokeStyle = '#222238'; g.lineWidth = 1; g.beginPath(); g.arc(ax, ay, r, 0, 7); g.stroke(); } g.strokeStyle = C.blue; g.lineWidth = k < 3 ? 2 : 1; g.beginPath(); g.moveTo(ax, ay); g.lineTo(nx, ny); g.stroke(); ax = nx; ay = ny; }
+    g.restore(); const tx = X(x), ty = mC - tip[I] * u; g.strokeStyle = C.label; g.setLineDash([3, 4]); g.lineWidth = 1; g.beginPath(); g.moveTo(ax, ay); g.lineTo(tx, ty); g.stroke(); g.setLineDash([]);
+    g.fillStyle = C.pink; g.beginPath(); g.arc(ax, ay, 4, 0, 7); g.fill(); g.beginPath(); g.arc(tx, ty, 4, 0, 7); g.fill();
+    let ci = 0; for (let i = 0; i < CAP.length; i++) if (x >= CAP[i][0]) ci = i; $('r15').innerHTML = CAP[ci][1]; };
+  const stop = () => { if (raf) cancelAnimationFrame(raf); raf = 0; $('b15').textContent = 'play'; };
+  const tick = ts => { if (cur !== 15) { stop(); return; } if (t0 == null) t0 = ts - (+$('s15').value - 2) / (XM - 2) * DUR * 1000; const v = 2 + (XM - 2) * Math.min(1, (ts - t0) / 1000 / DUR); $('s15').value = v; draw(); if (v >= XM) { stop(); return; } raf = requestAnimationFrame(tick); };
+  $('b15').addEventListener('click', () => { if (raf) { stop(); return; } if (+$('s15').value >= XM - .01) $('s15').value = 2; t0 = null; $('b15').textContent = 'pause'; raf = requestAnimationFrame(tick); });
+  $('s15').addEventListener('pointerdown', stop); $('s15').addEventListener('keydown', stop);
+  on(15, ['s15'], draw); }
+
+// ---------- stepper ----------
+const steps = [...document.querySelectorAll('#card .step')], dots = $('dots'); let cur = 0, far = 0;
+steps.forEach((_, i) => { const b = document.createElement('button'); b.setAttribute('aria-label', 'Go to screen ' + (i + 1)); b.onclick = () => show(i); dots.appendChild(b); });
+function show(i) { cur = Math.max(0, Math.min(steps.length - 1, i)); far = Math.max(far, cur); steps.forEach((s, k) => s.classList.toggle('on', k === cur)); [...dots.children].forEach((d, k) => { d.className = k === cur ? 'on' : k <= far ? 'seen' : ''; });
+  $('count').textContent = (cur + 1) + ' of ' + steps.length; $('back').disabled = cur === 0; $('next').disabled = cur === steps.length - 1; $('next').textContent = cur === steps.length - 1 ? 'The end' : 'Next'; $('scroll').scrollTop = 0; draws[cur] && draws[cur](); history.replaceState(null, '', '#' + (cur + 1)); }
+$('next').onclick = () => show(cur + 1); $('back').onclick = () => show(cur - 1);
+addEventListener('keydown', e => { if (e.target.tagName === 'INPUT' || drawerOpen) return; if (e.key === 'ArrowRight') show(cur + 1); if (e.key === 'ArrowLeft') show(cur - 1); });
+// the column changes width with the window and with the drawer: redraw the screen in view on either
+new ResizeObserver(() => { draws[cur] && draws[cur](); }).observe($('card'));
+$('toMath').addEventListener('click', openDrawer);
+show((parseInt(location.hash.slice(1)) || 1) - 1);
+})();
+</script>
+
+<!-- ── the drawer: riemann.html's script. One line differs: $ looks up 'm-' + id ── -->
+<script>
+(function () {
+"use strict";
+const ZEROS = [14.134725,21.022040,25.010858,30.424876,32.935062,37.586178,40.918719,43.327073,48.005151,49.773832,52.970321,56.446248,59.347044,60.831779,65.112544,67.079811,69.546402,72.067158,75.704691,77.144840,79.337375,82.910381,84.735493,87.425275,88.809111,92.491899,94.651344,95.870634,98.831194,101.317851,103.725538,105.446623,107.168611,111.029536,111.874659,114.320221,116.226680,118.790783,121.370125,122.946829,124.256819,127.516684,129.578704,131.087689,133.497737,134.756510,138.116042,139.736209,141.123707,143.111846,146.000982,147.422765,150.053520,150.925258,153.024694,156.112909,157.597592,158.849988,161.188964,163.030710,165.537069,167.184440,169.094515,169.911976,173.411537,174.754192,176.441434,178.377408,179.916484,182.207078,184.874468,185.598784,187.228923,189.416159,192.026656,193.079727,195.265397,196.876482,198.015310,201.264752,202.493595,204.189672,205.394697,207.906259,209.576510,211.690863,213.347919,214.547045,216.169539,219.067596,220.714919,221.430706,224.007000,224.983325,227.421444,229.337413,231.250189,231.987235,233.693404,236.524230];
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const C = { blue: css('--blue'), amber: css('--amber'), pink: css('--pink'), grid: '#1a1a2a', axis: '#2a2a44', label: '#8a8aa0', text: '#c8c8d0', bg: '#08080f' };
+const $ = id => document.getElementById('m-' + id);
+const fmt = (v, d = 2) => Number(v).toLocaleString('en-US', { maximumFractionDigits: d, minimumFractionDigits: 0 });
+
+// ---------- tiny plot helper ----------
+function niceTicks(a, b, n) {
+  const span = b - a, raw = span / n, p = Math.pow(10, Math.floor(Math.log10(raw)));
+  const f = raw / p, step = (f < 1.5 ? 1 : f < 3.5 ? 2 : f < 7.5 ? 5 : 10) * p;
+  const out = []; for (let v = Math.ceil(a / step) * step; v <= b + 1e-9; v += step) out.push(Math.abs(v) < 1e-12 ? 0 : v);
+  return out;
+}
+class Plot {
+  constructor(cv, pad) {
+    this.cv = cv; this.pad = Object.assign({ l: 46, r: 14, t: 10, b: 26 }, pad || {});
+    this.hover = null; this.onhover = null; this.draw = null;
+    cv.addEventListener('pointermove', e => { const r = cv.getBoundingClientRect(); this.hover = e.clientX - r.left; this.draw && this.draw(); });
+    cv.addEventListener('pointerleave', () => { this.hover = null; this.draw && this.draw(); });
+  }
+  begin(xr, yr) {
+    const dpr = window.devicePixelRatio || 1, r = this.cv.getBoundingClientRect();
+    const W = Math.round(r.width * dpr), H = Math.round(r.height * dpr);
+    if (this.cv.width !== W || this.cv.height !== H) { this.cv.width = W; this.cv.height = H; }
+    const g = this.g = this.cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    this.w = r.width; this.h = r.height; this.xr = xr; this.yr = yr;
+    g.clearRect(0, 0, this.w, this.h); g.font = '11px system-ui, sans-serif';
+    return g;
+  }
+  X(x) { const p = this.pad; return p.l + (x - this.xr[0]) / (this.xr[1] - this.xr[0]) * (this.w - p.l - p.r); }
+  Y(y) { const p = this.pad; return this.h - p.b - (y - this.yr[0]) / (this.yr[1] - this.yr[0]) * (this.h - p.t - p.b); }
+  invX(px) { const p = this.pad; return this.xr[0] + (px - p.l) / (this.w - p.l - p.r) * (this.xr[1] - this.xr[0]); }
+  grid(xt, yt, fx, fy) {
+    const g = this.g, p = this.pad;
+    g.lineWidth = 1; g.strokeStyle = C.grid; g.fillStyle = C.label;
+    g.textAlign = 'right'; g.textBaseline = 'middle';
+    for (const v of yt) { const y = Math.round(this.Y(v)) + .5; g.beginPath(); g.moveTo(p.l, y); g.lineTo(this.w - p.r, y); g.stroke(); g.fillText(fy ? fy(v) : fmt(v), p.l - 6, y); }
+    g.textAlign = 'center'; g.textBaseline = 'top';
+    for (const v of xt) { const x = this.X(v); if (x < p.l - 1 || x > this.w - p.r + 1) continue; g.fillText(fx ? fx(v) : fmt(v), x, this.h - p.b + 6); }
+    g.strokeStyle = C.axis; g.beginPath(); g.moveTo(p.l, this.h - p.b + .5); g.lineTo(this.w - p.r, this.h - p.b + .5); g.stroke();
+  }
+  clip() { const g = this.g, p = this.pad; g.save(); g.beginPath(); g.rect(p.l, p.t - 2, this.w - p.l - p.r, this.h - p.t - p.b + 4); g.clip(); }
+  line(xs, ys, color, width, dash) {
+    const g = this.g; g.strokeStyle = color; g.lineWidth = width || 2; g.lineJoin = 'round'; g.setLineDash(dash || []);
+    g.beginPath(); for (let i = 0; i < xs.length; i++) { const x = this.X(xs[i]), y = this.Y(ys[i]); i ? g.lineTo(x, y) : g.moveTo(x, y); } g.stroke(); g.setLineDash([]);
+  }
+  steps(xs, ys, color, width) { // ys[i] holds from xs[i] to xs[i+1]
+    const g = this.g; g.strokeStyle = color; g.lineWidth = width || 2; g.lineJoin = 'miter';
+    g.beginPath(); for (let i = 0; i < xs.length; i++) { const x = this.X(xs[i]), y = this.Y(ys[i]); if (!i) g.moveTo(x, y); else { g.lineTo(x, this.Y(ys[i - 1])); g.lineTo(x, y); } }
+    g.lineTo(this.X(this.xr[1]), this.Y(ys[ys.length - 1])); g.stroke();
+  }
+  cross() {
+    if (this.hover == null) return null; const p = this.pad;
+    if (this.hover < p.l || this.hover > this.w - p.r) return null;
+    const g = this.g; g.strokeStyle = '#3a3a5a'; g.lineWidth = 1; g.beginPath(); g.moveTo(this.hover + .5, p.t); g.lineTo(this.hover + .5, this.h - p.b); g.stroke();
+    return this.invX(this.hover);
+  }
+  dot(x, y, color) { const g = this.g; g.fillStyle = C.bg; g.beginPath(); g.arc(this.X(x), this.Y(y), 6, 0, 7); g.fill(); g.fillStyle = color; g.beginPath(); g.arc(this.X(x), this.Y(y), 4, 0, 7); g.fill(); }
+}
+const redraws = [];
+function bind(ids, fn) { ids.forEach(i => $(i).addEventListener('input', fn)); redraws.push(fn); fn(); }
+
+// ---------- number theory basics ----------
+const NMAX = 100000;
+const sieve = new Uint8Array(NMAX + 1).fill(1); sieve[0] = sieve[1] = 0;
+for (let i = 2; i * i <= NMAX; i++) if (sieve[i]) for (let j = i * i; j <= NMAX; j += i) sieve[j] = 0;
+const PRIMES = []; for (let i = 2; i <= NMAX; i++) if (sieve[i]) PRIMES.push(i);
+function Li(x) { // offset log integral from 2, Simpson in log-space
+  if (x <= 2) return 0; const n = 400, a = Math.log(2), b = Math.log(x), h = (b - a) / n; let s = 0;
+  const f = u => Math.exp(u) / u;
+  for (let i = 0; i <= n; i++) s += f(a + i * h) * (i === 0 || i === n ? 1 : i % 2 ? 4 : 2);
+  return s * h / 3 + 1.045163780117; // + li(2)
+}
+
+// ---------- 1: staircase ----------
+{
+  const P = new Plot($('c1'));
+  P.draw = () => {
+    const xmax = Math.round(Math.pow(10, +$('s1').value)); $('o1').textContent = fmt(xmax);
+    const ps = PRIMES.filter(p => p <= xmax), ymax = Math.max(ps.length, Li(xmax)) * 1.06;
+    const g = P.begin([0, xmax], [0, ymax]);
+    P.grid(niceTicks(0, xmax, 6), niceTicks(0, ymax, 5));
+    P.clip();
+    const lx = [], ly = []; for (let i = 0; i <= 300; i++) { const x = 2 + (xmax - 2) * i / 300; lx.push(x); ly.push(Li(x)); }
+    P.line(lx, ly, C.amber, 2);
+    P.steps([0].concat(ps), [0].concat(ps.map((_, i) => i + 1)), C.blue, xmax > 3000 ? 1.5 : 2);
+    const hx = P.cross(); g.restore();
+    const at = hx == null ? xmax : Math.max(2, hx), n = PRIMES.filter(p => p <= at).length, l = Li(at);
+    if (hx != null) { P.dot(at, n, C.blue); P.dot(at, l, C.amber); }
+    $('r1').innerHTML = `up to x = <b>${fmt(at, 0)}</b>: &nbsp; primes <b>${fmt(n)}</b> &nbsp;·&nbsp; smooth estimate <b>${fmt(l, 1)}</b> &nbsp;·&nbsp; gap <b>${fmt(l - n, 1)}</b> &nbsp;·&nbsp; √x = ${fmt(Math.sqrt(at), 1)}`;
+  };
+  bind(['s1'], P.draw);
+}
+
+// ---------- 2: Euler product ----------
+{
+  const P = new Plot($('c2')), target = Math.PI * Math.PI / 6;
+  P.draw = () => {
+    const N = +$('s2').value; $('o2').textContent = N;
+    const xs = [], sum = [], prod = []; let s = 0, pr = 1;
+    for (let n = 1; n <= N; n++) { s += 1 / (n * n); if (sieve[n]) pr *= 1 / (1 - 1 / (n * n)); xs.push(n); sum.push(s); prod.push(pr); }
+    const g = P.begin([1, N], [1, 1.7]);
+    P.grid(niceTicks(1, N, 6), [1, 1.2, 1.4, 1.6], null, v => v.toFixed(1));
+    P.clip(); P.line([1, N], [target, target], C.label, 1, [5, 4]);
+    P.line(xs, sum, C.blue, 2); P.steps(xs, prod, C.amber, 2);
+    const hx = P.cross(); g.restore();
+    const k = Math.min(N, Math.max(1, Math.round(hx == null ? N : hx))) - 1;
+    if (hx != null) { P.dot(xs[k], sum[k], C.blue); P.dot(xs[k], prod[k], C.amber); }
+    $('r2').innerHTML = `N = <b>${xs[k]}</b>: &nbsp; sum <b>${sum[k].toFixed(5)}</b> &nbsp;·&nbsp; product over primes <b>${prod[k].toFixed(5)}</b> &nbsp;·&nbsp; both head for π²/6 = <b>${target.toFixed(5)}</b>`;
+  };
+  bind(['s2'], P.draw);
+}
+
+// ---------- zeta via Borwein ----------
+const BN = 90, BD = (() => { const d = new Float64Array(BN + 1); let term = 1 / BN, acc = 0; for (let i = 0; i <= BN; i++) { acc += term; d[i] = BN * acc; term *= 4 * (BN + i) * (BN - i) / ((2 * i + 1) * (2 * i + 2)); } return d; })();
+const BW = Float64Array.from({ length: BN }, (_, k) => (k % 2 ? -1 : 1) * (BD[k] - BD[BN]) / BD[BN]), BL = Float64Array.from({ length: BN }, (_, k) => Math.log(k + 1));
+function zetaAbs(sig, t) {
+  let re = 0, im = 0;
+  for (let k = 0; k < BN; k++) { const m = BW[k] * Math.exp(-sig * BL[k]), a = t * BL[k]; re += m * Math.cos(a); im -= m * Math.sin(a); }
+  const m2 = Math.exp((1 - sig) * Math.LN2), dr = 1 - m2 * Math.cos(t * Math.LN2), di = m2 * Math.sin(t * Math.LN2);
+  return Math.hypot(re, im) / Math.hypot(dr, di);
+}
+window.zetaAbs = zetaAbs;
+
+// ---------- 3: the strip ----------
+{
+  const TMAX = 60, P = new Plot($('c3')), S = new Plot($('c3a'), { t: 8, b: 8 });
+  const zs = ZEROS.filter(z => z < TMAX);
+  P.draw = () => {
+    const sig = +$('s3').value; $('o3').textContent = sig.toFixed(2);
+    // strip
+    let g = S.begin([0, TMAX], [-0.25, 1.25]);
+    g.fillStyle = '#10101e'; g.fillRect(S.X(0), S.Y(1), S.X(TMAX) - S.X(0), S.Y(0) - S.Y(1));
+    g.strokeStyle = C.axis; g.lineWidth = 1; g.setLineDash([4, 4]); g.beginPath(); g.moveTo(S.X(0), S.Y(.5)); g.lineTo(S.X(TMAX), S.Y(.5)); g.stroke(); g.setLineDash([]);
+    g.fillStyle = C.label; g.textAlign = 'right'; g.textBaseline = 'middle';
+    g.fillText('σ = 1', S.pad.l - 6, S.Y(1)); g.fillText('½', S.pad.l - 6, S.Y(.5)); g.fillText('σ = 0', S.pad.l - 6, S.Y(0));
+    g.strokeStyle = C.blue; g.lineWidth = 2; g.beginPath(); g.moveTo(S.X(0), S.Y(sig)); g.lineTo(S.X(TMAX), S.Y(sig)); g.stroke();
+    for (const z of zs) S.dot(z, .5, C.pink);
+    // trace
+    const xs = [], ys = []; let mn = Infinity, mt = 0;
+    for (let i = 0; i <= 900; i++) { const t = 0.5 + (TMAX - 0.5) * i / 900, v = zetaAbs(sig, t); xs.push(t); ys.push(v); if (t > 5 && v < mn) { mn = v; mt = t; } }
+    g = P.begin([0, TMAX], [0, 4]);
+    P.grid(niceTicks(0, TMAX, 6), [0, 1, 2, 3, 4], v => 't = ' + v);
+    P.clip(); P.line(xs, ys, C.blue, 2);
+    const hx = P.cross(); g.restore();
+    let extra = '';
+    if (hx != null && hx > .5) { const v = zetaAbs(sig, hx); P.dot(hx, Math.min(v, 4), C.blue); extra = ` &nbsp;·&nbsp; at t = ${hx.toFixed(2)}: |ζ| = <b>${v.toFixed(3)}</b>`; }
+    const on = Math.abs(sig - .5) < 1e-9;
+    $('r3').innerHTML = `along σ = <b>${sig.toFixed(2)}</b> the smallest value is <b>${mn < 0.02 ? mn.toFixed(4) : mn.toFixed(3)}</b> (near t = ${mt.toFixed(1)})` + (on ? ` &nbsp;·&nbsp; it reaches zero <b>${zs.length}</b> times in this window` : ` &nbsp;·&nbsp; it never reaches zero`) + extra;
+  };
+  $('b3').addEventListener('click', () => { $('s3').value = .5; P.draw(); });
+  bind(['s3'], P.draw);
+}
+
+// ---------- 4: explicit formula ----------
+function psiTrue(xmax) { const xs = [1], ys = [0]; let s = 0; for (let n = 2; n <= xmax; n++) { let m = n, p = 0; for (const q of PRIMES) { if (q * q > m) break; if (m % q === 0) { p = q; while (m % q === 0) m /= q; break; } } if (p === 0) { p = n; m = 1; } if (m === 1) { s += Math.log(p); xs.push(n); ys.push(s); } } return [xs, ys]; }
+function psiWave(x, K, beta0) { // explicit formula with K zero-pairs; optional displaced first zero
+  const L = Math.log(x); let v = x - Math.log(2 * Math.PI) - 0.5 * Math.log(1 - 1 / (x * x));
+  for (let k = 0; k < K; k++) { const gm = ZEROS[k];
+    if (k === 0 && beta0 != null && beta0 !== .5) { for (const b of [beta0, 1 - beta0]) v -= Math.pow(x, b) * (b * Math.cos(gm * L) + gm * Math.sin(gm * L)) / (b * b + gm * gm); }
+    else v -= 2 * Math.sqrt(x) * (.5 * Math.cos(gm * L) + gm * Math.sin(gm * L)) / (.25 + gm * gm); }
+  return v;
+}
+window.psiWave = psiWave;
+{
+  const XM = 60, P = new Plot($('c4')), [tx, ty] = psiTrue(XM);
+  const psiAt = x => { let v = 0; for (let i = 0; i < tx.length && tx[i] <= x; i++) v = ty[i]; return v; };
+  P.draw = () => {
+    const K = +$('s4').value; $('o4').textContent = K;
+    const g = P.begin([1, XM], [-2, 62]);
+    P.grid(niceTicks(0, XM, 6), niceTicks(0, 60, 6));
+    P.clip(); P.steps(tx, ty, C.blue, 2);
+    const xs = [], ys = []; for (let i = 0; i <= 1400; i++) { const x = 1.5 + (XM - 1.5) * i / 1400; xs.push(x); ys.push(psiWave(x, K)); }
+    P.line(xs, ys, C.amber, 2);
+    const hx = P.cross(); g.restore();
+    let err = 0, n = 0; for (let x = 2.5; x < XM; x += 1) { err += Math.abs(psiWave(x, K) - psiAt(x)); n++; }
+    let extra = '';
+    if (hx != null && hx > 1.5) { const a = psiAt(hx), b = psiWave(hx, K); P.dot(hx, a, C.blue); P.dot(hx, b, C.amber); extra = ` &nbsp;·&nbsp; at x = ${hx.toFixed(1)}: true <b>${a.toFixed(2)}</b>, rebuilt <b>${b.toFixed(2)}</b>`; }
+    $('r4').innerHTML = `<b>${K}</b> zero${K === 1 ? '' : 's'} &nbsp;·&nbsp; average miss between the steps: <b>${(err / n).toFixed(2)}</b>` + extra;
+  };
+  bind(['s4'], P.draw);
+}
+
+// ---------- 5: off the line ----------
+{
+  const P = new Plot($('c5'), { r: 22 }), K = 20, L0 = Math.log(10), L1 = Math.log(1e10), N = 2400;
+  const base = (() => { const xs = [], ys = []; for (let i = 0; i <= N; i++) { const L = L0 + (L1 - L0) * i / N, x = Math.exp(L); xs.push(L / Math.LN10); ys.push((psiWave(x, K) - x) / Math.sqrt(x)); } return [xs, ys]; })();
+  P.draw = () => {
+    const b = +$('s5').value; $('o5').textContent = b.toFixed(3);
+    const ys = []; let mx = 0;
+    for (let i = 0; i <= N; i++) { const x = Math.exp(L0 + (L1 - L0) * i / N), v = (psiWave(x, K, b) - x) / Math.sqrt(x); ys.push(v); mx = Math.max(mx, Math.abs(v)); }
+    const R = Math.max(1, Math.ceil(mx * 1.05 * 2) / 2);
+    const g = P.begin([1, 10], [-R, R]);
+    P.grid([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], niceTicks(-R, R, 6), v => '10' + String(v).split('').map(d => '⁰¹²³⁴⁵⁶⁷⁸⁹'[d]).join(''), v => fmt(v, 1));
+    P.clip(); P.line([1, 10], [0, 0], C.axis, 1);
+    if (b !== .5) P.line(base[0], ys, C.pink, 1.5);
+    P.line(base[0], base[1], C.blue, 1.5);
+    g.restore();
+    const bmax = Math.max(...base[1].map(Math.abs));
+    $('r5').innerHTML = b === .5 ? `every zero on the line: from x = 10 to x = 10¹⁰ the error ÷ √x stays within <b>±${bmax.toFixed(2)}</b> (first 20 zeros)`
+      : `first zero at σ = <b>${b.toFixed(3)}</b>: its wave grows like x<sup>${b.toFixed(3)}</sup> instead of x<sup>0.5</sup> &nbsp;·&nbsp; by x = 10¹⁰ the error ÷ √x reaches <b>±${mx.toFixed(1)}</b>, against ±${bmax.toFixed(2)} on the line`;
+  };
+  bind(['s5'], P.draw);
+}
+
+// ---------- 6: curves over finite fields ----------
+{
+  const PS = PRIMES.filter(p => p >= 5 && p <= 101).slice(0, 22), P = new Plot($('c6')), cache = {};
+  $('s6').max = PS.length - 1;
+  function count(p) {
+    if (cache[p]) return cache[p];
+    const chi = new Int8Array(p).fill(-1); chi[0] = 0; for (let x = 1; x < p; x++) chi[x * x % p] = 1;
+    const cube = new Int32Array(p); for (let x = 0; x < p; x++) cube[x] = x * x % p * x % p;
+    const hist = new Map(); let curves = 0, worst = 0;
+    for (let a = 0; a < p; a++) for (let b = 0; b < p; b++) {
+      if ((4 * a * a % p * a + 27 * b * b) % p === 0) continue;
+      let s = 0; for (let x = 0; x < p; x++) s += chi[(cube[x] + a * x + b) % p];
+      const e = s; // points = p + 1 + s, so error = s
+      hist.set(e, (hist.get(e) || 0) + 1); curves++; worst = Math.max(worst, Math.abs(e));
+    }
+    return cache[p] = { hist, curves, worst };
+  }
+  P.draw = () => {
+    const p = PS[+$('s6').value]; $('o6').textContent = p;
+    const { hist, curves, worst } = count(p), bound = 2 * Math.sqrt(p), R = Math.ceil(bound) + 4;
+    const ymax = Math.max(...hist.values()) * 1.1;
+    const g = P.begin([-R - .5, R + .5], [0, ymax]);
+    P.grid(niceTicks(-R, R, 8), niceTicks(0, ymax, 4), v => (v > 0 ? '+' : '') + v);
+    const bw = Math.max(1, (P.X(1) - P.X(0)) - 2);
+    let hov = null; if (P.hover != null) hov = Math.round(P.invX(P.hover));
+    for (const [e, n] of hist) { g.fillStyle = C.blue; g.globalAlpha = hov === e ? 1 : .82; const x = P.X(e) - bw / 2, y = P.Y(n), h = P.Y(0) - y; g.beginPath(); g.roundRect(x, y, bw, h, [Math.min(3, bw / 2), Math.min(3, bw / 2), 0, 0]); g.fill(); }
+    g.globalAlpha = 1;
+    for (const s of [-1, 1]) { g.strokeStyle = C.pink; g.lineWidth = 1.5; g.setLineDash([5, 4]); g.beginPath(); g.moveTo(P.X(s * bound), P.pad.t); g.lineTo(P.X(s * bound), P.h - P.pad.b); g.stroke(); g.setLineDash([]);
+      g.fillStyle = C.label; g.textAlign = s < 0 ? 'right' : 'left'; g.textBaseline = 'top'; g.fillText((s < 0 ? '−' : '+') + '2√p = ' + (s * bound).toFixed(2).replace('-', '−'), P.X(s * bound) + s * 6, P.pad.t + 2); }
+    const extra = hov != null && hist.has(hov) ? ` &nbsp;·&nbsp; error ${hov > 0 ? '+' : ''}${hov}: <b>${fmt(hist.get(hov))}</b> curves` : '';
+    $('r6').innerHTML = `p = <b>${p}</b>: &nbsp; <b>${fmt(curves)}</b> curves counted &nbsp;·&nbsp; largest error <b>${worst}</b> &nbsp;·&nbsp; the bound 2√p = <b>${bound.toFixed(2)}</b> &nbsp;·&nbsp; outside the bound: <b>${[...hist.keys()].filter(e => Math.abs(e) > bound).length}</b>` + extra;
+  };
+  bind(['s6'], P.draw);
+}
+
+// ---------- 7: multiplicity ----------
+{
+  const P = new Plot($('c7'), { l: 14, b: 12 }), B = new Plot($('c7b'), { l: 14, t: 4, b: 18 });
+  P.draw = () => {
+    const D = +$('s7a').value, m = +$('s7b').value, n = Math.floor(D / m);
+    $('o7a').textContent = D; $('o7b').textContent = m;
+    const roots = Array.from({ length: n }, (_, i) => -1 + 2 * (i + .5) / n);
+    const f = x => { let lg = 0, sg = 1; for (const r of roots) { const d = x - r; lg += m * Math.log(Math.abs(d) + 1e-300); if (d < 0 && m % 2) sg = -sg; } return [sg, lg]; };
+    let g = P.begin([-1, 1], [-1.25, 1.25]);
+    g.strokeStyle = C.axis; g.lineWidth = 1; g.beginPath(); g.moveTo(P.X(-1), P.Y(0) + .5); g.lineTo(P.X(1), P.Y(0) + .5); g.stroke();
+    const edges = [-1].concat(roots, [1]); g.strokeStyle = C.blue; g.lineWidth = 2; g.lineJoin = 'round'; g.beginPath();
+    for (let j = 0; j < edges.length - 1; j++) {
+      const a = edges[j], b = edges[j + 1], S = 48, pts = []; let mx = -Infinity;
+      for (let i = 0; i <= S; i++) { const x = a + (b - a) * i / S, [sg, lg] = f(x); pts.push([x, sg, lg]); if (i > 0 && i < S) mx = Math.max(mx, lg); }
+      const inner = j > 0 && j < edges.length - 2;
+      for (const [x, sg, lg] of pts) { let y = sg * Math.exp(lg - mx); if (!inner) y = Math.max(-1, Math.min(1, y)) * (Math.abs(y) > 1 ? 1 : 1); const X = P.X(x), Y = P.Y(Math.max(-1.2, Math.min(1.2, y))); (j === 0 && x === a) ? g.moveTo(X, Y) : g.lineTo(X, Y); }
+    }
+    g.stroke();
+    for (const r of roots) P.dot(r, 0, C.pink);
+    // budget bar
+    g = B.begin([0, 60], [0, 1]); const cw = (B.w - 28) / 60;
+    for (let i = 0; i < 60; i++) { const used = i < n * m, inB = i < D; g.fillStyle = used ? (Math.floor(i / m) % 2 ? '#2f86b3' : C.blue) : inB ? '#1c1c30' : 'transparent'; if (inB) { g.beginPath(); g.roundRect(14 + i * cw + 1, 6, cw - 2, 18, 2); g.fill(); } }
+    g.fillStyle = C.label; g.textAlign = 'left'; g.textBaseline = 'top'; g.fillText(`degree budget: ${D} · spent: ${n} points × ${m} = ${n * m}`, 14, 30);
+    $('r7').innerHTML = `degree <b>${D}</b>, vanishing <b>${m}</b> time${m > 1 ? 's' : ''} at each point &nbsp;→&nbsp; at most <b>${n}</b> points` + (m > 1 ? ` &nbsp;·&nbsp; with m = 1 the same budget allowed ${D}` : '');
+  };
+  bind(['s7a', 's7b'], P.draw);
+}
+
+let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => redraws.forEach(f => f()), 60); });
+})();
+</script>
+<script data-goatcounter="https://kuramoto.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
